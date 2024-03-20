@@ -1,15 +1,8 @@
 import express, { Express, Request, Response, NextFunction, Send } from "express";
 import session from 'express-session';
-import { Database, RequestError } from "./dao/database";
+import { Database, RequestError } from "./dao/api";
 var MongoDBStore = require('connect-mongodb-session')(session);
 
-declare namespace process {
-  namespace env {
-    let mongo_username: string
-    let mongo_password: string
-    let PORT: string | null
-  }
-}
 
 const port = process.env.PORT || 3000;
 const app: Express = express();
@@ -32,6 +25,11 @@ app.use(session({
 }));
 
 
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof RequestError) {
+    res.status(400).json({ success: false, reason: err.message })
+  }
+})
 // angular front
 app.use('/web', express.static('web/dist/ticketing/browser'))
 app.use('/web/*', function (_, res: Response) {
@@ -62,7 +60,9 @@ import { Admin } from './dao/admin';
 import { Config } from "./dao/config";
 app.use('/admin', Admin.RouterFactory());
 
-
+app.use('/*', function (_, res: Response) {
+  res.redirect("/web/")
+});
 app.listen(port, async () => {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -75,9 +75,3 @@ app.listen(port, async () => {
 
   }
 });
-
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof RequestError) {
-    res.status(400).json({ success: false, reason: err.message })
-  }
-})

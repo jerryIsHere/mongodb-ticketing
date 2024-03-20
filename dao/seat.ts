@@ -3,7 +3,7 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { MongoClient, ObjectId } from "mongodb";
 import { Config } from "./config";
-import { BaseDAO, Database, RequestError } from "./database";
+import { BaseDAO, Database, RequestError } from "./api";
 import { Venue } from "./venue";
 
 export namespace Seat {
@@ -33,23 +33,23 @@ export namespace Seat {
         return seat
     };
     export class DAO extends BaseDAO {
-        private _row: string
+        private _row: string | undefined
         public get row() { return this._row }
-        public set row(value: string) { this._row = value; Database.DirtyDAO.add(this); }
+        public set row(value: string | undefined) { this._row = value; BaseDAO.DirtyList.add(this); }
 
-        private _no: number
+        private _no: number | undefined
         public get no() { return this._no }
-        public set no(value: number) { this._no = value; Database.DirtyDAO.add(this); }
+        public set no(value: number | undefined) { this._no = value; BaseDAO.DirtyList.add(this); }
 
-        private _venueId: ObjectId
+        private _venueId: ObjectId | undefined
         public get venueId() { return this._venueId }
-        public set venueId(value: ObjectId) {
+        public set venueId(value: ObjectId | undefined) {
             Database.mongodb.collection(Venue.collection_name).findOne({ _id: value }).then(instance => {
                 if (instance == null) {
                     throw new RequestError(`Venue with id ${value} doesn't exists.`)
                 }
                 else {
-                    this._venueId = value; Database.DirtyDAO.add(this);
+                    this._venueId = value; BaseDAO.DirtyList.add(this);
                 }
             })
         }
@@ -58,10 +58,10 @@ export namespace Seat {
             no: number,
             venueId: ObjectId
         ) {
-            super(collection_name);;
-            this._row = row
-            this._no = no
-            this._venueId = venueId
+            super();;
+            this.row = row
+            this.no = no
+            this.venueId = venueId
         }
     }
 }

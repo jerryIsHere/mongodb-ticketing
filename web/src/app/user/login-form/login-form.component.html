@@ -1,0 +1,21 @@
+<form [formGroup]="loginForm">
+    <mat-form-field>
+      <mat-label>Username (for login)</mat-label>
+      <input matInput formControlName="username" required>
+      @if (loginForm.controls['username'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
+  
+    <mat-form-field>
+      <mat-label>Password</mat-label>
+      <input matInput formControlName="password" type="password" required>
+      @if (loginForm.controls['password'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    
+  </form>
+  <button mat-button (click)="login()">login</button>
+  

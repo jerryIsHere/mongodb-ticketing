@@ -1,0 +1,8 @@
+<mat-tab-group style="width: 50vw; height: 40vh;">
+  <mat-tab label="Login">
+    <app-login-form (logined)="dialogRef.close()"></app-login-form>
+  </mat-tab>
+  <mat-tab label="Register">
+    <app-register-form (logined)="dialogRef.close()"></app-register-form>
+  </mat-tab>
+</mat-tab-group>

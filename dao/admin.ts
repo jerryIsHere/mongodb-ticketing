@@ -15,13 +15,12 @@ import { PriceTier } from './priceTier';
 
 import { EventSeat } from "./eventSeat";
 
-import { Database } from "./database";
+import { Database } from "./api";
 
 export namespace Admin {
     export function RouterFactory(): Express.Router {
         var admin = Router()
         var db = Database.mongo.db(Config.db_name)
-        console.log(db)
         admin.get("/initMongoDB", (req: Request, res: Response) => {
             [User, Event, Seat, Venue, PriceTier, EventSeat].forEach(namespace => {
                 if (namespace.collection_name) {

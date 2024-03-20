@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { MongoClient } from "mongodb";
 import { Config } from "./config";
-import { BaseDAO, Database } from "./database";
+import { BaseDAO, Database } from "./api";
 
 export namespace Venue {
     export const collection_name = "venues"
@@ -31,13 +31,13 @@ export namespace Venue {
         return venue
     };
     export class DAO extends BaseDAO {
-        private _venuename: string
+        private _venuename: string | undefined
         public get venuename() { return this._venuename }
-        public set venuename(value: string) { this._venuename = value; Database.DirtyDAO.add(this); }
+        public set venuename(value: string | undefined) { this._venuename = value; BaseDAO.DirtyList.add(this); }
 
         private constructor(venuename: string) {
-            super(collection_name);;
-            this._venuename = venuename
+            super();;
+            this.venuename = venuename
         }
     }
 }
