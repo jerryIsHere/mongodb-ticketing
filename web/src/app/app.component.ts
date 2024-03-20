@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterModule, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button'
@@ -15,7 +15,7 @@ import { LoginOrRegisterDialogComponent } from './user/login-or-register-dialog/
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatMenuModule, MatButtonModule, MatDialogModule],
+  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatMenuModule, MatButtonModule, RouterModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.sass'
 })

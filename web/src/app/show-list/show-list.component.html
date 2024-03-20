@@ -1,1 +1,15 @@
-<p>show-list works!</p>
+@if (events == null){
+loading
+}
+@else if (events.length > 0){
+<table mat-table [dataSource]="events">
+  <ng-container matColumnDef="name">
+    <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+  </ng-container>
+  <ng-container matColumnDef="id">
+    <td mat-cell *matCellDef="let element"> <button mat-button>Join</button>
+    </td>
+  </ng-container>
+  <tr mat-row *matRowDef="let row; columns: ['name', 'id'];"></tr>
+</table>
+}
