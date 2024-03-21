@@ -1,0 +1,36 @@
+@if(event && event.eventname){
+{{event.eventname}}
+}
+<mat-grid-list [cols]="cols.length" rowHeight="100px">
+  @for (seat of slots; track seat) {
+  <mat-grid-tile>
+    @if(seat && getTiceket(seat._id)) {
+    @if(hasBuyer(seat._id)){
+    <span>{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}} : sold</span>
+    }
+    @else {
+    <button mat-button [matMenuTriggerFor]="menu"
+      [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
+      :
+      {{getTiceket(seat._id)?.priceTier?.tierName}}
+    </button>
+    }
+    }
+  </mat-grid-tile>
+  }
+</mat-grid-list>
+<mat-menu #menu="matMenu">
+  <ng-template matMenuContent let-seat_id="seat_id">
+    @if(seat_id){
+    @if(getTiceket(seat_id)){
+    @if(hasBuyer(seat_id)){
+    }
+    @else{
+    <button mat-menu-item (click)="buy(getTiceket(seat_id)?._id)">buy</button>
+    }
+    }
+    @else {
+    }
+    }
+  </ng-template>
+</mat-menu>

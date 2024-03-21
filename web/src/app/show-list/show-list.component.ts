@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule } from '@angular/material/dialog';
 import { Event } from '../management-panel/management-panel.component'
 import { ApiService } from '../service/api.service';
 import { RouterModule } from '@angular/router';

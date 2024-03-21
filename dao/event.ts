@@ -46,7 +46,7 @@ export namespace Event {
                         duration: req.body.duration,
                     })
                     dao.setVenueId(new ObjectId(venueId)).then(_ => Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
-                        if (value.acknowledged) {
+                        if (value.insertedId) {
                             res.json({ success: true })
                         }
                     }))
@@ -55,26 +55,25 @@ export namespace Event {
         })
 
         event.patch("/:eventId", async (req: Request, res: Response) => {
-            if (req.query.venueId && typeof req.query.venueId == "string") {
+            if (req.params.eventId && typeof req.params.eventId == "string") {
                 var dao = new DAO({
                     eventname: req.body.eventname,
                     datetime: req.body.datetime,
                     duration: req.body.duration,
                 })
-                return dao.setVenueId(new ObjectId(req.query.venueId))
+                return dao.setVenueId(new ObjectId(req.body.venueId))
                     .then(_ => Database.mongodb.collection(collection_name)
-                        .updateOne({ _id: new ObjectId(req.params.priceTierId) }, { $set: dao.Serialize(true) },).then((value) => {
-                            if (value.acknowledged) {
+                        .updateOne({ _id: new ObjectId(req.params.eventId) }, { $set: dao.Serialize(true) },).then((value) => {
+                            if (value.modifiedCount > 0) {
                                 res.json({ success: true })
                             }
                         }))
             }
-
         })
 
         event.delete("/:eventId", (req: Request, res: Response) => {
             return Database.mongodb.collection(collection_name).deleteOne({ _id: new ObjectId(req.params.eventId) }).then((value) => {
-                if (value.acknowledged) {
+                if (value.deletedCount > 0) {
                     res.json({ success: true })
                 }
             })

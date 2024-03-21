@@ -8,6 +8,11 @@ import { Event } from './event';
 import { PriceTier } from "./priceTier";
 import { Seat } from "./seat";
 import { User } from "./user";
+declare module "express-session" {
+    interface SessionData {
+        user: User.DAO | null;
+    }
+}
 
 export namespace EventSeat {
     export const collection_name = "ticket"
@@ -17,7 +22,133 @@ export namespace EventSeat {
         ticket.get("/", (req: Request, res: Response) => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
                 var cursor = Database.mongodb.collection(collection_name).aggregate([
-                    { $match: { eventId: new ObjectId(req.query.eventId) } },
+                    ...[
+                        { $match: { eventId: new ObjectId(req.query.eventId) } },
+                        {
+                            $lookup:
+                            {
+                                from: Event.collection_name,
+                                localField: "eventId",
+                                foreignField: "_id",
+                                as: "event",
+                            }
+                        },
+                        {
+                            $lookup:
+                            {
+                                from: Seat.collection_name,
+                                localField: "seatId",
+                                foreignField: "_id",
+                                as: "seat",
+                            }
+                        },
+                        {
+                            $lookup:
+                            {
+                                from: PriceTier.collection_name,
+                                localField: "priceTierId",
+                                foreignField: "_id",
+                                as: "priceTier",
+                            }
+                        },
+                    ], ...(req.session["user"] as any)?._isAdmin ? [
+                        {
+                            $lookup:
+                            {
+                                from: User.collection_name,
+                                localField: "occupantId",
+                                foreignField: "_id",
+                                as: "occupant",
+                            }
+                        },
+                        { $set: { 'occupant': { $first: '$occupant' } } }
+                    ] :
+                        [
+                            { $set: { 'occupied': { $cond: { if: { $ne: ["$occupantId", null] }, then: true, else: false } } } },
+                            { $project: { occupantId: 0 } },
+                        ],
+                    ...[
+                        { $set: { 'event': { $first: '$event' } } },
+                        { $set: { 'seat': { $first: '$seat' } } },
+                        { $set: { 'priceTier': { $first: '$priceTier' } } },
+
+                    ]
+                ])
+                let result: Object[] = []
+                cursor.forEach(doc => {
+                    result.push(doc)
+                }).then(_ => {
+                    res.json({ success: true, data: result })
+                })
+            }
+            else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
+                var cursor = Database.mongodb.collection(collection_name).aggregate([
+                    ...[
+                        { $match: { occupantId: new ObjectId((req.session['user'] as any)._id) } },
+                        {
+                            $lookup:
+                            {
+                                from: Event.collection_name,
+                                localField: "eventId",
+                                foreignField: "_id",
+                                as: "event",
+                            }
+                        },
+                        {
+                            $lookup:
+                            {
+                                from: Seat.collection_name,
+                                localField: "seatId",
+                                foreignField: "_id",
+                                as: "seat",
+                            }
+                        },
+                        {
+                            $lookup:
+                            {
+                                from: PriceTier.collection_name,
+                                localField: "priceTierId",
+                                foreignField: "_id",
+                                as: "priceTier",
+                            }
+                        },
+                    ], ...(req.session["user"] as any)?._isAdmin ? [
+                        {
+                            $lookup:
+                            {
+                                from: User.collection_name,
+                                localField: "occupantId",
+                                foreignField: "_id",
+                                as: "occupant",
+                            }
+                        },
+                        { $set: { 'occupant': { $first: '$occupant' } } }
+                    ] :
+                        [
+                            { $project: { occupantId: 0 } },
+                        ],
+                    ...[
+                        { $set: { 'event': { $first: '$event' } } },
+                        { $set: { 'seat': { $first: '$seat' } } },
+                        { $set: { 'priceTier': { $first: '$priceTier' } } },
+
+                    ]
+                ])
+                let result: Object[] = []
+                cursor.forEach(doc => {
+                    result.push(doc)
+                }).then(_ => {
+                    res.json({ success: true, data: result })
+                })
+
+            }
+        })
+
+        ticket.get("/:ticketId", (req: Request, res: Response) => {
+            return Database.mongodb.collection(collection_name).aggregate([
+                ...[
+                    { $match: { "_id": new ObjectId(req.params.ticketId) } },
+                    { $limit: 1 },
                     {
                         $lookup:
                         {
@@ -36,62 +167,28 @@ export namespace EventSeat {
                             as: "seat",
                         }
                     },
+                ], ...(req.session["user"] as any)?._isAdmin ? [
                     {
                         $lookup:
                         {
-                            from: PriceTier.collection_name,
-                            localField: "priceTierId",
+                            from: User.collection_name,
+                            localField: "occupantId",
                             foreignField: "_id",
-                            as: "priceTier",
+                            as: "occupant",
                         }
                     },
+                    { $set: { 'occupant': { $first: '$occupant' } } }
+                ] :
+                    [
+                        { $set: { 'occupied': { $cond: { if: { $ne: ["$occupantId", null] }, then: true, else: false } } } },
+                        { $project: { occupantId: 0 } },
+                    ],
+                ...[
                     { $set: { 'event': { $first: '$event' } } },
                     { $set: { 'seat': { $first: '$seat' } } },
                     { $set: { 'priceTier': { $first: '$priceTier' } } },
-                ])
-                let result: Object[] = []
-                cursor.forEach(doc => {
-                    result.push(doc)
-                }).then(_ => {
-                    res.json({ success: true, data: result })
-                })
-            }
-        })
 
-        ticket.get("/:ticketId", (req: Request, res: Response) => {
-            return Database.mongodb.collection(collection_name).aggregate([
-                { $match: { "_id": new ObjectId(req.params.ticketId) } },
-                { $limit: 1 },
-                {
-                    $lookup:
-                    {
-                        from: Event.collection_name,
-                        localField: "eventId",
-                        foreignField: "_id",
-                        as: "event",
-                    }
-                },
-                {
-                    $lookup:
-                    {
-                        from: Seat.collection_name,
-                        localField: "seatId",
-                        foreignField: "_id",
-                        as: "seat",
-                    }
-                },
-                {
-                    $lookup:
-                    {
-                        from: PriceTier.collection_name,
-                        localField: "priceTierId",
-                        foreignField: "_id",
-                        as: "priceTier",
-                    }
-                },
-                { $set: { 'event': { $first: '$event' } } },
-                { $set: { 'seat': { $first: '$seat' } } },
-                { $set: { 'priceTier': { $first: '$priceTier' } } },
+                ]
             ])
         })
         ticket.post("/", (req: Request, res: Response) => {
@@ -107,7 +204,7 @@ export namespace EventSeat {
                     promises.push(dao.setSeatId(new ObjectId(req.body.seatId)))
                     promises.push(dao.setPriceTierId(new ObjectId(req.body.priceTierId)))
                     Promise.all(promises).then(_ => Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
-                        if (value.acknowledged) {
+                        if (value.insertedId) {
                             res.json({ success: true })
                         }
                     }))
@@ -115,19 +212,16 @@ export namespace EventSeat {
             }
         })
         ticket.post("/:ticketId", (req: Request, res: Response) => {
-            if (req.query.buy != undefined) {
-                if (
-                    req.body.occupantId && typeof req.body.occupantId == "string"
-                ) {
-                    Database.mongodb.collection(collection_name).findOne({ _id: new ObjectId(req.params.ticketId) }).then(result => {
-                        if (result) {
-                            new DAO({ doc: result }).claim(req.body.occupantId).then(result => {
-                                if (result)
-                                    res.json({ success: true });
-                            })
-                        }
-                    })
-                }
+            if (req.query.buy != undefined && req.session['user'] && (req.session['user'] as any)._id) {
+                return Database.mongodb.collection(collection_name).findOne({ _id: new ObjectId(req.params.ticketId) }).then(result => {
+                    if (result && req.session['user'] && (req.session['user'] as any)._id) {
+                        new DAO({ doc: result }).claim((req.session['user'] as any)._id).then(result => {
+                            if (result)
+                                res.json({ success: true });
+                        })
+                    }
+                })
+
             }
         })
 
@@ -182,20 +276,21 @@ export namespace EventSeat {
         private _occupantId?: ObjectId | undefined | null
         public get occupantId(): ObjectId | undefined | null { return this._occupantId }
         public claim(userId: ObjectId): Promise<DAO> {
-            if (userId != null) { throw new RequestError(`User with id ${userId} doesn't exists.`) }
+            if (userId == null) { throw new RequestError(`Ticket must be claimed with an userId.`) }
             return new Promise((resolve, reject) => {
-                Database.mongodb.collection(User.collection_name).findOne({ _id: userId }).then(instance => {
-                    if (instance == null) throw new RequestError(`User with id ${userId} doesn't exists.`)
+                Database.mongodb.collection(User.collection_name).findOne({ _id: userId }).then(value => {
+                    if (value == null) throw new RequestError(`User with id ${userId} doesn't exists.`)
                     if (this.id) {
                         Database.mongodb.collection(collection_name)
-                            .findOneAndUpdate(
+                            .updateOne(
                                 { _id: this.id, occupantId: null },
-                                { occupantId: userId },
-                                { returnDocument: "after" }
-                            ).then((doc) => {
-                                if (doc && doc.value && doc.value.occupantId) {
-                                    this._occupantId = doc.value.occupantId
+                                { $set: { "occupantId": userId } }
+                            ).then((value) => {
+                                if (value.matchedCount > 0) {
                                     resolve(this)
+                                }
+                                else {
+                                    throw new RequestError(`Ticket not avaliable.`)
                                 }
                             })
                     }

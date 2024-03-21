@@ -2,8 +2,8 @@
   <span style="flex: 1 1 auto;"></span>
   <button mat-button *ngIf="userSession.user" [routerLink]="['/']"
     [color]="router.isActive('/', true)?'accent':''">Events</button>
-  <button mat-button *ngIf="userSession.user" [routerLink]="['/myticket']"
-    [color]="router.isActive('/myticket', false)?'accent':''">My Ticket</button>
+  <button mat-button *ngIf="userSession.user" [routerLink]="['/my-ticket']"
+    [color]="router.isActive('/my-ticket', false)?'accent':''">My Ticket</button>
   <button mat-button *ngIf="userSession.user?.hasAdminRight" [routerLink]="['/management']"
     [color]="router.isActive('/management', false)?'accent':''">Management Panel</button>
   <span style="flex: 1 1 auto;"></span>

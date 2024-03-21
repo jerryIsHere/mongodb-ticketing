@@ -34,7 +34,7 @@ export namespace PriceTier {
                         price: req.body.price,
                     })
                     return Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
-                        if (value.acknowledged) {
+                        if (value.insertedId) {
                             res.json({ success: true })
                         }
                     })
@@ -49,7 +49,7 @@ export namespace PriceTier {
                     price: req.body.price,
                 })
                 return Database.mongodb.collection(collection_name).updateOne({ _id: new ObjectId(req.params.priceTierId) }, { $set: dao.Serialize(true) },).then((value) => {
-                    if (value.acknowledged) {
+                    if (value.modifiedCount > 0) {
                         res.json({ success: true })
                     }
                 })
@@ -58,7 +58,7 @@ export namespace PriceTier {
 
         priceTier.delete("/:priceTierId", async (req: Request, res: Response) => {
             return Database.mongodb.collection(collection_name).deleteOne({ _id: new ObjectId(req.params.priceTierId) }).then((value) => {
-                if (value.acknowledged) {
+                if (value.deletedCount > 0) {
                     res.json({ success: true })
                 }
             })

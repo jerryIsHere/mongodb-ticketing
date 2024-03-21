@@ -31,7 +31,7 @@ export namespace Venue {
                     venuename: req.body.venuename
                 })
                 return Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
-                    if (value.acknowledged) {
+                    if (value.insertedId) {
                         res.json({ success: true })
                     }
                 })
@@ -43,7 +43,7 @@ export namespace Venue {
                 venuename: req.body.venuename
             })
             Database.mongodb.collection(collection_name).updateOne({ _id: new ObjectId(req.params.venueId) }, { $set: dao.Serialize(true) },).then((value) => {
-                if (value.acknowledged) {
+                if (value.modifiedCount > 0) {
                     res.json({ success: true })
                 }
             })
@@ -52,7 +52,7 @@ export namespace Venue {
 
         venue.delete("/:venueId", async (req: Request, res: Response) => {
             return Database.mongodb.collection(collection_name).deleteOne({ _id: new ObjectId(req.params.venueId) }).then((value) => {
-                if (value.acknowledged) {
+                if (value.deletedCount > 0) {
                     res.json({ success: true })
                 }
             })

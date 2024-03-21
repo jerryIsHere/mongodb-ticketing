@@ -34,7 +34,8 @@ export namespace Seat {
                         })
                         promises.push(
                             dao.setVenueId(new ObjectId(venueId)).then(_ => Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
-                                return value.acknowledged
+                                if (value.insertedId) return true
+                                throw new RequestError("unkown error")
                             }))
                         )
                     })
@@ -59,7 +60,7 @@ export namespace Seat {
 
         seat.delete("/:seatId", (req: Request, res: Response) => {
             return Database.mongodb.collection(collection_name).deleteOne({ _id: new ObjectId(req.params.seatId) }).then((value) => {
-                if (value.acknowledged) {
+                if (value.deletedCount > 0) {
                     res.json({ success: true })
                 }
             })
