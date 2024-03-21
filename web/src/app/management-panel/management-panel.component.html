@@ -27,7 +27,8 @@
         <a mat-button [routerLink]="['/event-seats', { id: element._id }]">
           <mat-icon>event_seat</mat-icon>
         </a>
-        <button mat-button (click)="openForm(dataListControls['events'], element)">Edit</button>
+        <button mat-button
+          (click)="openForm(dataListControls['events'], {event: element, venues: venues})">Edit</button>
         <button mat-button (click)="delete(dataListControls['events'], element._id)" color="warn">Delete</button>
       </td>
     </ng-container>

@@ -9,7 +9,6 @@ export namespace Event {
     export const collection_name = "events"
     export function RouterFactory(): Express.Router {
         var event = Router()
-
         event.get("/", (req: Request, res: Response) => {
             if (req.query.list != undefined) {
                 var cursor = Database.mongodb.collection(collection_name).aggregate([
@@ -31,6 +30,11 @@ export namespace Event {
                     res.json({ success: true, data: result })
                 })
             }
+        })
+        event.get("/:eventId", (req: Request, res: Response) => {
+            return Database.mongodb.collection(collection_name).findOne({ _id: new ObjectId(req.params.eventId) }).then(result => {
+                if (result) res.json({ success: true, data: result });
+            })
         })
         event.post("/", (req: Request, res: Response) => {
             if (req.query.create != undefined) {

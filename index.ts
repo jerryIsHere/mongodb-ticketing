@@ -56,6 +56,9 @@ app.use('/venue', Venue.RouterFactory());
 import { PriceTier } from './dao/priceTier';
 app.use('/priceTier', PriceTier.RouterFactory());
 
+import { EventSeat } from './dao/eventSeat';
+app.use('/ticket', EventSeat.RouterFactory());
+
 import { Admin } from './dao/admin';
 import { Config } from "./dao/config";
 app.use('/admin', Admin.RouterFactory());

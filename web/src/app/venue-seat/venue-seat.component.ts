@@ -4,10 +4,11 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
 import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonModule } from '@angular/material/button';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,
-  imports: [MatGridListModule, MatMenuModule],
+  imports: [MatGridListModule, MatMenuModule, MatButtonModule],
   templateUrl: './venue-seat.component.html',
   styleUrl: './venue-seat.component.sass'
 })

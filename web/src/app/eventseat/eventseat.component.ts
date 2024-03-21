@@ -5,11 +5,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { Event } from '../management-panel/management-panel.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { Seat } from '../venue-seat/venue-seat.component';
+import { MatButtonModule } from '@angular/material/button';
+import { PriceTier } from '../management-panel/management-panel.component';
 
 @Component({
   selector: 'app-eventseat',
   standalone: true,
-  imports: [MatGridListModule, MatMenuModule],
+  imports: [MatGridListModule, MatMenuModule, MatButtonModule],
   templateUrl: './eventseat.component.html',
   styleUrl: './eventseat.component.sass'
 })
@@ -18,44 +20,85 @@ export class EventseatComponent {
   rows: string[] = []
   slots: (Seat | undefined)[] = []
   seats: Seat[] | undefined
-  eventSeats: (EventSeat)[] = []
+  tickets: Ticket[] = []
   _id: string | undefined
-  _event: Event | undefined
+  event: Event | undefined
+  priceTiers: PriceTier[] | undefined
   @Input()
-  set event(event: Event) {
-    this._event = event
-    if (this._event && this._event._id) this.loadData(this._event._id)
+  set id(id: string) {
+    this._id = id
+    if (id) this.loadData(id)
   }
   constructor(private api: ApiService, public dialog: MatDialog) {
-
+    this.api.httpClient.get("/priceTier?list").toPromise().then((result: any) => {
+      if (result && result.data)
+        this.priceTiers = result.data
+    })
   }
   loadData(id: string) {
-    this.api.httpClient.get(`/seat?venueId=${this._event?.venueId}`).toPromise().then((result: any) => {
+    var promises: Promise<any>[] = []
+    this.api.httpClient.get(`/event/${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
-        this.seats = result.data
-        if (this.seats) {
-          this.rows = Array.from((result.data as Array<Seat>).map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
-          this.cols = Array.from((result.data as Array<Seat>).map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
-          this.slots = []
-          for (let row of this.rows) {
-            for (let col of this.cols) {
-              this.slots.push(this.seats.find(seat => seat.no == col && seat.row == row))
+        this.event = result.data
+        return result.data
+      }
+    }).then((event) => {
+      if (event) {
+        this.api.httpClient.get(`/seat?venueId=${event.venueId}`).toPromise().then((result: any) => {
+          if (result && result.data) {
+            this.seats = result.data
+            if (this.seats) {
+              this.rows = Array.from((result.data as Array<Seat>).map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
+              this.cols = Array.from((result.data as Array<Seat>).map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
+              this.slots = []
+              for (let row of this.rows) {
+                for (let col of this.cols) {
+                  this.slots.push(this.seats.find(seat => seat.no == col && seat.row == row))
+                }
+              }
             }
           }
-        }
+        })
       }
     })
-    this.api.httpClient.get(`/ticket?eventId=${this._event?._id}`).toPromise().then((result: any) => {
+    this.api.httpClient.get(`/ticket?eventId=${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
-        this.eventSeats = result.data
+        this.tickets = result.data
       }
     })
+  }
+  getBuyer(seatId: string) {
+    this.getTiceket(seatId)?.occupant 
+    return this.getTiceket(seatId)?.occupant 
+  }
+  delete(ticketId: string | undefined) {
+    if (ticketId)
+      this.api.httpClient.delete(`/ticket/${ticketId}`).subscribe((value) => {
+        if (this._id) this.loadData(this._id)
+      })
+
+  }
+  getTiceket(seatId: string): Ticket | null {
+    let search = this.tickets.filter(es => es.seatId == seatId)
+    if (search.length > 0)
+      return search[0]
+    return null
+  }
+  startSell(seatId: string, priceTierId: string) {
+    if (this._id)
+      this.api.httpClient.post(`/ticket?create`, { seatId: seatId, eventId: this._id, priceTierId: priceTierId }).subscribe((value) => {
+        if (this._id) this.loadData(this._id)
+      })
+
   }
 }
 
-export interface EventSeat {
+export interface Ticket {
   eventId: string,
   seatId: string,
   priceTierId: string,
   occupantId: string
+  priceTier?: PriceTier,
+  occupant?: any
+  _id: string
 }

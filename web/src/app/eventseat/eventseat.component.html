@@ -1,17 +1,48 @@
+@if(event && event.eventname){
+{{event.eventname}}
+}
 <mat-grid-list [cols]="cols.length" rowHeight="100px">
-    @for (seat of slots; track seat) {
-    <mat-grid-tile>
-      @if(seat) {
-      <button mat-button [matMenuTriggerFor]="menu"
-        [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}</button>
-      }
-    </mat-grid-tile>
+  @for (seat of slots; track seat) {
+  <mat-grid-tile>
+    @if(seat) {
+    <button mat-button [matMenuTriggerFor]="menu"
+      [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
+      :
+      {{getTiceket(seat._id)?getBuyer(seat._id)?getBuyer(seat._id):getTiceket(seat._id)?.priceTier?.tierName:"not selling"}}
+    </button>
     }
-  </mat-grid-list>
-  <mat-menu #menu="matMenu">
-    <ng-template matMenuContent let-seat_id="seat_id">
-      @if(seat_id){
-      }
-    </ng-template>
-  </mat-menu>
-  
+  </mat-grid-tile>
+  }
+</mat-grid-list>
+<mat-menu #menu="matMenu">
+  <ng-template matMenuContent let-seat_id="seat_id">
+    @if(seat_id){
+    @if(getTiceket(seat_id)){
+    @if(getBuyer(seat_id)){
+    <span mat-menu-item>
+      {{getBuyer(seat_id).username}}
+    </span>
+    }
+    @else{
+    <button mat-menu-item (click)="delete(getTiceket(seat_id)?._id)">delete</button>
+    }
+    }
+    @else {
+    <button mat-button mat-menu-item [matMenuTriggerFor]="priceMenu" [matMenuTriggerData]="{seat_id: seat_id}">sell as
+    </button>
+    }
+    }
+  </ng-template>
+</mat-menu>
+
+<mat-menu #priceMenu="matMenu">
+  <ng-template matMenuContent let-seat_id="seat_id">
+    @if(priceTiers){
+    @for(priceTier of priceTiers; track priceTier){
+    @if(priceTier._id){
+    <button mat-menu-item (click)="startSell(seat_id, priceTier._id)">{{priceTier.tierName}}</button>
+    }
+    }
+    }
+  </ng-template>
+</mat-menu>

@@ -42,7 +42,7 @@ export namespace Venue {
             var dao = new DAO({
                 venuename: req.body.venuename
             })
-            Database.mongodb.collection(collection_name).updateOne({ _id: new ObjectId(req.params.priceTierId) }, { $set: dao.Serialize(true) },).then((value) => {
+            Database.mongodb.collection(collection_name).updateOne({ _id: new ObjectId(req.params.venueId) }, { $set: dao.Serialize(true) },).then((value) => {
                 if (value.acknowledged) {
                     res.json({ success: true })
                 }

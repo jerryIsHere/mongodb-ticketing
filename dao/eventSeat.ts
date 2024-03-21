@@ -12,11 +12,43 @@ import { User } from "./user";
 export namespace EventSeat {
     export const collection_name = "ticket"
     export function RouterFactory(): Express.Router {
-        var seat = Router()
+        var ticket = Router()
 
-        seat.get("/", (req: Request, res: Response) => {
+        ticket.get("/", (req: Request, res: Response) => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                var cursor = Database.mongodb.collection(collection_name).find({ eventId: new ObjectId(req.query.eventId) })
+                var cursor = Database.mongodb.collection(collection_name).aggregate([
+                    { $match: { eventId: new ObjectId(req.query.eventId) } },
+                    {
+                        $lookup:
+                        {
+                            from: Event.collection_name,
+                            localField: "eventId",
+                            foreignField: "_id",
+                            as: "event",
+                        }
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: Seat.collection_name,
+                            localField: "seatId",
+                            foreignField: "_id",
+                            as: "seat",
+                        }
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: PriceTier.collection_name,
+                            localField: "priceTierId",
+                            foreignField: "_id",
+                            as: "priceTier",
+                        }
+                    },
+                    { $set: { 'event': { $first: '$event' } } },
+                    { $set: { 'seat': { $first: '$seat' } } },
+                    { $set: { 'priceTier': { $first: '$priceTier' } } },
+                ])
                 let result: Object[] = []
                 cursor.forEach(doc => {
                     result.push(doc)
@@ -26,7 +58,7 @@ export namespace EventSeat {
             }
         })
 
-        seat.post("/:ticketId", (req: Request, res: Response) => {
+        ticket.get("/:ticketId", (req: Request, res: Response) => {
             return Database.mongodb.collection(collection_name).aggregate([
                 { $match: { "_id": new ObjectId(req.params.ticketId) } },
                 { $limit: 1 },
@@ -62,19 +94,49 @@ export namespace EventSeat {
                 { $set: { 'priceTier': { $first: '$priceTier' } } },
             ])
         })
-
-        seat.patch("/:ticketId", (req: Request, res: Response) => {
-
+        ticket.post("/", (req: Request, res: Response) => {
+            if (req.query.create != undefined) {
+                if (
+                    req.body.eventId && typeof req.body.eventId == "string" &&
+                    req.body.seatId && typeof req.body.seatId == "string" &&
+                    req.body.priceTierId && typeof req.body.priceTierId == "string"
+                ) {
+                    var dao = new DAO({});
+                    var promises: Promise<any>[] = []
+                    promises.push(dao.setEventId(new ObjectId(req.body.eventId)))
+                    promises.push(dao.setSeatId(new ObjectId(req.body.seatId)))
+                    promises.push(dao.setPriceTierId(new ObjectId(req.body.priceTierId)))
+                    Promise.all(promises).then(_ => Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
+                        if (value.acknowledged) {
+                            res.json({ success: true })
+                        }
+                    }))
+                }
+            }
+        })
+        ticket.post("/:ticketId", (req: Request, res: Response) => {
+            if (req.query.buy != undefined) {
+                if (
+                    req.body.occupantId && typeof req.body.occupantId == "string"
+                ) {
+                    Database.mongodb.collection(collection_name).findOne({ _id: new ObjectId(req.params.ticketId) }).then(result => {
+                        if (result) {
+                            new DAO({ doc: result }).claim(req.body.occupantId).then(result => {
+                                if (result)
+                                    res.json({ success: true });
+                            })
+                        }
+                    })
+                }
+            }
         })
 
-        seat.delete("/:ticketId", (req: Request, res: Response) => {
-
+        ticket.delete("/:ticketId", (req: Request, res: Response) => {
+            return Database.mongodb.collection(collection_name).findOneAndDelete({ _id: new ObjectId(req.params.ticketId) }).then(result => {
+                if (result) res.json({ success: true, data: result });
+            })
         })
-
-        seat.put("/:ticketId", (req: Request, res: Response) => {
-
-        })
-        return seat
+        return ticket
     };
     export class DAO extends BaseDAO {
         private _eventId: ObjectId | undefined
@@ -143,10 +205,20 @@ export namespace EventSeat {
                 })
             })
         }
-        private constructor(
+        constructor(
             params: { doc?: WithId<Document> }
         ) {
             super(params.doc && params.doc._id ? params.doc._id : undefined);
         }
+        public Serialize(throwErrorWhenUndefined: boolean): Object {
+            var obj = this.PropertiesWithGetter()
+            if (throwErrorWhenUndefined) {
+                var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId")
+                if (undefinedEntries.length > 0)
+                    throw new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`)
+            }
+            return obj
+        }
+
     }
 }
