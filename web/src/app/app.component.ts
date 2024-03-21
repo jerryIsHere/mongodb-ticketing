@@ -10,6 +10,7 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { UserSessionService } from './service/user-session.service';
 import { ApiService } from './service/api.service';
 import { LoginOrRegisterDialogComponent } from './user/login-or-register-dialog/login-or-register-dialog.component';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -24,7 +25,6 @@ export class AppComponent {
   loginOrRegister() {
     const dialogRef = this.dialog.open(LoginOrRegisterDialogComponent,);
   }
-  constructor(public userSession: UserSessionService, public api: ApiService, public dialog: MatDialog) {
-
+  constructor(public userSession: UserSessionService, public api: ApiService, public dialog: MatDialog, public router: Router) {
   }
 }

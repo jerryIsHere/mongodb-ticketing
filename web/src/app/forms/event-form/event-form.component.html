@@ -1,1 +1,44 @@
-<p>event-form works!</p>
+<form [formGroup]="eventForm">
+  <mat-form-field>
+    <mat-label>Event Name</mat-label>
+    <input matInput formControlName="eventname" required>
+    @if (eventForm.controls['eventname'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+  <br>
+  <mat-form-field>
+    <mat-label>Event Time</mat-label>
+    <input matInput formControlName="datetime" required>
+    @if (eventForm.controls['datetime'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+  <br>
+  <mat-form-field>
+    <mat-label>Duration</mat-label>
+    <input matInput formControlName="duration" required>
+    @if (eventForm.controls['duration'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+    @if (eventForm.controls['duration'].hasError('min')) {
+    <mat-error>Price should be positive</mat-error>
+    }
+    @if (eventForm.controls['duration'].hasError('pattern')) {
+    <mat-error>Price should be a number</mat-error>
+    }
+  </mat-form-field>
+  <br>
+  <mat-form-field>
+    <mat-label>Venue</mat-label>
+    <mat-select formControlName="venueId" required>
+      @for (venue of data.venues; track venue) {
+      <option [value]="venue._id">{{venue.venuename}}</option>}
+    </mat-select>
+    @if (eventForm.controls['datetime'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+  <br>
+</form>
+<button mat-button (click)="submit()">{{data.event._id?"update":"create"}}</button>

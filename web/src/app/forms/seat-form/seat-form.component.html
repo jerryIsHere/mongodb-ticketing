@@ -1,1 +1,18 @@
-<p>seat-form works!</p>
+<form [formGroup]="seatMatrixForm">
+  <mat-form-field>
+    <mat-label>Code for rows</mat-label>
+    <input matInput formControlName="rows" placeholder="a,b,c,aa,bb" required>
+    @if (seatMatrixForm.controls['rows'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+  <br>
+  <mat-form-field>
+    <mat-label>No of seats in earch row</mat-label>
+    <input matInput formControlName="nos" placeholder="1,2,3,4,5" required>
+    @if (seatMatrixForm.controls['nos'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+</form>
+<button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>

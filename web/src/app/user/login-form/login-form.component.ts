@@ -1,5 +1,5 @@
 import { Component, Output, EventEmitter } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, FormControl, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,8 +26,8 @@ export class LoginFormComponent {
       this.api.user.login({
         username: this.loginForm.controls["username"].value,
         password: this.loginForm.controls["password"].value
-      }).then((result)=>{
-        if(result && result.success) this.logined.emit();
+      }).then((result) => {
+        if (result && result.success) this.logined.emit();
       })
     }
   }

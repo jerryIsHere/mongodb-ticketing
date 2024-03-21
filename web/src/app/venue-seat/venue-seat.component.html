@@ -1,0 +1,18 @@
+<mat-grid-list [cols]="cols.length" rowHeight="100px">
+  @for (seat of slots; track seat) {
+  <mat-grid-tile>
+    @if(seat) {
+    <button mat-button [matMenuTriggerFor]="menu"
+      [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}</button>
+    }
+  </mat-grid-tile>
+  }
+</mat-grid-list>
+<mat-menu #menu="matMenu">
+  <ng-template matMenuContent let-seat_id="seat_id">
+    @if(seat_id){
+    <button mat-menu-item (click)="delete(seat_id)">delete</button>
+    }
+  </ng-template>
+</mat-menu>
+<button mat-button (click)="openForm()">batch create</button>

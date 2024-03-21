@@ -25,7 +25,6 @@ export namespace User {
 
         })
         user.post("/", async (req: Request, res: Response) => {
-            console.log(req.session)
             if (req.query.login != undefined) {
                 if (req.body.password) {
                     DAO.login(req.body.username, req.body.password).then(user => {

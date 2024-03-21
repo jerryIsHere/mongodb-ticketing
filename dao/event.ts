@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient, ObjectId, WithId, Document, } from "mongodb";
 import { Config } from "./config";
 import { BaseDAO, Database, RequestError } from "./api";
 import { Venue } from "./venue";
@@ -10,23 +10,58 @@ export namespace Event {
     export function RouterFactory(): Express.Router {
         var event = Router()
 
-        event.get("/:eventId", (req: Request, res: Response) => {
-
+        event.get("/", (req: Request, res: Response) => {
+            if (req.query.list != undefined) {
+                var cursor = Database.mongodb.collection(collection_name).find()
+                let result: Object[] = []
+                cursor.forEach(doc => {
+                    result.push(doc)
+                }).then(_ => {
+                    res.json({ success: true, data: result })
+                })
+            }
         })
 
-        event.post("/:eventId", (req: Request, res: Response) => {
-
+        event.post("/", (req: Request, res: Response) => {
+            if (req.query.create != undefined) {
+                if (req.query.venueId && typeof req.query.venueId == "string") {
+                    let venueId = req.query.venueId
+                    var dao = new DAO({
+                        eventname: req.body.eventname,
+                        datetime: req.body.datetime,
+                        duration: req.body.duration,
+                    })
+                    dao.setVenueId(new ObjectId(venueId)).then(_ => Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
+                        return value.acknowledged
+                    }))
+                }
+            }
         })
 
-        event.patch("/:eventId", (req: Request, res: Response) => {
+        event.patch("/:eventId", async (req: Request, res: Response) => {
+            if (req.query.venueId && typeof req.query.venueId == "string") {
+                var dao = new DAO({
+                    eventname: req.body.eventname,
+                    datetime: req.body.datetime,
+                    duration: req.body.duration,
+                })
+                return dao.setVenueId(new ObjectId(req.query.venueId))
+                    .then(_ => Database.mongodb.collection(collection_name)
+                        .updateOne({ _id: new ObjectId(req.params.priceTierId) }, { $set: dao.Serialize(true) },).then((value) => {
+                            if (value.acknowledged) {
+                                res.json({ success: true })
+                            }
+                        }))
+            }
 
         })
 
         event.delete("/:eventId", (req: Request, res: Response) => {
-
-        })
-
-        event.put("/:eventId", (req: Request, res: Response) => {
+            return Database.mongodb.collection(collection_name).deleteOne({ _id: new ObjectId(req.params.eventId) }).then((value) => {
+                if (value.acknowledged) {
+                    res.json({ success: true })
+                }
+            })
 
         })
         return event
@@ -53,8 +88,8 @@ export namespace Event {
 
         private _venueId: ObjectId | undefined
         public get venueId() { return this._venueId }
-        public set venueId(value: ObjectId | undefined) {
-            Database.mongodb.collection(Venue.collection_name).findOne({ _id: value }).then(instance => {
+        public async setVenueId(value: ObjectId | undefined) {
+            return Database.mongodb.collection(Venue.collection_name).findOne({ _id: value }).then(instance => {
                 if (instance == null) {
                     throw new RequestError(`Venue with id ${value} doesn't exists.`)
                 }
@@ -64,17 +99,29 @@ export namespace Event {
             })
         }
 
-        private constructor(
+        constructor(params: {
             eventname: string,
             datetime: Date,
             duration: number,
-            venueId: ObjectId
+        } & { doc?: WithId<Document> }
         ) {
-            super();;
-            this.eventname = eventname
-            this.datetime = datetime
-            this.duration = duration
-            this.venueId = venueId
+            super(params.doc && params.doc._id ? params.doc._id : undefined);
+            if (params.doc && params.doc._id) {
+
+
+                this._eventname = params.doc.eventname
+                this._datetime = params.doc.datetime
+                this._duration = params.doc.duration
+                this._venueId = params.doc.venueId
+            }
+            if (params.eventname)
+                this.eventname = params.eventname
+
+            if (params.datetime)
+                this.datetime = params.datetime
+
+            if (params.duration)
+                this.duration = params.duration
         }
     }
 }

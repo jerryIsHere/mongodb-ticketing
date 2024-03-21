@@ -1,1 +1,10 @@
-<p>venue-form works!</p>
+<form [formGroup]="venueForm">
+  <mat-form-field>
+    <mat-label>Tier Name</mat-label>
+    <input matInput formControlName="venuename" required>
+    @if (venueForm.controls['venuename'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+</form>
+<button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>

@@ -1,8 +1,11 @@
 <mat-toolbar>HK City Choir Ticketing
   <span style="flex: 1 1 auto;"></span>
-  <button mat-button *ngIf="userSession.user" [routerLink]="['/']">Events</button>
-  <button mat-button *ngIf="userSession.user" [routerLink]="['/myticket']">My Ticket</button>
-  <button mat-button *ngIf="userSession.user?.hasAdminRight" [routerLink]="['/management']">Management Panel</button>
+  <button mat-button *ngIf="userSession.user" [routerLink]="['/']"
+    [color]="router.isActive('/', true)?'accent':''">Events</button>
+  <button mat-button *ngIf="userSession.user" [routerLink]="['/myticket']"
+    [color]="router.isActive('/myticket', false)?'accent':''">My Ticket</button>
+  <button mat-button *ngIf="userSession.user?.hasAdminRight" [routerLink]="['/management']"
+    [color]="router.isActive('/management', false)?'accent':''">Management Panel</button>
   <span style="flex: 1 1 auto;"></span>
   <button mat-button [matMenuTriggerFor]="userSession.user?userMenu:null"
     (click)="userSession.user?null:loginOrRegister()">{{userSession.user?userSession.user.username:'login/register'}}</button>
