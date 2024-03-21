@@ -12,7 +12,18 @@ export namespace Event {
 
         event.get("/", (req: Request, res: Response) => {
             if (req.query.list != undefined) {
-                var cursor = Database.mongodb.collection(collection_name).find()
+                var cursor = Database.mongodb.collection(collection_name).aggregate([
+                    {
+                        $lookup:
+                        {
+                            from: Venue.collection_name,
+                            localField: "venueId",
+                            foreignField: "_id",
+                            as: "venue",
+                        }
+                    },
+                    { $set: { 'venue': { $first: '$venue' } } }
+                ])
                 let result: Object[] = []
                 cursor.forEach(doc => {
                     result.push(doc)
@@ -21,18 +32,19 @@ export namespace Event {
                 })
             }
         })
-
         event.post("/", (req: Request, res: Response) => {
             if (req.query.create != undefined) {
-                if (req.query.venueId && typeof req.query.venueId == "string") {
-                    let venueId = req.query.venueId
+                if (req.body.venueId && typeof req.body.venueId == "string") {
+                    let venueId = req.body.venueId
                     var dao = new DAO({
                         eventname: req.body.eventname,
                         datetime: req.body.datetime,
                         duration: req.body.duration,
                     })
                     dao.setVenueId(new ObjectId(venueId)).then(_ => Database.mongodb.collection(collection_name).insertOne(dao.Serialize(true)).then((value) => {
-                        return value.acknowledged
+                        if (value.acknowledged) {
+                            res.json({ success: true })
+                        }
                     }))
                 }
             }

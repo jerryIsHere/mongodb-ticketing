@@ -10,5 +10,5 @@ export const routes: Routes = [
     { path: 'management', component: ManagementPanelComponent },
     { path: 'myticket', component: TicketingComponent },
     { path: 'venue-seats', component: VenueSeatComponent },
-    { path: 'event-seat', component: EventseatComponent },
+    { path: 'event-seats', component: EventseatComponent },
 ];

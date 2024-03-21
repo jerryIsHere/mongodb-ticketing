@@ -33,7 +33,7 @@
     <mat-label>Venue</mat-label>
     <mat-select formControlName="venueId" required>
       @for (venue of data.venues; track venue) {
-      <option [value]="venue._id">{{venue.venuename}}</option>}
+      <mat-option [value]="venue._id">{{venue.venuename}}</mat-option>}
     </mat-select>
     @if (eventForm.controls['datetime'].hasError('required')) {
     <mat-error>This field is required</mat-error>

@@ -102,7 +102,7 @@ export interface Event {
   datetime?: Date;
   duration?: number;
   venueId?: string;
-  venuename?: string;
+  venue?: Venue;
   _id?: string;
 }
 export interface Venue {

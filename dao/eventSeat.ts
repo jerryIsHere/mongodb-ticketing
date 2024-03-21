@@ -14,12 +14,53 @@ export namespace EventSeat {
     export function RouterFactory(): Express.Router {
         var seat = Router()
 
-        seat.get("/:ticketId", (req: Request, res: Response) => {
-
+        seat.get("/", (req: Request, res: Response) => {
+            if (req.query.eventId && typeof req.query.eventId == "string") {
+                var cursor = Database.mongodb.collection(collection_name).find({ eventId: new ObjectId(req.query.eventId) })
+                let result: Object[] = []
+                cursor.forEach(doc => {
+                    result.push(doc)
+                }).then(_ => {
+                    res.json({ success: true, data: result })
+                })
+            }
         })
 
         seat.post("/:ticketId", (req: Request, res: Response) => {
-
+            return Database.mongodb.collection(collection_name).aggregate([
+                { $match: { "_id": new ObjectId(req.params.ticketId) } },
+                { $limit: 1 },
+                {
+                    $lookup:
+                    {
+                        from: Event.collection_name,
+                        localField: "eventId",
+                        foreignField: "_id",
+                        as: "event",
+                    }
+                },
+                {
+                    $lookup:
+                    {
+                        from: Seat.collection_name,
+                        localField: "seatId",
+                        foreignField: "_id",
+                        as: "seat",
+                    }
+                },
+                {
+                    $lookup:
+                    {
+                        from: PriceTier.collection_name,
+                        localField: "priceTierId",
+                        foreignField: "_id",
+                        as: "priceTier",
+                    }
+                },
+                { $set: { 'event': { $first: '$event' } } },
+                { $set: { 'seat': { $first: '$seat' } } },
+                { $set: { 'priceTier': { $first: '$priceTier' } } },
+            ])
         })
 
         seat.patch("/:ticketId", (req: Request, res: Response) => {
@@ -38,10 +79,10 @@ export namespace EventSeat {
     export class DAO extends BaseDAO {
         private _eventId: ObjectId | undefined
         public get eventId() { return this._eventId }
-        public set eventId(value: ObjectId | undefined) {
-            Database.mongodb.collection(Event.collection_name).findOne({ _id: value }).then(instance => {
+        public async setEventId(value: ObjectId | undefined) {
+            return Database.mongodb.collection(Event.collection_name).findOne({ _id: value }).then(instance => {
                 if (instance == null) {
-                    throw new RequestError(`Event with id ${value} doesn't exists.`)
+                    throw new RequestError(`Venue with id ${value} doesn't exists.`)
                 }
                 else {
                     this._eventId = value; BaseDAO.DirtyList.add(this);
@@ -51,10 +92,10 @@ export namespace EventSeat {
 
         private _seatId: ObjectId | undefined
         public get seatId() { return this._seatId }
-        public set seatId(value: ObjectId | undefined) {
-            Database.mongodb.collection(Seat.collection_name).findOne({ _id: value }).then(instance => {
+        public async setSeatId(value: ObjectId | undefined) {
+            return Database.mongodb.collection(Seat.collection_name).findOne({ _id: value }).then(instance => {
                 if (instance == null) {
-                    throw new RequestError(`Seat with id ${value} doesn't exists.`)
+                    throw new RequestError(`Venue with id ${value} doesn't exists.`)
                 }
                 else {
                     this._seatId = value; BaseDAO.DirtyList.add(this);
@@ -64,16 +105,17 @@ export namespace EventSeat {
 
         private _priceTierId: ObjectId | undefined
         public get priceTierId() { return this._priceTierId }
-        public set priceTierId(value: ObjectId | undefined) {
-            Database.mongodb.collection(PriceTier.collection_name).findOne({ _id: value }).then(instance => {
+        public async setPriceTierId(value: ObjectId | undefined) {
+            return Database.mongodb.collection(PriceTier.collection_name).findOne({ _id: value }).then(instance => {
                 if (instance == null) {
-                    throw new RequestError(`Price tier with id ${value} doesn't exists.`)
+                    throw new RequestError(`Venue with id ${value} doesn't exists.`)
                 }
                 else {
                     this._priceTierId = value; BaseDAO.DirtyList.add(this);
                 }
             })
         }
+
 
         private _occupantId?: ObjectId | undefined | null
         public get occupantId(): ObjectId | undefined | null { return this._occupantId }
@@ -102,16 +144,9 @@ export namespace EventSeat {
             })
         }
         private constructor(
-            eventId: ObjectId,
-            seatId: ObjectId,
-            priceTierId: ObjectId,
-            occupantId: ObjectId
+            params: { doc?: WithId<Document> }
         ) {
-            super();;
-            this.eventId = eventId
-            this.seatId = seatId
-            this.priceTierId = priceTierId
-            this._occupantId = occupantId
+            super(params.doc && params.doc._id ? params.doc._id : undefined);
         }
     }
 }
