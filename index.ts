@@ -1,6 +1,6 @@
 import express, { Express, Request, Response, NextFunction, Send } from "express";
 import session from 'express-session';
-import { Database, RequestError } from "./dao/api";
+import { Database, RequestError } from "./dao/database";
 var MongoDBStore = require('connect-mongodb-session')(session);
 
 
@@ -41,26 +41,25 @@ app.use('/web/*', function (_, res: Response) {
 });
 app.use(express.json())
 
-import { User } from './dao/user';
+import { User } from './api/user';
 app.use('/user', User.RouterFactory());
 
-import { Event } from './dao/event';
+import { Event } from './api/event';
 app.use('/event', Event.RouterFactory());
 
-import { Seat } from './dao/seat';
+import { Seat } from './api/seat';
 app.use('/seat', Seat.RouterFactory());
 
-import { Venue } from './dao/venue';
+import { Venue } from './api/venue';
 app.use('/venue', Venue.RouterFactory());
 
-import { PriceTier } from './dao/priceTier';
+import { PriceTier } from './api/priceTier';
 app.use('/priceTier', PriceTier.RouterFactory());
 
-import { EventSeat } from './dao/eventSeat';
+import { EventSeat } from './api/eventSeat';
 app.use('/ticket', EventSeat.RouterFactory());
 
-import { Admin } from './dao/admin';
-import { Config } from "./dao/config";
+import { Admin } from './api/admin';
 app.use('/admin', Admin.RouterFactory());
 
 app.use('/*', function (_, res: Response) {
@@ -73,7 +72,7 @@ app.listen(port, async () => {
     // Send a ping to confirm a successful connection
     await Database.mongo.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    Database.mongodb = Database.mongo.db(Config.db_name)
+    Database.mongodb = Database.mongo.db(Database.db_name)
   } catch (_) {
 
   }

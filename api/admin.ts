@@ -1,28 +1,16 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { MongoClient } from "mongodb";
-import { Config } from "./config";
 
-import { User } from './user';
-
-import { Event } from './event';
-
-import { Seat } from './seat';
-
-import { Venue } from './venue';
-
-import { PriceTier } from './priceTier';
-
-import { EventSeat } from "./eventSeat";
-
-import { Database } from "./api";
+import DAO, { BaseDAO } from '../dao/dao'
+import { Database } from "../dao/database";
 
 export namespace Admin {
     export function RouterFactory(): Express.Router {
         var admin = Router()
-        var db = Database.mongo.db(Config.db_name)
+        var db = Database.mongo.db(Database.db_name)
         admin.get("/initMongoDB", (req: Request, res: Response) => {
-            [User, Event, Seat, Venue, PriceTier, EventSeat].forEach(namespace => {
+            [DAO.User, EventDAO, DAO.Seat, DAO.Venue, DAO.PriceTier, EventSeatDAO].forEach((namespace) => {
                 if (namespace.collection_name) {
                     Database.mongodb.createCollection(namespace.collection_name)
                 }

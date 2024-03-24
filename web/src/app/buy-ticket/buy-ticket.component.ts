@@ -72,7 +72,7 @@ export class BuyTicketComponent {
   }
   buy(ticketId: string | undefined) {
     if (ticketId)
-      this.api.httpClient.post(`/ticket/${ticketId}?buy`, {}).subscribe((value) => {
+      this.api.httpClient.patch(`/ticket/${ticketId}?buy`, {}).subscribe((value) => {
         if (this._id) this.loadData(this._id)
       })
   }
