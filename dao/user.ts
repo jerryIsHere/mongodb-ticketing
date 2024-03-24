@@ -10,14 +10,14 @@ export class UserDAO extends BaseDAO {
     public hasAdminRight: () => boolean = () => { return this._isAdmin };
     private _username: string | undefined
     public get username() { return this._username }
-    public set username(value: string | undefined) { this._username = value; BaseDAO.DirtyList.add(this); }
+    public set username(value: string | undefined) { this._username = value;  }
 
     private _saltedpassword?: string
     public get saltedpassword() { return this._saltedpassword }
     public setPassword(value: string): Promise<void> {
         return new Promise((resolve, reject) => {
             hash(value, UserDAO.saltRounds, (err, hash) => {
-                this._saltedpassword = hash; BaseDAO.DirtyList.add(this);
+                this._saltedpassword = hash; 
                 resolve();
             });
         })
@@ -25,18 +25,18 @@ export class UserDAO extends BaseDAO {
 
     private _fullname: string | undefined
     public get fullname() { return this._fullname }
-    public set fullname(value: string | undefined) { this._fullname = value; BaseDAO.DirtyList.add(this); }
+    public set fullname(value: string | undefined) { this._fullname = value;  }
 
     private _email: string | undefined
     public get email() { return this._email }
     public set email(value: string | undefined) {
 
-        this._email = value; BaseDAO.DirtyList.add(this);
+        this._email = value; 
     }
 
     private _singingPart?: string | undefined | null
     public get singingPart(): string | undefined | null { return this._singingPart }
-    public set singingPart(value: string | undefined | null) { this._singingPart = value; BaseDAO.DirtyList.add(this); }
+    public set singingPart(value: string | undefined | null) { this._singingPart = value;  }
     constructor(params:
         {
             username?: string;

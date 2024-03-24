@@ -8,11 +8,11 @@ export class EventDAO extends BaseDAO {
     public static readonly collection_name = "events"
     private _eventname: string | undefined
     public get eventname() { return this._eventname }
-    public set eventname(value: string | undefined) { this._eventname = value; BaseDAO.DirtyList.add(this); }
+    public set eventname(value: string | undefined) { this._eventname = value; }
 
     private _datetime: Date | undefined
     public get datetime() { return this._datetime }
-    public set datetime(value: Date | undefined) { this._datetime = value; BaseDAO.DirtyList.add(this); }
+    public set datetime(value: Date | undefined) { this._datetime = value; }
 
     private _duration: number | undefined
     public get duration() { return this._duration }
@@ -21,21 +21,22 @@ export class EventDAO extends BaseDAO {
             throw new RequestError('Duration must be greater then 0.')
         }
         else {
-            this._duration = value; BaseDAO.DirtyList.add(this);
+            this._duration = value;
         }
     }
 
     private _venueId: ObjectId | undefined
     public get venueId() { return this._venueId }
-    public async setVenueId(value: ObjectId | undefined): Promise<EventDAO> {
-        return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: value }).then(instance => {
-            if (instance == null) {
-                throw new RequestError(`Venue with id ${value} doesn't exists.`)
-            }
-            else {
-                this._venueId = value; BaseDAO.DirtyList.add(this); return this
-            }
-        })
+    public set venueId(value: ObjectId | string | undefined) {
+        // return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: value }).then(instance => {
+        //     if (instance == null) {
+        //         throw new RequestError(`Venue with id ${value} doesn't exists.`)
+        //     }
+        //     else {
+
+        this._venueId = new ObjectId(value);
+        //     }
+        // })
     }
 
     constructor(params: {
@@ -84,15 +85,29 @@ export class EventDAO extends BaseDAO {
         }
         throw new RequestError(`${this.name} has no instance with id ${id}.`)
     }
-
+    async checkReference() {
+        await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
+            if (instance == null) {
+                throw new RequestError(`Venue with id ${this._venueId} doesn't exists.`)
+            }
+        })
+    }
     async create(): Promise<EventDAO> {
-        var result = await Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true))
-        if (result.insertedId) {
-            return this
-        }
-        else {
-            throw new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`)
-        }
+        return new Promise<EventDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                await this.checkReference()
+                var result = await Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true))
+                if (result.insertedId) {
+                    Database.session.commitTransaction();
+                    resolve(this)
+                }
+                else {
+                    reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+                }
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
     }
 
     async update(): Promise<EventDAO> {

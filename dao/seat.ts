@@ -8,23 +8,23 @@ export class SeatDAO extends BaseDAO {
     public static readonly collection_name = "seats"
     private _row: string | undefined
     public get row() { return this._row }
-    public set row(value: string | undefined) { this._row = value; BaseDAO.DirtyList.add(this); }
+    public set row(value: string | undefined) { this._row = value; }
 
     private _no: number | undefined
     public get no() { return this._no }
-    public set no(value: number | undefined) { this._no = value; BaseDAO.DirtyList.add(this); }
+    public set no(value: number | undefined) { this._no = value; }
 
     private _venueId: ObjectId | undefined
     public get venueId() { return this._venueId }
-    public async setVenueId(value: string | undefined) {
-        return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
-            if (instance == null) {
-                throw new RequestError(`Venue with id ${value} doesn't exists.`)
-            }
-            else {
-                this._venueId = new ObjectId(value); BaseDAO.DirtyList.add(this);
-            }
-        })
+    public set venueId(value: ObjectId | string | undefined) {
+        // return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
+        //     if (instance == null) {
+        //         throw new RequestError(`Venue with id ${value} doesn't exists.`)
+        //     }
+        //     else {
+        this._venueId = new ObjectId(value);
+        //     }
+        // })
     }
     constructor(params: {
         row?: string,
@@ -53,15 +53,29 @@ export class SeatDAO extends BaseDAO {
         }
         throw new RequestError(`${this.name} has no instance with id ${id}.`)
     }
-
+    async checkReference() {
+        await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
+            if (instance == null) {
+                throw new RequestError(`Venue with id ${this._venueId} doesn't exists.`)
+            }
+        })
+    }
     async create(): Promise<SeatDAO> {
-        var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true))
-        if (result.insertedId) {
-            return this
-        }
-        else {
-            throw new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`)
-        }
+        return new Promise<SeatDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                await this.checkReference()
+                var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true))
+                if (result.insertedId) {
+                    Database.session.commitTransaction();
+                    resolve(this)
+                }
+                else {
+                    reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+                }
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
     }
 
     async update(): Promise<SeatDAO> {

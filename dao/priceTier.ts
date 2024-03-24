@@ -7,7 +7,7 @@ export class PriceTierDAO extends BaseDAO {
     public static readonly collection_name = "priceTiers"
     private _tierName: string | undefined
     public get tierName() { return this._tierName }
-    public set tierName(value: string | undefined) { this._tierName = value; BaseDAO.DirtyList.add(this); }
+    public set tierName(value: string | undefined) { this._tierName = value;  }
 
 
     private _price: number | undefined
@@ -17,7 +17,7 @@ export class PriceTierDAO extends BaseDAO {
             throw new RequestError('Price must be greater then 0.')
         }
         else {
-            this._price = value; BaseDAO.DirtyList.add(this);
+            this._price = value; 
         }
     }
 

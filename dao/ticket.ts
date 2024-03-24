@@ -12,41 +12,41 @@ export class TicketDAO extends BaseDAO {
     public static readonly collection_name = "ticket"
     private _eventId: ObjectId | undefined
     public get eventId() { return this._eventId }
-    public async setEventId(value: string | undefined) {
-        return Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
-            if (instance == null) {
-                throw new RequestError(`Event with id ${value} doesn't exists.`)
-            }
-            else {
-                this._eventId = new ObjectId(value); BaseDAO.DirtyList.add(this);
-            }
-        })
+    public set eventId(value: ObjectId | string | undefined) {
+        // return Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
+        //     if (instance == null) {
+        //         throw new RequestError(`Event with id ${value} doesn't exists.`)
+        //     }
+        //     else {
+        this._eventId = new ObjectId(value);
+        //     }
+        // })
     }
 
     private _seatId: ObjectId | undefined
     public get seatId() { return this._seatId }
-    public async setSeatId(value: string | undefined) {
-        return Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
-            if (instance == null) {
-                throw new RequestError(`Seat with id ${value} doesn't exists.`)
-            }
-            else {
-                this._seatId = new ObjectId(value); BaseDAO.DirtyList.add(this);
-            }
-        })
+    public set seatId(value: ObjectId | string | undefined) {
+        // return Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
+        //     if (instance == null) {
+        //         throw new RequestError(`Seat with id ${value} doesn't exists.`)
+        //     }
+        //     else {
+        this._seatId = new ObjectId(value);
+        //     }
+        // })
     }
 
     private _priceTierId: ObjectId | undefined
     public get priceTierId() { return this._priceTierId }
-    public async setPriceTierId(value: string | undefined) {
-        return Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
-            if (instance == null) {
-                throw new RequestError(`Price tier with id ${value} doesn't exists.`)
-            }
-            else {
-                this._priceTierId = new ObjectId(value); BaseDAO.DirtyList.add(this);
-            }
-        })
+    public set priceTierId(value: ObjectId | string | undefined) {
+        // return Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
+        //     if (instance == null) {
+        //         throw new RequestError(`Price tier with id ${value} doesn't exists.`)
+        //     }
+        //     else {
+        this._priceTierId = new ObjectId(value);
+        //     }
+        // })
     }
 
 

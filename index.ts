@@ -51,8 +51,8 @@ app.use('/venue', Venue.RouterFactory());
 import { PriceTier } from './api/priceTier';
 app.use('/priceTier', PriceTier.RouterFactory());
 
-import { EventSeat } from './api/ticket';
-app.use('/ticket', EventSeat.RouterFactory());
+import { Ticket } from './api/ticket';
+app.use('/ticket', Ticket.RouterFactory());
 
 import { Admin } from './api/admin';
 app.use('/admin', Admin.RouterFactory());
@@ -71,11 +71,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, async () => {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await Database.mongo.connect();
-    // Send a ping to confirm a successful connection
-    await Database.mongo.db("admin").command({ ping: 1 });
+    await Database.init()
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    Database.mongodb = Database.mongo.db(Database.db_name)
   } catch (_) {
 
   }
