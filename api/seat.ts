@@ -7,14 +7,16 @@ export namespace Seat {
     export function RouterFactory(): Express.Router {
         var seat = Router()
 
-        seat.get("/", (req: Request, res: Response) => {
+        seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
-                return SeatDAO.listByVenueId(req.query.venueId).then(result => {
+                SeatDAO.listByVenueId(req.query.venueId).then(result => {
                     res.json({ success: true, data: result })
+                }).catch((error) => {
+                    next(error)
                 })
             }
         })
-        seat.post("/", async (req: Request, res: Response) : Promise<any> => {
+        seat.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 let venueId = req.query.venueId
                 if (req.query.batch != undefined && req.body.seats && Array.isArray(req.body.seats)) {
@@ -28,23 +30,29 @@ export namespace Seat {
                             dao.setVenueId(venueId).then(_ => dao.create())
                         )
                     })
-                    return Promise.all(promises).then((seats: SeatDAO[]) => {
+                    Promise.all(promises).then((seats: SeatDAO[]) => {
                         res.json({ success: true, data: seats.map(seat => seat.Serialize(false)) })
+                    }).catch((error) => {
+                        next(error)
                     })
                 }
             }
         })
-        seat.patch("/:seatId", async (req: Request, res: Response) : Promise<any> => {
+        seat.patch("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.tierName && req.body.price) {
                 var dao = new SeatDAO({})
-                return dao.update().then((value) => {
+                dao.update().then((value) => {
                     res.json({ success: true })
+                }).catch((error) => {
+                    next(error)
                 })
             }
         })
-        seat.delete("/:seatId", async (req: Request, res: Response) : Promise<any> => {
-            return (await SeatDAO.getById(req.params.priceTierId)).delete().then((value) => {
+        seat.delete("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
+            (await SeatDAO.getById(req.params.seatId)).delete().then((value) => {
                 res.json({ success: true })
+            }).catch((error) => {
+                next(error)
             })
         })
         return seat

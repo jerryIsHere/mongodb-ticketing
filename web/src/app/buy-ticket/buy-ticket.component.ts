@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { Seat } from '../venue-seat/venue-seat.component';
 import { MatButtonModule } from '@angular/material/button';
 import { PriceTier } from '../management-panel/management-panel.component';
+import { UserSessionService } from '../service/user-session.service';
 
 @Component({
   selector: 'app-buy-ticket',
@@ -29,7 +30,7 @@ export class BuyTicketComponent {
     this._id = id
     if (id) this.loadData(id)
   }
-  constructor(private api: ApiService, public dialog: MatDialog) {
+  constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService ) {
     this.api.httpClient.get("/priceTier?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.priceTiers = result.data

@@ -7,45 +7,53 @@ export namespace PriceTier {
     export function RouterFactory(): Express.Router {
         var priceTier = Router()
 
-        priceTier.get("/", (req: Request, res: Response) => {
+        priceTier.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
-                return PriceTierDAO.listAll().then(result => {
+                PriceTierDAO.listAll().then(result => {
                     res.json({ success: true, data: result })
+                }).catch((error) => {
+                    next(error)
                 })
             }
         })
-        priceTier.get("/:priceTierId", (req: Request, res: Response) => {
+        priceTier.get("/:priceTierId", async (req: Request, res: Response, next) => {
 
         })
 
-        priceTier.post("/", async (req: Request, res: Response) : Promise<any> => {
+        priceTier.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.create != undefined) {
                 if (req.body.tierName && req.body.price) {
                     var dao = new PriceTierDAO({
                         tierName: req.body.tierName,
                         price: req.body.price,
                     })
-                    return dao.create().then((value) => {
+                    dao.create().then((value) => {
                         res.json({ success: true })
+                    }).catch((error) => {
+                        next(error)
                     })
                 }
             }
         })
 
-        priceTier.patch("/:priceTierId", async (req: Request, res: Response) : Promise<any> => {
+        priceTier.patch("/:priceTierId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.tierName && req.body.price) {
-                var dao = await PriceTierDAO.getById(req.body.venueId)
-                dao.tierName = req.body.eventntierNameame
+                var dao = await PriceTierDAO.getById(req.params.priceTierId)
+                dao.tierName = req.body.tierName
                 dao.price = req.body.price
-                return dao.update().then((value) => {
+                dao.update().then((value) => {
                     res.json({ success: true })
+                }).catch((error) => {
+                    next(error)
                 })
             }
         })
 
-        priceTier.delete("/:priceTierId", async (req: Request, res: Response) : Promise<any> => {
-            return (await PriceTierDAO.getById(req.params.priceTierId)).delete().then((value) => {
+        priceTier.delete("/:priceTierId", async (req: Request, res: Response, next): Promise<any> => {
+            (await PriceTierDAO.getById(req.params.priceTierId)).delete().then((value) => {
                 res.json({ success: true })
+            }).catch(error => {
+                next(error)
             })
         })
 

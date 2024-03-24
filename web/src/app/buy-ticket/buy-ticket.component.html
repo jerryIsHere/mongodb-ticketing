@@ -8,12 +8,19 @@
     @if(hasBuyer(seat._id)){
     <span>{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}} : sold</span>
     }
-    @else {
+    @else if(userSession.user){
     <button mat-button [matMenuTriggerFor]="menu"
       [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
       :
       {{getTiceket(seat._id)?.priceTier?.tierName}}
     </button>
+    }
+    @else {
+    <span>
+      {{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
+      :
+      {{getTiceket(seat._id)?.priceTier?.tierName}}
+    </span>
     }
     }
   </mat-grid-tile>

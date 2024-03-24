@@ -8,14 +8,14 @@ import { SeatDAO } from "./seat";
 import { UserDAO } from "./user";
 
 
-export class EventSeatDAO extends BaseDAO {
+export class TicketDAO extends BaseDAO {
     public static readonly collection_name = "ticket"
     private _eventId: ObjectId | undefined
     public get eventId() { return this._eventId }
     public async setEventId(value: string | undefined) {
-        return Database.mongodb.collection(EventSeatDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
+        return Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
             if (instance == null) {
-                throw new RequestError(`Venue with id ${value} doesn't exists.`)
+                throw new RequestError(`Event with id ${value} doesn't exists.`)
             }
             else {
                 this._eventId = new ObjectId(value); BaseDAO.DirtyList.add(this);
@@ -28,7 +28,7 @@ export class EventSeatDAO extends BaseDAO {
     public async setSeatId(value: string | undefined) {
         return Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
             if (instance == null) {
-                throw new RequestError(`Venue with id ${value} doesn't exists.`)
+                throw new RequestError(`Seat with id ${value} doesn't exists.`)
             }
             else {
                 this._seatId = new ObjectId(value); BaseDAO.DirtyList.add(this);
@@ -41,7 +41,7 @@ export class EventSeatDAO extends BaseDAO {
     public async setPriceTierId(value: string | undefined) {
         return Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new ObjectId(value) }).then(instance => {
             if (instance == null) {
-                throw new RequestError(`Venue with id ${value} doesn't exists.`)
+                throw new RequestError(`Price tier with id ${value} doesn't exists.`)
             }
             else {
                 this._priceTierId = new ObjectId(value); BaseDAO.DirtyList.add(this);
@@ -52,13 +52,13 @@ export class EventSeatDAO extends BaseDAO {
 
     private _occupantId?: ObjectId | undefined | null
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
-    public claim(userId: string): Promise<EventSeatDAO> {
+    public claim(userId: string): Promise<TicketDAO> {
         if (userId == null) { throw new RequestError(`Ticket must be claimed with an userId.`) }
         return new Promise((resolve, reject) => {
             Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: new ObjectId(userId) }).then(value => {
                 if (value == null) throw new RequestError(`User with id ${userId} doesn't exists.`)
                 if (this.id) {
-                    Database.mongodb.collection(EventSeatDAO.collection_name)
+                    Database.mongodb.collection(TicketDAO.collection_name)
                         .updateOne(
                             { _id: this.id, occupantId: null },
                             { $set: { "occupantId": userId } }
@@ -148,18 +148,18 @@ export class EventSeatDAO extends BaseDAO {
 
     }
     static async listByEventId(evnetId: string, showOccupant: boolean) {
-        var cursor = Database.mongodb.collection(EventSeatDAO.collection_name).
+        var cursor = Database.mongodb.collection(TicketDAO.collection_name).
             aggregate(this.aggregateQuery({ $match: { eventId: new ObjectId(evnetId) } }, showOccupant))
         return cursor.toArray();
     }
     static async ofUser(userId: string, showOccupant: boolean) {
-        var cursor = Database.mongodb.collection(EventSeatDAO.collection_name).
+        var cursor = Database.mongodb.collection(TicketDAO.collection_name).
             aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(userId) } }, showOccupant))
 
         return cursor.toArray();
     }
     static async getWithDetailsById(id: string, showOccupant: boolean) {
-        var cursor = Database.mongodb.collection(EventSeatDAO.collection_name).
+        var cursor = Database.mongodb.collection(TicketDAO.collection_name).
             aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(id) } }, showOccupant))
         var docs = await cursor.toArray()
         if (docs.length > 0) {
@@ -169,15 +169,15 @@ export class EventSeatDAO extends BaseDAO {
         throw new RequestError(`${this.name} has no instance with id ${id}.`)
     }
     static async getById(id: string) {
-        var doc = await Database.mongodb.collection(EventSeatDAO.collection_name).findOne({ _id: new ObjectId(id) })
+        var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
         if (doc) {
-            return new EventSeatDAO({ doc: doc })
+            return new TicketDAO({ doc: doc })
         }
         throw new RequestError(`${this.name} has no instance with id ${id}.`)
     }
 
-    async create(): Promise<EventSeatDAO> {
-        var result = await Database.mongodb.collection(EventSeatDAO.collection_name).insertOne(this.Serialize(true))
+    async create(): Promise<TicketDAO> {
+        var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true))
         if (result.insertedId) {
             return this
         }
@@ -188,7 +188,7 @@ export class EventSeatDAO extends BaseDAO {
 
     async delete(): Promise<null> {
         if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(EventSeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+        var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
         if (result.deletedCount > 0) {
             return null
         }

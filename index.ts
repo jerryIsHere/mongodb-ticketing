@@ -25,11 +25,6 @@ app.use(session({
 }));
 
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof RequestError) {
-    res.status(400).json({ success: false, reason: err.message })
-  }
-})
 // angular front
 app.use('/web', express.static('web/dist/ticketing/browser'))
 app.use('/web/*', function (_, res: Response) {
@@ -56,7 +51,7 @@ app.use('/venue', Venue.RouterFactory());
 import { PriceTier } from './api/priceTier';
 app.use('/priceTier', PriceTier.RouterFactory());
 
-import { EventSeat } from './api/eventSeat';
+import { EventSeat } from './api/ticket';
 app.use('/ticket', EventSeat.RouterFactory());
 
 import { Admin } from './api/admin';
@@ -65,6 +60,14 @@ app.use('/admin', Admin.RouterFactory());
 app.use('/*', function (_, res: Response) {
   res.redirect("/web/")
 });
+
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.log(err)
+  if (err instanceof RequestError) {
+    res.status(400).json({ success: false, reason: err.message })
+  }
+})
+
 app.listen(port, async () => {
   try {
     // Connect the client to the server	(optional starting in v4.7)

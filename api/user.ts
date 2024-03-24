@@ -12,26 +12,29 @@ export namespace User {
     export function RouterFactory(): Express.Router {
         var user = Router()
 
-        user.patch("/:userId", (req: Request, res: Response) => {
+        user.patch("/:userId", async (req: Request, res: Response, next) => {
 
         })
 
 
-        user.put("/:userId", (req: Request, res: Response) => {
+        user.put("/:userId", async (req: Request, res: Response, next) => {
 
         })
-        user.post("/", async (req: Request, res: Response): Promise<any> => {
+        user.post("/", async (req: Request, res: Response, next): Promise<any> => {
+            console.log("start")
             if (req.query.login != undefined) {
                 if (req.body.password) {
-                    return UserDAO.login(req.body.username, req.body.password).then(user => {
+                    console.log("test")
+                    UserDAO.login(req.body.username, req.body.password).then(user => {
                         req.session['user'] = user.withoutCredential()
                         res.cookie("user", JSON.stringify({ ...user.withoutCredential().Serialize(false), hasAdminRight: user.hasAdminRight() }))
                         res.json({ success: true, message: user.withoutCredential().Serialize(false) })
+                    }).catch((error) => {
+                        next(error)
                     })
-
                 }
                 else {
-                    throw new RequestError("A login must be done with a password.")
+                    next(new RequestError("A login must be done with a password."))
                 }
             }
             else if (req.query.logout != undefined) {
@@ -56,6 +59,8 @@ export namespace User {
                                 res.json({ success: true, user: dao.withoutCredential().Serialize(false) })
                             }
                         })
+                    }).catch((error) => {
+                        next(error)
                     })
 
                 }

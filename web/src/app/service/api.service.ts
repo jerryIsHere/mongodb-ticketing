@@ -6,7 +6,7 @@ import { UserSessionService } from './user-session.service';
   providedIn: 'root'
 })
 export class ApiService {
-  static readonly endpoint: string = location.origin.includes("localhost") ? "http://localhost:3000" : "https://micro-ticketing-api.vercel.app"
+  //static readonly endpoint: string = location.origin.includes("localhost") ? "http://localhost:3000" : "https://micro-ticketing-api.vercel.app"
   public user: UserApi
   constructor(public httpClient: HttpClient, public userSession: UserSessionService) {
     this.user = new UserApi(httpClient, userSession)
@@ -22,7 +22,7 @@ class UserApi {
     singingPart: string;
     password: string
   }) {
-    return this.httpClient.post(ApiService.endpoint + "/user?register", user).toPromise().then((result: any) => {
+    return this.httpClient.post("/user?register", user).toPromise().then((result: any) => {
       if (result && result.success) {
         this.userSession.checkUserSession();
         return result
@@ -33,7 +33,7 @@ class UserApi {
     username: string;
     password: string
   }) {
-    return this.httpClient.post(ApiService.endpoint + `/user?login`, credential).toPromise().then((result: any) => {
+    return this.httpClient.post(`/user?login`, credential).toPromise().then((result: any) => {
       if (result && result.success) {
         this.userSession.checkUserSession();
         return result
@@ -42,7 +42,7 @@ class UserApi {
 
   }
   logout() {
-    return this.httpClient.post(ApiService.endpoint + `/user?logout`, {}).toPromise().then((result: any) => {
+    return this.httpClient.post(`/user?logout`, {}).toPromise().then((result: any) => {
       if (result && result.success) {
         this.userSession.checkUserSession();
         return
