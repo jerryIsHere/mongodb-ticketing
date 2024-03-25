@@ -18,7 +18,7 @@ export class ShowListComponent {
     this.loadData()
   }
   loadData() {
-    return this.api.httpClient.get("/event?list").toPromise().then((result: any) => {
+    return this.api.request.get("/event?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.events = result.data
     })

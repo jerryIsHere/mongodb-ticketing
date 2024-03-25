@@ -33,37 +33,37 @@ export class ManagementPanelComponent {
     priceTiers: {
       component: PriceTierFormComponent,
       loadData: () => {
-        return this.api.httpClient.get("/priceTier?list").toPromise().then((result: any) => {
+        return this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.priceTiers = result.data
         })
       },
       delete: (id: string) => {
-        return this.api.httpClient.delete(`/priceTier/${id}`).toPromise()
+        return this.api.request.delete(`/priceTier/${id}`).toPromise()
       }
     },
     venues: {
       component: VenueFormComponent,
       loadData: () => {
-        return this.api.httpClient.get("/venue?list").toPromise().then((result: any) => {
+        return this.api.request.get("/venue?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.venues = result.data
         })
       },
       delete: (id: string) => {
-        return this.api.httpClient.delete(`/venue/${id}`).toPromise()
+        return this.api.request.delete(`/venue/${id}`).toPromise()
       }
     },
     events: {
       component: EventFormComponent,
       loadData: () => {
-        return this.api.httpClient.get("/event?list").toPromise().then((result: any) => {
+        return this.api.request.get("/event?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.events = result.data
         })
       },
       delete: (id: string) => {
-        return this.api.httpClient.delete(`/event/${id}`).toPromise()
+        return this.api.request.delete(`/event/${id}`).toPromise()
       }
     },
     // EventSeatFormComponent: {

@@ -30,21 +30,21 @@ export class EventseatComponent {
     if (id) this.loadData(id)
   }
   constructor(private api: ApiService, public dialog: MatDialog) {
-    this.api.httpClient.get("/priceTier?list").toPromise().then((result: any) => {
+    this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.priceTiers = result.data
     })
   }
   loadData(id: string) {
     var promises: Promise<any>[] = []
-    this.api.httpClient.get(`/event/${this._id}`).toPromise().then((result: any) => {
+    this.api.request.get(`/event/${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.event = result.data
         return result.data
       }
     }).then((event) => {
       if (event) {
-        this.api.httpClient.get(`/seat?venueId=${event.venueId}`).toPromise().then((result: any) => {
+        this.api.request.get(`/seat?venueId=${event.venueId}`).toPromise().then((result: any) => {
           if (result && result.data) {
             this.seats = result.data
             if (this.seats) {
@@ -61,7 +61,7 @@ export class EventseatComponent {
         })
       }
     })
-    this.api.httpClient.get(`/ticket?eventId=${this._id}`).toPromise().then((result: any) => {
+    this.api.request.get(`/ticket?eventId=${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.tickets = result.data
       }
@@ -73,7 +73,7 @@ export class EventseatComponent {
   }
   delete(ticketId: string | undefined) {
     if (ticketId)
-      this.api.httpClient.delete(`/ticket/${ticketId}`).subscribe((value) => {
+      this.api.request.delete(`/ticket/${ticketId}`).subscribe((value) => {
         if (this._id) this.loadData(this._id)
       })
 
@@ -86,7 +86,7 @@ export class EventseatComponent {
   }
   startSell(seatId: string, priceTierId: string) {
     if (this._id)
-      this.api.httpClient.post(`/ticket?create`, { seatId: seatId, eventId: this._id, priceTierId: priceTierId }).subscribe((value) => {
+      this.api.request.post(`/ticket?create`, { seatId: seatId, eventId: this._id, priceTierId: priceTierId }).subscribe((value) => {
         if (this._id) this.loadData(this._id)
       })
 

@@ -30,14 +30,14 @@ export class VenueFormComponent {
     if (this.venueForm.valid) {
       this.data.venuename = this.venueForm.controls["venuename"].value;
       if (this.data && this.data._id) {
-        this.api.httpClient.patch(`/venue/${this.data._id}`, this.data).toPromise().then((result: any) => {
+        this.api.request.patch(`/venue/${this.data._id}`, this.data).toPromise().then((result: any) => {
           if (result && result.success) {
             this.dialogRef.close(this.data)
           }
         })
       }
       else {
-        this.api.httpClient.post("/venue?create", this.data).toPromise().then((result: any) => {
+        this.api.request.post("/venue?create", this.data).toPromise().then((result: any) => {
           if (result && result.success) {
             this.dialogRef.close(this.data)
           }

@@ -33,14 +33,14 @@ export class PriceTierFormComponent {
       this.data.tierName = this.priceTierForm.controls["tierName"].value;
       this.data.price = this.priceTierForm.controls["price"].value;
       if (this.data && this.data._id) {
-        this.api.httpClient.patch(`/priceTier/${this.data._id}`, this.data).toPromise().then((result: any) => {
+        this.api.request.patch(`/priceTier/${this.data._id}`, this.data).toPromise().then((result: any) => {
           if (result && result.success) {
             this.dialogRef.close(this.data)
           }
         })
       }
       else {
-        this.api.httpClient.post("/priceTier?create", this.data).toPromise().then((result: any) => {
+        this.api.request.post("/priceTier?create", this.data).toPromise().then((result: any) => {
           if (result && result.success) {
             this.dialogRef.close(this.data)
           }

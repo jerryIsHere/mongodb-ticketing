@@ -31,21 +31,21 @@ export class BuyTicketComponent {
     if (id) this.loadData(id)
   }
   constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService ) {
-    this.api.httpClient.get("/priceTier?list").toPromise().then((result: any) => {
+    this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.priceTiers = result.data
     })
   }
   loadData(id: string) {
     var promises: Promise<any>[] = []
-    this.api.httpClient.get(`/event/${this._id}`).toPromise().then((result: any) => {
+    this.api.request.get(`/event/${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.event = result.data
         return result.data
       }
     }).then((event) => {
       if (event) {
-        this.api.httpClient.get(`/seat?venueId=${event.venueId}`).toPromise().then((result: any) => {
+        this.api.request.get(`/seat?venueId=${event.venueId}`).toPromise().then((result: any) => {
           if (result && result.data) {
             this.seats = result.data
             if (this.seats) {
@@ -62,7 +62,7 @@ export class BuyTicketComponent {
         })
       }
     })
-    this.api.httpClient.get(`/ticket?eventId=${this._id}`).toPromise().then((result: any) => {
+    this.api.request.get(`/ticket?eventId=${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.tickets = result.data
       }
@@ -73,7 +73,7 @@ export class BuyTicketComponent {
   }
   buy(ticketId: string | undefined) {
     if (ticketId)
-      this.api.httpClient.patch(`/ticket/${ticketId}?buy`, {}).subscribe((value) => {
+      this.api.request.patch(`/ticket/${ticketId}?buy`, {}).subscribe((value) => {
         if (this._id) this.loadData(this._id)
       })
   }

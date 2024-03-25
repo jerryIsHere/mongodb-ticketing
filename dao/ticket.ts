@@ -58,7 +58,6 @@ export class TicketDAO extends BaseDAO {
                 this._occupantId = new ObjectId(userId)
                 try {
                     await this.checkReference()
-                    await this.duplicationChecking()
                 }
                 catch (err) {
                     reject(err)
@@ -293,7 +292,6 @@ export class TicketDAO extends BaseDAO {
                         try {
                             dao.priceTierId = new ObjectId(priceTierId)
                             await dao.checkReference()
-                            await dao.duplicationChecking()
                         }
                         catch (err) {
                             daoreject(err)
@@ -329,7 +327,6 @@ export class TicketDAO extends BaseDAO {
                         dao._occupantId = new ObjectId(userId)
                         try {
                             await dao.checkReference()
-                            await dao.duplicationChecking()
                         }
                         catch (err) {
                             daoreject(err)

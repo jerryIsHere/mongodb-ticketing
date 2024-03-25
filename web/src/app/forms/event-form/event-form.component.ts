@@ -38,14 +38,14 @@ export class EventFormComponent {
       this.data.event.duration = this.eventForm.controls["duration"].value;
       this.data.event.venueId = this.eventForm.controls["venueId"].value;
       if (this.data && this.data.event && this.data.event._id) {
-        this.api.httpClient.patch(`/event/${this.data.event._id}`, this.data.event).toPromise().then((result: any) => {
+        this.api.request.patch(`/event/${this.data.event._id}`, this.data.event).toPromise().then((result: any) => {
           if (result && result.success) {
             this.dialogRef.close(this.data)
           }
         })
       }
       else {
-        this.api.httpClient.post("/event?create", this.data.event).toPromise().then((result: any) => {
+        this.api.request.post("/event?create", this.data.event).toPromise().then((result: any) => {
           if (result && result.success) {
             this.dialogRef.close(this.data.event)
           }

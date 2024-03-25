@@ -38,7 +38,7 @@ export class SeatFormComponent {
           seats.push({ row: row, no: col })
         }
       }
-      this.api.httpClient.post(`/seat?venueId=${this.data._id}&batch`, { seats: seats }).toPromise().then((result: any) => {
+      this.api.request.post(`/seat?venueId=${this.data._id}&batch`, { seats: seats }).toPromise().then((result: any) => {
         if (result && result.success) {
           this.dialogRef.close(this.data)
         }

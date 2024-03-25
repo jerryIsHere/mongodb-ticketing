@@ -27,7 +27,7 @@ export class VenueSeatComponent {
 
   }
   loadData(id: string) {
-    this.api.httpClient.get(`/seat?venueId=${this._id}`).toPromise().then((result: any) => {
+    this.api.request.get(`/seat?venueId=${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.seats = result.data
         if (this.seats) {
@@ -55,7 +55,7 @@ export class VenueSeatComponent {
     }
   }
   delete(_id: string) {
-    return this.api.httpClient.delete(`/seat/${_id}`).subscribe((value) => {
+    return this.api.request.delete(`/seat/${_id}`).subscribe((value) => {
       if (this._id) this.loadData(this._id)
     })
   }

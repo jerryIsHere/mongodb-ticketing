@@ -17,7 +17,7 @@ export class MyticketComponent {
     this.loadData()
   }
   loadData() {
-    return this.api.httpClient.get("/ticket?my").toPromise().then((result: any) => {
+    return this.api.request.get("/ticket?my").toPromise().then((result: any) => {
       if (result && result.data)
         this.tickets = result.data
     })
