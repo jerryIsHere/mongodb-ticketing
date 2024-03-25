@@ -33,7 +33,7 @@ export class PriceTierDAO extends BaseDAO {
     static async listAll() {
         return new Promise<PriceTierDAO[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(PriceTierDAO.collection_name).find()
-            return (await cursor.toArray()).map(doc => new PriceTierDAO({ doc: doc }));
+            resolve((await cursor.toArray()).map(doc => new PriceTierDAO({ doc: doc })));
         })
     }
     static async getById(id: string) {

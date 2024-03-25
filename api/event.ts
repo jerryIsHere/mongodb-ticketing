@@ -8,8 +8,8 @@ export namespace Event {
         var event = Router()
         event.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
-                EventDAO.listAll().then((result: Document[]) => {
-                    res.json({ success: true, data: result })
+                EventDAO.listAll().then((result: EventDAO[]) => {
+                    res.json({ success: true, data: result.map(dao => dao.Serialize(false)) })
                 }).catch((error) => next(error))
             }
         })

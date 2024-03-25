@@ -62,6 +62,7 @@ app.use('/*', function (_, res: Response) {
 });
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.log(err)
   if (err instanceof RequestError) {
     res.status(400).json({ success: false, reason: err.message })
   }

@@ -10,7 +10,7 @@ export namespace Seat {
         seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 SeatDAO.listByVenueId(req.query.venueId).then(result => {
-                    res.json({ success: true, data: result })
+                    res.json({ success: true, data: result.map(dao => dao.Serialize(false))  })
                 }).catch((error) => next(error))
             }
         })
