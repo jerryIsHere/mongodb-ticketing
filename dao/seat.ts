@@ -2,6 +2,8 @@ import { MongoClient, ObjectId, WithId, Document, InsertOneResult } from "mongod
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { VenueDAO } from "./venue";
+import { TicketDAO } from "./ticket";
+
 
 
 export class SeatDAO extends BaseDAO {
@@ -46,7 +48,7 @@ export class SeatDAO extends BaseDAO {
     static async listByVenueId(venueId: string) {
         return new Promise<SeatDAO[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(SeatDAO.collection_name).find({ venueId: new ObjectId(venueId) })
-            resolve((await cursor.toArray()).map(doc=> new SeatDAO({doc: doc})));
+            resolve((await cursor.toArray()).map(doc => new SeatDAO({ doc: doc })));
         })
     }
     static async getById(id: string) {
@@ -70,7 +72,13 @@ export class SeatDAO extends BaseDAO {
     async create(): Promise<SeatDAO> {
         return new Promise<SeatDAO>((resolve, reject) => {
             Database.session.withTransaction(async () => {
-                await this.checkReference()
+                try {
+                    await this.checkReference()
+                }
+                catch (error) {
+                    reject(error)
+                    return
+                }
                 var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true))
                 if (result.insertedId) {
                     Database.session.commitTransaction();
@@ -78,6 +86,7 @@ export class SeatDAO extends BaseDAO {
                 }
                 else {
                     reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+                    return
                 }
             })
         }).finally(() => {
@@ -88,16 +97,25 @@ export class SeatDAO extends BaseDAO {
     static async batchCreate(daos: SeatDAO[]): Promise<SeatDAO[]> {
         return new Promise<SeatDAO[]>((resolve, reject) => {
             Database.session.withTransaction(async () => {
-                Promise.all(daos.map(async dao => {
-                    await dao.checkReference()
-                    var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true))
-                    if (result.insertedId) {
-                        return dao
-                    }
-                    else {
-                        throw new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`)
-                    }
-                })).then(daos => {
+                Promise.all(daos.map(dao =>
+                    new Promise<SeatDAO>(async (daoresolve, daoreject) => {
+                        try {
+                            await dao.checkReference()
+                        }
+                        catch (err) {
+                            daoreject(err)
+                            return
+                        }
+                        var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true))
+                        if (result.insertedId) {
+                            daoresolve(dao)
+                        }
+                        else {
+                            daoreject(new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`))
+                            return
+                        }
+                    })
+                )).then(daos => {
                     resolve(daos)
                     Database.session.commitTransaction();
                 })
@@ -120,18 +138,29 @@ export class SeatDAO extends BaseDAO {
         })
 
     }
-
+    async checkTicketDependency() {
+        var ticket = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ priceTier_id: this._id })
+        return ticket
+    }
     async delete(): Promise<SeatDAO> {
-        return new Promise<SeatDAO>(async (resolve, reject) => {
-            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }
-            var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-            if (result.deletedCount > 0) {
-                resolve(this)
-            }
-            else {
-                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
-            }
-
+        return new Promise<SeatDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                var dependency = await this.checkTicketDependency()
+                if (dependency != null) {
+                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed` +
+                        `as ticket with id ${dependency._id} depends on it.`))
+                }
+                if (this._id) {
+                    var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                    if (result.deletedCount > 0) {
+                        Database.session.commitTransaction();
+                        resolve(this)
+                    }
+                }
+                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+            })
+        }).finally(() => {
+            Database.session.endSession();
         })
     }
 }

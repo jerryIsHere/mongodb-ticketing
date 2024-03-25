@@ -9,13 +9,13 @@ export namespace Event {
         event.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
                 EventDAO.listAll().then((result: EventDAO[]) => {
-                    res.json({ success: true, data: result.map(dao => dao.Serialize(false)) })
+                    res.json({ success: true, data: result.map(dao => dao.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
         event.get("/:eventId", async (req: Request, res: Response, next) => {
             EventDAO.getById(req.params.eventId).then(result => {
-                if (result) res.json({ success: true, data: result.Serialize(false) });
+                if (result) res.json({ success: true, data: result.Hydrated() });
             }).catch((error) => next(error))
         })
         event.post("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -44,7 +44,7 @@ export namespace Event {
                     dao.venueId = req.body.venueId
                     return dao.update()
                 }).then((value) => {
-                    res.json({ success: true, data: value.Serialize(false) })
+                    res.json({ success: true, data: value.Hydrated() })
                 }).catch((error) => next(error))
             }
         })

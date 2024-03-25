@@ -10,7 +10,7 @@ export namespace Seat {
         seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 SeatDAO.listByVenueId(req.query.venueId).then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Serialize(false))  })
+                    res.json({ success: true, data: result.map(dao => dao.Hydrated())  })
                 }).catch((error) => next(error))
             }
         })
@@ -27,7 +27,7 @@ export namespace Seat {
                         return dao;
                     })
                     SeatDAO.batchCreate(daos).then((seats: SeatDAO[]) => {
-                        res.json({ success: true, data: seats.map(seat => seat.Serialize(false)) })
+                        res.json({ success: true, data: seats.map(seat => seat.Hydrated()) })
                     }).catch((error) => next(error))
                 }
             }

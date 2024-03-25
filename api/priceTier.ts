@@ -10,7 +10,7 @@ export namespace PriceTier {
         priceTier.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
                 PriceTierDAO.listAll().then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Serialize(false))  })
+                    res.json({ success: true, data: result.map(dao => dao.Hydrated())  })
                 }).catch((error) => next(error))
             }
         })

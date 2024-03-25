@@ -1,6 +1,7 @@
 import { WithId, Document, ObjectId } from "mongodb";
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
+import { TicketDAO } from "./ticket";
 
 
 export class PriceTierDAO extends BaseDAO {
@@ -72,17 +73,29 @@ export class PriceTierDAO extends BaseDAO {
             } else { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
         })
     }
-
+    async checkTicketDependency() {
+        var ticket = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ priceTier_id: this._id })
+        return ticket
+    }
     async delete(): Promise<PriceTierDAO> {
-        return new Promise<PriceTierDAO>(async (resolve, reject) => {
-            if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-            var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-            if (result.deletedCount > 0) {
-                resolve(this)
-            }
-            else {
-                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
-            }
+        return new Promise<PriceTierDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                var dependency = await this.checkTicketDependency()
+                if (dependency != null) {
+                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed` +
+                        `as ticket with id ${dependency._id} depends on it.`))
+                }
+                if (this._id) {
+                    var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                    if (result.deletedCount > 0) {
+                        Database.session.commitTransaction();
+                        resolve(this)
+                    }
+                }
+                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+            })
+        }).finally(() => {
+            Database.session.endSession();
         })
     }
 }

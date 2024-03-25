@@ -81,6 +81,11 @@ export class TicketDAO extends BaseDAO {
         params: { doc?: WithId<Document> }
     ) {
         super(params.doc && params.doc._id ? params.doc._id : undefined);
+        if (params.doc && params.doc._id) {
+            this._eventId = params.doc.eventId
+            this._seatId = params.doc.seatId
+            this._priceTierId = params.doc.priceTierId
+        }
     }
     public Serialize(throwErrorWhenUndefined: boolean): Object {
         var obj = this.PropertiesWithGetter()
@@ -183,19 +188,87 @@ export class TicketDAO extends BaseDAO {
             reject(new RequestError(`${this.name} has no instance with id ${id}.`))
         })
     }
-
-    async create(): Promise<TicketDAO> {
-        return new Promise<TicketDAO>(async (resolve, reject) => {
-            var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true))
-            if (result.insertedId) {
-                resolve(this)
+    async checkReference() {
+        var eventdoc = await Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: this._eventId }).then(instance => {
+            if (instance == null) {
+                throw new RequestError(`Event with id ${this._eventId} doesn't exists.`)
             }
             else {
-                reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+                return instance
+            }
+        })
+        await Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: this._priceTierId }).then(instance => {
+            if (instance == null) {
+                throw new RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`)
+            }
+        })
+        await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: eventdoc.venueId }).then(instance => {
+            if (instance == null) {
+                throw new RequestError(`Seat with id ${this._seatId} in the same event venue with id ${eventdoc._venueId} doesn't exists.`)
             }
         })
     }
-
+    async duplicationChecking() {
+        await Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: this.eventId, seatId: this.seatId }).then(instance => {
+            if (instance) {
+                throw new RequestError(`Ticket with same event with id ${this.eventId} and seat with id ${this.seatId} already exists.`)
+            }
+        })
+    }
+    async create(): Promise<TicketDAO> {
+        return new Promise<TicketDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                try {
+                    await this.checkReference()
+                    await this.duplicationChecking()
+                }
+                catch (err) {
+                    reject(err)
+                    return
+                }
+                var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true))
+                if (result.insertedId) {
+                    Database.session.commitTransaction();
+                    resolve(this)
+                }
+                else {
+                    reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+                }
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
+    }
+    static async batchCreate(daos: TicketDAO[]): Promise<TicketDAO[]> {
+        return new Promise<TicketDAO[]>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                Promise.all(daos.map(dao =>
+                    new Promise<TicketDAO>(async (daoresolve, daoreject) => {
+                        try {
+                            await dao.checkReference()
+                            await dao.duplicationChecking()
+                        }
+                        catch (err) {
+                            daoreject(err)
+                            return
+                        }
+                        var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true))
+                        if (result.insertedId) {
+                            daoresolve(dao)
+                        }
+                        else {
+                            daoreject(new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`))
+                        }
+                    })
+                )).then(daos => {
+                    resolve(daos)
+                    Database.session.commitTransaction();
+                })
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
+    }
     async delete(): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }

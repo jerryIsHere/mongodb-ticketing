@@ -35,8 +35,10 @@ export abstract class BaseDAO {
         }
         return obj
     }
-    public static read(collection_name: string, _id: ObjectId) {
-        return Database.mongodb.collection(collection_name).findOne({ _id: _id })
+    public Hydrated(): Object {
+        var obj = this.PropertiesWithGetter()
+        obj = { _id: this._id, ...obj }
+        return obj
     }
 }
 

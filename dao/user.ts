@@ -65,7 +65,7 @@ export class UserDAO extends BaseDAO {
     }
     static fetchAndDeserialize(id: string) {
         var _id = new ObjectId(id)
-        this.read(UserDAO.collection_name, _id).then((doc) => {
+        Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: _id }).then((doc) => {
             if (doc && doc.username && doc.fullname && doc.email)
                 return new UserDAO({ username: doc.username, fullname: doc.fullname, email: doc.email })
         })

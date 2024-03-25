@@ -2,6 +2,8 @@ import { ObjectId, WithId, Document, } from "mongodb";
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { VenueDAO } from "./venue";
+import { TicketDAO } from "./ticket";
+
 
 
 export class EventDAO extends BaseDAO {
@@ -137,20 +139,29 @@ export class EventDAO extends BaseDAO {
         })
 
     }
-
+    async checkTicketDependency() {
+        var ticket = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ priceTier_id: this._id })
+        return ticket
+    }
     async delete(): Promise<EventDAO> {
-        return new Promise<EventDAO>(async (resolve, reject) => {
-            if (this._id) {
-                var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-                if (result.deletedCount > 0) {
-                    resolve(this)
+        return new Promise<EventDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                var dependency = await this.checkTicketDependency()
+                if (dependency != null) {
+                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed` +
+                        `as ticket with id ${dependency._id} depends on it.`))
                 }
-                else {
-                    reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+                if (this._id) {
+                    var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                    if (result.deletedCount > 0) {
+                        Database.session.commitTransaction();
+                        resolve(this)
+                    }
                 }
-            } else {
-                reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`))
-            }
+                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+            })
+        }).finally(() => {
+            Database.session.endSession();
         })
     }
 }
