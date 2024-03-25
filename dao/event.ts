@@ -66,7 +66,7 @@ export class EventDAO extends BaseDAO {
             this.duration = params.duration
     }
     static async listAll() {
-        return new Promise<EventDAO[]>(async (resolve, reject) => {
+        return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(EventDAO.collection_name).aggregate([
                 {
                     $lookup:
@@ -79,7 +79,7 @@ export class EventDAO extends BaseDAO {
                 },
                 { $set: { 'venue': { $first: '$venue' } } }
             ])
-            resolve((await cursor.toArray()).map(doc => new EventDAO({ doc: { _id: doc._id, ...doc } })));
+            resolve((await cursor.toArray()));
         })
     }
     static async getById(id: string) {
@@ -134,7 +134,7 @@ export class EventDAO extends BaseDAO {
                     reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
                 }
             } else {
-                reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`))
+                reject(new RequestError(`${this.constructor.name}'s id is not initialized.`))
             }
         })
 
@@ -158,7 +158,7 @@ export class EventDAO extends BaseDAO {
                         resolve(this)
                     }
                 }
-                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+                else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
             })
         }).finally(() => {
             Database.session.endSession();

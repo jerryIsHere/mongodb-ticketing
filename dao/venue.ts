@@ -59,7 +59,7 @@ export class VenueDAO extends BaseDAO {
                 }
             }
             else {
-                reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`))
+                reject(new RequestError(`${this.constructor.name}'s id is not initialized.`))
             }
         })
     }
@@ -85,7 +85,7 @@ export class VenueDAO extends BaseDAO {
                         resolve(this)
                     }
                 }
-                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+                else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
             })
         }).finally(() => {
             Database.session.endSession();

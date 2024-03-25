@@ -126,7 +126,7 @@ export class SeatDAO extends BaseDAO {
     }
     async update(): Promise<SeatDAO> {
         return new Promise<SeatDAO>(async (resolve, reject) => {
-            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }
+            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
             var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
             if (result.modifiedCount > 0) {
                 return this
@@ -157,7 +157,7 @@ export class SeatDAO extends BaseDAO {
                         resolve(this)
                     }
                 }
-                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+                else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
             })
         }).finally(() => {
             Database.session.endSession();

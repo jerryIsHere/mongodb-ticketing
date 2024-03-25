@@ -16,12 +16,12 @@ export namespace Ticket {
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
                 TicketDAO.listByEventId(req.query.eventId, (req.session["user"] as any)?._isAdmin).then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Hydrated())  })
+                    res.json({ success: true, data: result  })
                 }).catch((error) => next(error))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 TicketDAO.ofUser((req.session['user'] as any)._id, (req.session["user"] as any)?._isAdmin).then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Hydrated()) })
+                    res.json({ success: true, data: result })
                 }).catch((error) => next(error))
             }
         })

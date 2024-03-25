@@ -70,7 +70,7 @@ export class PriceTierDAO extends BaseDAO {
                 else {
                     reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
                 }
-            } else { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+            } else { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
         })
     }
     async checkTicketDependency() {
@@ -92,7 +92,7 @@ export class PriceTierDAO extends BaseDAO {
                         resolve(this)
                     }
                 }
-                else { return reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+                else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
             })
         }).finally(() => {
             Database.session.endSession();

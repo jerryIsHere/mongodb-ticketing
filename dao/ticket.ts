@@ -53,28 +53,39 @@ export class TicketDAO extends BaseDAO {
     private _occupantId?: ObjectId | undefined | null
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
     public claim(userId: string): Promise<TicketDAO> {
-        if (userId == null) { throw new RequestError(`Ticket must be claimed with an userId.`) }
-        return new Promise((resolve, reject) => {
-            Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: new ObjectId(userId) }).then(value => {
-                if (value == null) throw new RequestError(`User with id ${userId} doesn't exists.`)
+        return new Promise<TicketDAO>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                this._occupantId = new ObjectId(userId)
+                try {
+                    await this.checkReference()
+                    await this.duplicationChecking()
+                }
+                catch (err) {
+                    reject(err)
+                    return
+                }
                 if (this.id) {
                     Database.mongodb.collection(TicketDAO.collection_name)
                         .updateOne(
                             { _id: this.id, occupantId: null },
                             { $set: { "occupantId": userId } }
                         ).then((value) => {
-                            if (value.matchedCount > 0) {
+                            if (value.modifiedCount > 0) {
                                 resolve(this)
                             }
                             else {
-                                throw new RequestError(`Ticket not avaliable.`)
+                                reject(new RequestError(`Ticket not avaliable.`))
+                                return
                             }
                         })
                 }
                 else {
-                    throw new RequestError(`User with id ${userId} doesn't exists.`)
+                    reject(new RequestError(`User with id ${userId} doesn't exists.`))
+                    return
                 }
             })
+        }).finally(() => {
+            Database.session.endSession();
         })
     }
     constructor(
@@ -153,27 +164,26 @@ export class TicketDAO extends BaseDAO {
 
     }
     static async listByEventId(evnetId: string, showOccupant: boolean) {
-        return new Promise<TicketDAO[]>(async (resolve, reject) => {
+        return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
                 aggregate(this.aggregateQuery({ $match: { eventId: new ObjectId(evnetId) } }, showOccupant))
-            resolve((await cursor.toArray()).map(doc => new TicketDAO({ doc: { _id: doc._id, ...doc } })));
+            resolve((await cursor.toArray()));
         })
     }
     static async ofUser(userId: string, showOccupant: boolean) {
-        return new Promise<TicketDAO[]>(async (resolve, reject) => {
+        return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
                 aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(userId) } }, showOccupant))
-            resolve((await cursor.toArray()).map(doc => new TicketDAO({ doc: { _id: doc._id, ...doc } })));
+            resolve((await cursor.toArray()));
         })
     }
     static async getWithDetailsById(id: string, showOccupant: boolean) {
-        return new Promise<TicketDAO>(async (resolve, reject) => {
+        return new Promise<Document>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
                 aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(id) } }, showOccupant))
             var docs = await cursor.toArray()
             if (docs.length > 0) {
-                var doc: WithId<Document> = { _id: new ObjectId(id), ...docs[0] }
-                resolve(new this({ doc: doc }))
+                resolve(docs[0])
             } else {
                 reject(new RequestError(`${this.name} has no instance with id ${id}.`))
             }
@@ -207,6 +217,12 @@ export class TicketDAO extends BaseDAO {
                 throw new RequestError(`Seat with id ${this._seatId} in the same event venue with id ${eventdoc._venueId} doesn't exists.`)
             }
         })
+        if (this._occupantId)
+            await Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
+                if (instance == null) {
+                    throw new RequestError(`User with id ${this._seatId} doesn't exists.`)
+                }
+            })
     }
     async duplicationChecking() {
         await Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: this.eventId, seatId: this.seatId }).then(instance => {
@@ -269,9 +285,80 @@ export class TicketDAO extends BaseDAO {
             Database.session.endSession();
         })
     }
+    static async batchUdatePriceTier(daos: TicketDAO[], priceTierId: string): Promise<TicketDAO[]> {
+        return new Promise<TicketDAO[]>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                Promise.all(daos.map(dao =>
+                    new Promise<TicketDAO>(async (daoresolve, daoreject) => {
+                        try {
+                            dao.priceTierId = new ObjectId(priceTierId)
+                            await dao.checkReference()
+                            await dao.duplicationChecking()
+                        }
+                        catch (err) {
+                            daoreject(err)
+                            return
+                        }
+                        if (dao._id) {
+                            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: dao._id }, dao.Serialize(true))
+                            if (result) {
+                                daoresolve(dao)
+                            }
+                            else {
+                                daoreject(new RequestError(`Update of ${dao.constructor.name} failed with unknown reason.`))
+                            }
+                        }
+                        else {
+                            reject(new RequestError(`One of the ticket's id is not initialized.`))
+                        }
+                    })
+                )).then(daos => {
+                    resolve(daos)
+                    Database.session.commitTransaction();
+                })
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
+    }
+    static async batchClaim(daos: TicketDAO[], userId: string): Promise<TicketDAO[]> {
+        return new Promise<TicketDAO[]>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                Promise.all(daos.map(dao =>
+                    new Promise<TicketDAO>(async (daoresolve, daoreject) => {
+                        dao._occupantId = new ObjectId(userId)
+                        try {
+                            await dao.checkReference()
+                            await dao.duplicationChecking()
+                        }
+                        catch (err) {
+                            daoreject(err)
+                            return
+                        }
+                        if (dao.id) {
+                            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne(
+                                { _id: dao.id, occupantId: null },
+                                { $set: { "occupantId": userId } })
+                            if (result.modifiedCount > 0) {
+                                daoresolve(dao)
+                            }
+                            else {
+                                daoreject(new RequestError(`Ticket with id ${dao.id} is not avaliable.`))
+                            }
+                        }
+                    })
+                )).then(daos => {
+                    resolve(daos)
+                    Database.session.commitTransaction();
+                })
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
+    }
     async delete(): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }
+            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
             var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
             if (result.deletedCount > 0) {
                 resolve(this)
