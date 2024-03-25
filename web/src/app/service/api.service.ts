@@ -97,7 +97,7 @@ export class ApiService {
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason);
+              this.snackBar.open(errResponse.error.reason, "ok");
             }
             return of([])
           })
@@ -124,7 +124,7 @@ export class ApiService {
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason);
+              this.snackBar.open(errResponse.error.reason, "ok");
             }
             return of([])
           })
@@ -148,7 +148,7 @@ export class ApiService {
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason);
+              this.snackBar.open(errResponse.error.reason, "ok");
             }
             return of([])
           })
@@ -172,7 +172,7 @@ export class ApiService {
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason);
+              this.snackBar.open(errResponse.error.reason, "ok");
             }
             return of([])
           })
