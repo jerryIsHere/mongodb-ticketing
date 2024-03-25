@@ -9,7 +9,7 @@ import { UserDAO } from "./user";
 
 
 export class TicketDAO extends BaseDAO {
-    public static readonly collection_name = "ticket"
+    public static readonly collection_name = "tickets"
     private _eventId: ObjectId | undefined
     public get eventId() { return this._eventId }
     public set eventId(value: ObjectId | string | undefined) {
@@ -148,53 +148,66 @@ export class TicketDAO extends BaseDAO {
 
     }
     static async listByEventId(evnetId: string, showOccupant: boolean) {
-        var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-            aggregate(this.aggregateQuery({ $match: { eventId: new ObjectId(evnetId) } }, showOccupant))
-        return cursor.toArray();
+        return new Promise<TicketDAO[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(TicketDAO.collection_name).
+                aggregate(this.aggregateQuery({ $match: { eventId: new ObjectId(evnetId) } }, showOccupant))
+            resolve((await cursor.toArray()).map(doc => new TicketDAO({ doc: { _id: doc._id, ...doc } })));
+        })
     }
     static async ofUser(userId: string, showOccupant: boolean) {
-        var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-            aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(userId) } }, showOccupant))
-
-        return cursor.toArray();
+        return new Promise<TicketDAO[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(TicketDAO.collection_name).
+                aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(userId) } }, showOccupant))
+            resolve((await cursor.toArray()).map(doc => new TicketDAO({ doc: { _id: doc._id, ...doc } })));
+        })
     }
     static async getWithDetailsById(id: string, showOccupant: boolean) {
-        var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-            aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(id) } }, showOccupant))
-        var docs = await cursor.toArray()
-        if (docs.length > 0) {
-            var doc: WithId<Document> = { _id: new ObjectId(id), ...docs[0] }
-            return new this({ doc: doc })
-        }
-        throw new RequestError(`${this.name} has no instance with id ${id}.`)
+        return new Promise<TicketDAO>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(TicketDAO.collection_name).
+                aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(id) } }, showOccupant))
+            var docs = await cursor.toArray()
+            if (docs.length > 0) {
+                var doc: WithId<Document> = { _id: new ObjectId(id), ...docs[0] }
+                resolve(new this({ doc: doc }))
+            } else {
+                reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+            }
+        })
     }
     static async getById(id: string) {
-        var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
-        if (doc) {
-            return new TicketDAO({ doc: doc })
-        }
-        throw new RequestError(`${this.name} has no instance with id ${id}.`)
+        return new Promise<TicketDAO>(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
+            if (doc) {
+                resolve(new TicketDAO({ doc: doc }))
+            }
+            reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+        })
     }
 
     async create(): Promise<TicketDAO> {
-        var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true))
-        if (result.insertedId) {
-            return this
-        }
-        else {
-            throw new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`)
-        }
+        return new Promise<TicketDAO>(async (resolve, reject) => {
+            var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true))
+            if (result.insertedId) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+            }
+        })
     }
 
-    async delete(): Promise<null> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-        if (result.deletedCount > 0) {
-            return null
-        }
-        else {
-            throw new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
+    async delete(): Promise<TicketDAO> {
+        return new Promise<TicketDAO>(async (resolve, reject) => {
+            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }
+            var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+            if (result.deletedCount > 0) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+            }
+
+        })
     }
 
 }

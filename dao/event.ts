@@ -64,38 +64,49 @@ export class EventDAO extends BaseDAO {
             this.duration = params.duration
     }
     static async listAll() {
-        var cursor = Database.mongodb.collection(EventDAO.collection_name).aggregate([
-            {
-                $lookup:
+        return new Promise<EventDAO[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(EventDAO.collection_name).aggregate([
                 {
-                    from: VenueDAO.collection_name,
-                    localField: "venueId",
-                    foreignField: "_id",
-                    as: "venue",
-                }
-            },
-            { $set: { 'venue': { $first: '$venue' } } }
-        ])
-        return cursor.toArray();
+                    $lookup:
+                    {
+                        from: VenueDAO.collection_name,
+                        localField: "venueId",
+                        foreignField: "_id",
+                        as: "venue",
+                    }
+                },
+                { $set: { 'venue': { $first: '$venue' } } }
+            ])
+            resolve((await cursor.toArray()).map(doc => new EventDAO({ doc: { _id: doc._id, ...doc } })));
+        })
     }
     static async getById(id: string) {
-        var doc = await Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new ObjectId(id) })
-        if (doc) {
-            return new EventDAO({ doc: doc })
-        }
-        throw new RequestError(`${this.name} has no instance with id ${id}.`)
+        return new Promise<EventDAO>(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new ObjectId(id) })
+            if (doc) {
+                resolve(new EventDAO({ doc: doc }))
+            }
+            reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+        })
     }
-    async checkReference() {
-        await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
+    async checkReference(): Promise<null | RequestError> {
+        return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
             if (instance == null) {
-                throw new RequestError(`Venue with id ${this._venueId} doesn't exists.`)
+                return new RequestError(`Venue with id ${this._venueId} doesn't exists.`)
+            }
+            else {
+                return null
             }
         })
     }
     async create(): Promise<EventDAO> {
         return new Promise<EventDAO>((resolve, reject) => {
             Database.session.withTransaction(async () => {
-                await this.checkReference()
+                var referror = await this.checkReference()
+                if (referror) {
+                    reject(referror)
+                    return
+                }
                 var result = await Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true))
                 if (result.insertedId) {
                     Database.session.commitTransaction();
@@ -111,26 +122,36 @@ export class EventDAO extends BaseDAO {
     }
 
     async update(): Promise<EventDAO> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
-        if (result.modifiedCount > 0) {
-            return this
-        }
-        else {
-            throw new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
+        return new Promise<EventDAO>(async (resolve, reject) => {
+            if (this._id) {
+                var result = await Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+                if (result.modifiedCount > 0) {
+                    return this
+                }
+                else {
+                    reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+                }
+            } else {
+                reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`))
+            }
+        })
 
     }
 
-    async delete(): Promise<null> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-        if (result.deletedCount > 0) {
-            return null
-        }
-        else {
-            throw new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
+    async delete(): Promise<EventDAO> {
+        return new Promise<EventDAO>(async (resolve, reject) => {
+            if (this._id) {
+                var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                if (result.deletedCount > 0) {
+                    resolve(this)
+                }
+                else {
+                    reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+                }
+            } else {
+                reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`))
+            }
+        })
     }
 }
 

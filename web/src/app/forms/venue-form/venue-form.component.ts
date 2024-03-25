@@ -18,7 +18,7 @@ import {
 })
 export class VenueFormComponent {
   venueForm: FormGroup = this._formBuilder.group({
-    venuename: new FormControl(this.data.venuename, [Validators.required]),
+    venuename: new FormControl(this.data?.venuename, [Validators.required]),
   });
   constructor(
     public dialogRef: MatDialogRef<VenueFormComponent>,

@@ -21,49 +21,44 @@ export namespace User {
 
         })
         user.post("/", async (req: Request, res: Response, next): Promise<any> => {
-            try {
-                if (req.query.login != undefined) {
-                    if (req.body.password) {
-                        console.log("test")
-                        UserDAO.login(req.body.username, req.body.password).then(user => {
-                            req.session['user'] = user.withoutCredential()
-                            res.cookie("user", JSON.stringify({ ...user.withoutCredential().Serialize(false), hasAdminRight: user.hasAdminRight() }))
-                            res.json({ success: true, message: user.withoutCredential().Serialize(false) })
-                        })
-                    }
-                    else {
-                        next(new RequestError("A login must be done with a password."))
-                    }
+            if (req.query.login != undefined) {
+                if (req.body.password) {
+                    console.log("test")
+                    UserDAO.login(req.body.username, req.body.password).then(user => {
+                        req.session['user'] = user.withoutCredential()
+                        res.cookie("user", JSON.stringify({ ...user.withoutCredential().Serialize(false), hasAdminRight: user.hasAdminRight() }))
+                        res.json({ success: true, message: user.withoutCredential().Serialize(false) })
+                    })
                 }
-                else if (req.query.logout != undefined) {
-                    req.session['user'] = null;
-                    res.clearCookie("user");
-                    res.json({ success: true })
-                }
-                else if (req.query.register != undefined) {
-
-                    if (req.body.username && req.body.fullname && req.body.email && req.body.password) {
-                        var dao = new UserDAO({
-                            username: req.body.username,
-                            fullname: req.body.fullname,
-                            email: req.body.email,
-                            singingPart: req.body.singingPart
-                        })
-                        dao.setPassword(req.body.password).then(() => {
-                            dao.create().then((dao) => {
-                                if (dao.id) {
-                                    req.session['user'] = dao.withoutCredential()
-                                    res.cookie("user", JSON.stringify(dao.withoutCredential().Serialize(false)))
-                                    res.json({ success: true, user: dao.withoutCredential().Serialize(false) })
-                                }
-                            })
-                        })
-
-                    }
+                else {
+                    next(new RequestError("A login must be done with a password."))
                 }
             }
-            catch (error) {
-                next(error)
+            else if (req.query.logout != undefined) {
+                req.session['user'] = null;
+                res.clearCookie("user");
+                res.json({ success: true })
+            }
+            else if (req.query.register != undefined) {
+
+                if (req.body.username && req.body.fullname && req.body.email && req.body.password) {
+                    var dao = new UserDAO({
+                        username: req.body.username,
+                        fullname: req.body.fullname,
+                        email: req.body.email,
+                        singingPart: req.body.singingPart
+                    })
+                    dao.setPassword(req.body.password).then(() => {
+                        dao.create().then((dao) => {
+                            if (dao.id) {
+                                req.session['user'] = dao.withoutCredential()
+                                res.cookie("user", JSON.stringify(dao.withoutCredential().Serialize(false)))
+                                res.json({ success: true, user: dao.withoutCredential().Serialize(false) })
+                            }
+                        })
+                    })
+
+                }
             }
         })
         return user

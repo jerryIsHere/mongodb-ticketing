@@ -7,7 +7,7 @@ export class PriceTierDAO extends BaseDAO {
     public static readonly collection_name = "priceTiers"
     private _tierName: string | undefined
     public get tierName() { return this._tierName }
-    public set tierName(value: string | undefined) { this._tierName = value;  }
+    public set tierName(value: string | undefined) { this._tierName = value; }
 
 
     private _price: number | undefined
@@ -17,7 +17,7 @@ export class PriceTierDAO extends BaseDAO {
             throw new RequestError('Price must be greater then 0.')
         }
         else {
-            this._price = value; 
+            this._price = value;
         }
     }
 
@@ -31,47 +31,58 @@ export class PriceTierDAO extends BaseDAO {
         if (params.price) this.price = params.price
     }
     static async listAll() {
-        var cursor = Database.mongodb.collection(PriceTierDAO.collection_name).find()
-        return cursor.toArray();
+        return new Promise<PriceTierDAO[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(PriceTierDAO.collection_name).find()
+            return (await cursor.toArray()).map(doc => new PriceTierDAO({ doc: doc }));
+        })
     }
     static async getById(id: string) {
-        var doc = await Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new ObjectId(id) })
-        if (doc) {
-            return new PriceTierDAO({ doc: doc })
-        }
-        throw new RequestError(`${this.name} has no instance with id ${id}.`)
+
+        return new Promise<PriceTierDAO>(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new ObjectId(id) })
+            if (doc) {
+                resolve(new PriceTierDAO({ doc: doc }))
+            }
+            reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+        })
     }
 
     async create(): Promise<PriceTierDAO> {
-        var result = await Database.mongodb.collection(PriceTierDAO.collection_name).insertOne(this.Serialize(true))
-        if (result.insertedId) {
-            return this
-        }
-        else {
-            throw new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`)
-        }
+        return new Promise<PriceTierDAO>(async (resolve, reject) => {
+            var result = await Database.mongodb.collection(PriceTierDAO.collection_name).insertOne(this.Serialize(true))
+            if (result.insertedId) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+            }
+        })
     }
 
     async update(): Promise<PriceTierDAO> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(PriceTierDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
-        if (result.modifiedCount > 0) {
-            return this
-        }
-        else {
-            throw new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
-
+        return new Promise<PriceTierDAO>(async (resolve, reject) => {
+            if (this._id) {
+                var result = await Database.mongodb.collection(PriceTierDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+                if (result.modifiedCount > 0) {
+                    resolve(this)
+                }
+                else {
+                    reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+                }
+            } else { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)) }
+        })
     }
 
-    async delete(): Promise<null> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-        if (result.deletedCount > 0) {
-            return null
-        }
-        else {
-            throw new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
+    async delete(): Promise<PriceTierDAO> {
+        return new Promise<PriceTierDAO>(async (resolve, reject) => {
+            if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
+            var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+            if (result.deletedCount > 0) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+            }
+        })
     }
 }

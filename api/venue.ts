@@ -7,15 +7,10 @@ export namespace Venue {
         var venue = Router()
 
         venue.get("/", async (req: Request, res: Response, next) => {
-            try {
-                if (req.query.list != undefined) {
-                    return VenueDAO.listAll().then(result => {
-                        res.json({ success: true, data: result })
-                    })
-                }
-            }
-            catch (error) {
-                next(error)
+            if (req.query.list != undefined) {
+                VenueDAO.listAll().then(result => {
+                    res.json({ success: true, data: result })
+                }).catch((error) => next(error))
             }
         })
         venue.get("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
@@ -23,43 +18,29 @@ export namespace Venue {
         })
 
         venue.post("/", async (req: Request, res: Response, next): Promise<any> => {
-            try {
-                if (req.query.create != undefined) {
-                    var dao = new VenueDAO({
-                        venuename: req.body.venuename
-                    })
-                    return dao.create().then((value) => {
-                        res.json({ success: true })
-                    })
-                }
-            }
-            catch (error) {
-                next(error)
+            if (req.query.create != undefined) {
+                var dao = new VenueDAO({
+                    venuename: req.body.venuename
+                })
+                dao.create().then((value) => {
+                    res.json({ success: true })
+                }).catch((error) => next(error))
             }
         })
 
         venue.patch("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            try {
-                var dao = await VenueDAO.getById(req.params.venueId)
+            VenueDAO.getById(req.params.venueId).then(dao => {
                 dao.venuename = req.body.venuename
-                return dao.update().then((value) => {
-                    res.json({ success: true })
-                })
-            }
-            catch (error) {
-                next(error)
-            }
+                return dao.update()
+            }).then((value) => {
+                res.json({ success: true })
+            }).catch((error) => next(error))
         })
 
         venue.delete("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            try {
-                VenueDAO.getById(req.params.venueId).then(dao => dao.delete().then((value) => {
-                    res.json({ success: true })
-                }))
-            }
-            catch (error) {
-                next(error)
-            }
+            VenueDAO.getById(req.params.venueId).then(dao => dao.delete()).then((value) => {
+                res.json({ success: true })
+            }).catch((error) => next(error))
         })
         return venue
     };

@@ -44,14 +44,21 @@ export class SeatDAO extends BaseDAO {
             this.no = params.no
     }
     static async listByVenueId(venueId: string) {
-        var cursor = Database.mongodb.collection(SeatDAO.collection_name).find({ venueId: new ObjectId(venueId) })
-        return cursor.toArray();
-    } static async getById(id: string) {
-        var doc = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(id) })
-        if (doc) {
-            return new SeatDAO({ doc: doc })
-        }
-        throw new RequestError(`${this.name} has no instance with id ${id}.`)
+        return new Promise<SeatDAO[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(SeatDAO.collection_name).find({ venueId: new ObjectId(venueId) })
+            resolve((await cursor.toArray()).map(doc=> new SeatDAO({doc: doc})));
+        })
+    }
+    static async getById(id: string) {
+
+        return new Promise<SeatDAO>(async (resolve, reject) => {
+
+            var doc = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(id) })
+            if (doc) {
+                resolve(new SeatDAO({ doc: doc }))
+            }
+            reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+        })
     }
     async checkReference() {
         await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
@@ -78,26 +85,53 @@ export class SeatDAO extends BaseDAO {
         })
     }
 
+    static async batchCreate(daos: SeatDAO[]): Promise<SeatDAO[]> {
+        return new Promise<SeatDAO[]>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                Promise.all(daos.map(async dao => {
+                    await dao.checkReference()
+                    var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true))
+                    if (result.insertedId) {
+                        return dao
+                    }
+                    else {
+                        throw new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`)
+                    }
+                })).then(daos => {
+                    resolve(daos)
+                    Database.session.commitTransaction();
+                })
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
+    }
     async update(): Promise<SeatDAO> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
-        if (result.modifiedCount > 0) {
-            return this
-        }
-        else {
-            throw new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
+        return new Promise<SeatDAO>(async (resolve, reject) => {
+            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }
+            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+            if (result.modifiedCount > 0) {
+                return this
+            }
+            else {
+                throw new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
+            }
+
+        })
 
     }
 
-    async delete(): Promise<null> {
-        if (this._id == undefined) throw new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)
-        var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-        if (result.deletedCount > 0) {
-            return null
-        }
-        else {
-            throw new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
-        }
+    async delete(): Promise<SeatDAO> {
+        return new Promise<SeatDAO>(async (resolve, reject) => {
+            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s DAO id is not initialized.`)); return }
+            var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+            if (result.deletedCount > 0) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+            }
+
+        })
     }
 }

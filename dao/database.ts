@@ -34,6 +34,7 @@ export abstract class Database {
 export class RequestError extends Error {
     constructor(m: string) {
         super(m);
+        Object.setPrototypeOf(this, RequestError.prototype);
     }
 
 }
