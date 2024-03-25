@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { UserSessionService } from './user-session.service';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 
@@ -93,13 +93,15 @@ export class ApiService {
           includeHeaders?: string[];
         } | boolean;
       }) => {
-        return this.httpClient.get(url, options).pipe((err: any) => {
-          console.log(err)
-          if (err && err.success != undefined && err.success == false) {
-            this.snackBar.open(err.message);
-          }
-          else { return err }
-        })
+        return this.httpClient.get(url, options).pipe(
+          catchError((errResponse: HttpErrorResponse) => {
+            console.log(errResponse)
+            if (errResponse.error && errResponse.error.reason) {
+              this.snackBar.open(errResponse.error.reason);
+            }
+            return of([])
+          })
+        )
       },
 
       post: (url: string, body: any | null, options?: {
@@ -118,13 +120,15 @@ export class ApiService {
           includeHeaders?: string[];
         } | boolean;
       }) => {
-        return this.httpClient.post(url, body, options).pipe((err: any) => {
-          console.log(err)
-          if (err && err.success != undefined && err.success == false) {
-            this.snackBar.open(err.message);
-          }
-          else { return err }
-        })
+        return this.httpClient.post(url, body, options).pipe(
+          catchError((errResponse: HttpErrorResponse) => {
+            console.log(errResponse)
+            if (errResponse.error && errResponse.error.reason) {
+              this.snackBar.open(errResponse.error.reason);
+            }
+            return of([])
+          })
+        )
       },
 
       patch: (url: string, body: any | null, options?: {
@@ -140,13 +144,15 @@ export class ApiService {
         responseType?: 'json';
         withCredentials?: boolean;
       }) => {
-        return this.httpClient.patch(url, body, options).pipe((err: any) => {
-          console.log(err)
-          if (err && err.success != undefined && err.success == false) {
-            this.snackBar.open(err.message);
-          }
-          else { return err }
-        })
+        return this.httpClient.patch(url, body, options).pipe(
+          catchError((errResponse: HttpErrorResponse) => {
+            console.log(errResponse)
+            if (errResponse.error && errResponse.error.reason) {
+              this.snackBar.open(errResponse.error.reason);
+            }
+            return of([])
+          })
+        )
       },
       delete: (url: string, options?: {
         headers?: HttpHeaders | {
@@ -162,13 +168,15 @@ export class ApiService {
         withCredentials?: boolean;
         body?: any | null;
       }) => {
-        return this.httpClient.delete(url, options).pipe((err: any) => {
-          console.log(err)
-          if (err && err.success != undefined && err.success == false) {
-            this.snackBar.open(err.message);
-          }
-          else { return err }
-        })
+        return this.httpClient.delete(url, options).pipe(
+          catchError((errResponse: HttpErrorResponse) => {
+            console.log(errResponse)
+            if (errResponse.error && errResponse.error.reason) {
+              this.snackBar.open(errResponse.error.reason);
+            }
+            return of([])
+          })
+        )
       }
     }
     this.user = new UserApi(this.request, userSession)

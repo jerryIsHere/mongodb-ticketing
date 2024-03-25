@@ -75,7 +75,7 @@ export class VenueDAO extends BaseDAO {
                 if (dependency.event != null || dependency.seat != null) {
                     var dependencyType = dependency.event != null ? "event" : "seat"
                     var dependencyId = dependency.event != null ? dependency.event._id : dependency.seat?._id
-                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed` +
+                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
                         `as ${dependencyType}  with id ${dependencyId} depends on it.`))
                 }
                 if (this._id) {

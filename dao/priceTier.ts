@@ -82,7 +82,7 @@ export class PriceTierDAO extends BaseDAO {
             Database.session.withTransaction(async () => {
                 var dependency = await this.checkTicketDependency()
                 if (dependency != null) {
-                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed` +
+                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
                         `as ticket with id ${dependency._id} depends on it.`))
                 }
                 if (this._id) {
