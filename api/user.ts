@@ -28,7 +28,7 @@ export namespace User {
                         req.session['user'] = user.withoutCredential()
                         res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
                         res.json({ success: true, message: user.withoutCredential().Hydrated() })
-                    })
+                    }).catch((error) => next(error))
                 }
                 else {
                     next(new RequestError("A login must be done with a password."))
@@ -48,15 +48,14 @@ export namespace User {
                         email: req.body.email,
                         singingPart: req.body.singingPart
                     })
-                    dao.setPassword(req.body.password).then(() => {
-                        dao.create().then((dao) => {
-                            if (dao.id) {
-                                req.session['user'] = dao.withoutCredential()
-                                res.cookie("user", JSON.stringify(dao.withoutCredential().Hydrated()))
-                                res.json({ success: true, user: dao.withoutCredential().Hydrated() })
-                            }
-                        })
-                    })
+                    dao.setPassword(req.body.password).then((dao) => dao.create()).then((dao) => {
+                        if (dao.id) {
+                            req.session['user'] = dao.withoutCredential()
+                            res.cookie("user", JSON.stringify(dao.withoutCredential().Hydrated()))
+                            res.json({ success: true, user: dao.withoutCredential().Hydrated() })
+                        }
+                    }).catch((error) => next(error))
+                    
 
                 }
             }

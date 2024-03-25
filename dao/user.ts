@@ -10,33 +10,34 @@ export class UserDAO extends BaseDAO {
     public hasAdminRight: () => boolean = () => { return this._isAdmin };
     private _username: string | undefined
     public get username() { return this._username }
-    public set username(value: string | undefined) { this._username = value;  }
+    public set username(value: string | undefined) { this._username = value; }
 
     private _saltedpassword?: string
     public get saltedpassword() { return this._saltedpassword }
-    public setPassword(value: string): Promise<void> {
+    public setPassword(value: string): Promise<UserDAO> {
         return new Promise((resolve, reject) => {
             hash(value, UserDAO.saltRounds, (err, hash) => {
-                this._saltedpassword = hash; 
-                resolve();
+                this._saltedpassword = hash;
+                resolve(this);
             });
+
         })
     }
 
     private _fullname: string | undefined
     public get fullname() { return this._fullname }
-    public set fullname(value: string | undefined) { this._fullname = value;  }
+    public set fullname(value: string | undefined) { this._fullname = value; }
 
     private _email: string | undefined
     public get email() { return this._email }
     public set email(value: string | undefined) {
 
-        this._email = value; 
+        this._email = value;
     }
 
     private _singingPart?: string | undefined | null
     public get singingPart(): string | undefined | null { return this._singingPart }
-    public set singingPart(value: string | undefined | null) { this._singingPart = value;  }
+    public set singingPart(value: string | undefined | null) { this._singingPart = value; }
     constructor(params:
         {
             username?: string;
@@ -63,30 +64,36 @@ export class UserDAO extends BaseDAO {
             this.singingPart = params.singingPart
         }
     }
-    static fetchAndDeserialize(id: string) {
-        var _id = new ObjectId(id)
-        Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: _id }).then((doc) => {
-            if (doc && doc.username && doc.fullname && doc.email)
-                return new UserDAO({ username: doc.username, fullname: doc.fullname, email: doc.email })
-        })
-    }
-    static async fetchByUsernameAndDeserialize(username: string): Promise<UserDAO> {
+    // static fetchAndDeserialize(id: string) {
+    //     var _id = new ObjectId(id)
+    //     Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: _id }).then((doc) => {
+    //         if (doc && doc.username && doc.fullname && doc.email)
+    //             return new UserDAO({ username: doc.username, fullname: doc.fullname, email: doc.email })
+    //     })
+    // }
+    static async fetchByUsernameAndDeserialize(username: string): Promise<UserDAO | null> {
+
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username })
 
         if (doc == null) {
-            throw new RequestError(`User with username ${username} not found.`)
+            return null
         }
         return new UserDAO({ doc: doc })
     }
 
     static async login(username: string, password: string): Promise<UserDAO> {
-        var user = await this.fetchByUsernameAndDeserialize(username)
-        if (user.saltedpassword && await compare(password, user.saltedpassword)) {
-            return user
-        }
-        else {
-            throw new RequestError("Incorrect password");
-        }
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            var user = await this.fetchByUsernameAndDeserialize(username)
+            if (user == null) {
+                reject(new RequestError(`User with username ${username} not found.`))
+            }
+            else if (user.saltedpassword && await compare(password, user.saltedpassword)) {
+                resolve(user)
+            }
+            else {
+                reject(new RequestError("Incorrect password"))
+            }
+        })
     }
 
     public withoutCredential() {
@@ -97,9 +104,9 @@ export class UserDAO extends BaseDAO {
 
 
     public async create(): Promise<UserDAO> {
-        if (this.id)
-            throw Error(`Trying to create instantiated document ${this.id}`)
-        return new Promise((resolve, reject) => {
+        return new Promise<UserDAO>((resolve, reject) => {
+            if (this.id)
+                reject(new RequestError(`Trying to create instantiated document ${this.id}`))
             Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(instance => {
                 if (instance == null) {
                     Database.mongodb.collection(UserDAO.collection_name)
@@ -113,7 +120,7 @@ export class UserDAO extends BaseDAO {
                         })
                 }
                 else {
-                    reject(`User with username ${this.username} with exists.`)
+                    reject(new RequestError(`User with username ${this.username} already exists.`))
                 }
             })
         })
