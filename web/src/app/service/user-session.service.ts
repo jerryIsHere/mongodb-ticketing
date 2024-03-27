@@ -11,6 +11,11 @@ export class UserSessionService {
     this.checkUserSession()
   }
   checkUserSession() {
-    cookieStore.get("user").then((cookie: any) => { if (cookie && cookie.value) { this.user = JSON.parse(decodeURIComponent(cookie.value)) } else { this.user = null } });
+    cookieStore.get("user").then((cookie: any) => {
+      if (cookie && cookie.value) { this.user = JSON.parse(decodeURIComponent(cookie.value)) } else {
+        this.user = null
+        location.reload()
+      }
+    });
   }
 }
