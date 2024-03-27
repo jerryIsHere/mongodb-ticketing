@@ -133,7 +133,7 @@ export class TicketDAO extends BaseDAO {
     public Serialize(throwErrorWhenUndefined: boolean): Object {
         var obj = this.PropertiesWithGetter()
         if (throwErrorWhenUndefined) {
-            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId")
+            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId" && entry[0] != "paid" && entry[0] != "paymentRemark")
             if (undefinedEntries.length > 0)
                 throw new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`)
         }
@@ -316,7 +316,7 @@ export class TicketDAO extends BaseDAO {
                             daoreject(err)
                             return
                         }
-                        var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true))
+                        var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true))
                         if (result.insertedId) {
                             daoresolve(dao)
                         }
@@ -347,7 +347,7 @@ export class TicketDAO extends BaseDAO {
                             return
                         }
                         if (dao._id) {
-                            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: dao._id }, dao.Serialize(true))
+                            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao._id }, { $set: dao.Serialize(true) })
                             if (result) {
                                 daoresolve(dao)
                             }
@@ -404,7 +404,7 @@ export class TicketDAO extends BaseDAO {
                             return
                         }
                         if (dao.id) {
-                            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne(
+                            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne(
                                 { _id: dao.id, occupantId: null },
                                 { $set: { "occupantId": userId } })
                             if (result.modifiedCount > 0) {
@@ -445,7 +445,7 @@ export class TicketDAO extends BaseDAO {
                         if (dao.occupantId != null) {
                             daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed as it has occupant.`))
                         }
-                        var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true))
+                        var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true))
                         if (result.deletedCount > 0) {
                             daoresolve(dao)
                         }

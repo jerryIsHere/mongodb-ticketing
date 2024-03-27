@@ -20,11 +20,12 @@ type Section = { x: number, y: number }
 export class SeatingPlanComponent {
   @Input() venue: Venue = { sections: [] }
   selectedSection?: { x: number, y: number }
+  @Input()
   selectedSeatIds: Set<string> = new Set<string>()
-  @Output() seatSelectionChange = new EventEmitter<Set<string>>();
+  @Output() selectedSeatIdsChange = new EventEmitter<Set<string>>();
   toggleSelect(seat: Seat | null) {
     if (seat) this.selectedSeatIds.has(seat._id) ? this.selectedSeatIds.delete(seat._id) : this.selectedSeatIds.add(seat._id)
-    this.seatSelectionChange.emit(this.selectedSeatIds)
+    this.selectedSeatIdsChange.emit(this.selectedSeatIds)
   }
   isSeatSelected(id: string | undefined): undefined | boolean {
     if (id) return this.selectedSeatIds.has(id)
@@ -54,7 +55,9 @@ export class SeatingPlanComponent {
     }
   }
   ngOnChangnges(changes: SimpleChanges) {
+    console.log(changes)
     this.init()
+    if(changes["selectedSeatIds"]) this.selectedSeatIdsChange.emit(this.selectedSeatIds)
   }
   ngOnInit() {
     this.init()

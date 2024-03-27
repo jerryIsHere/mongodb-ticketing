@@ -1,7 +1,6 @@
 @if(seats && venue){
-<!-- <app-seating-plan #seatingPlan [venue]="venue" [seats]="seats" seatingPlanEditing>
-  </app-seating-plan> -->
-<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" isTicketPlanning>
+<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets" isTicketPlanning
+  (selectedSeatIdsChange)="checkAction()" [(selectedSeatIds)]="selectedSeatIds">
 </app-seating-plan>
 }
 @else{

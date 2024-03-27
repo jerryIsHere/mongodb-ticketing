@@ -4,11 +4,12 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
 import { Event, Venue } from '../management-panel/management-panel.component';
 import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
-import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
+import { SeatingPlanComponent, Ticket } from '../seatUI/seating-plan/seating-plan.component';
 import { Seat } from '../seatUI/seating-plan/seating-plan.component';;
 import { MatButtonModule } from '@angular/material/button';
 import { PriceTier } from '../management-panel/management-panel.component';
-import { MatSnackBar, MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
+import { SeatSelectedComponent } from '../snackbar/seat-selected/seat-selected.component';
 @Component({
   selector: 'app-eventseat',
   standalone: true,
@@ -17,9 +18,7 @@ import { MatSnackBar, MatSnackBarRef, TextOnlySnackBar } from '@angular/material
   styleUrl: './eventseat.component.sass'
 })
 export class EventseatComponent {
-  cols: string[] = []
-  rows: string[] = []
-  slots: (Seat | undefined)[] = []
+ 
   seats: Seat[] | undefined
   tickets: Ticket[] = []
   _id: string | undefined
@@ -65,38 +64,53 @@ export class EventseatComponent {
       }
     })
   }
-  getBuyer(seatId: string) {
-    this.getTiceket(seatId)?.occupant
-    return this.getTiceket(seatId)?.occupant
-  }
-  delete(ticketId: string | undefined) {
-    if (ticketId)
-      this.api.request.delete(`/ticket/${ticketId}`).subscribe((value) => {
-        if (this._id) this.loadData(this._id)
-      })
+  // getBuyer(seatId: string) {
+  //   this.getTiceket(seatId)?.occupant
+  //   return this.getTiceket(seatId)?.occupant
+  // }
+  // delete(ticketId: string | undefined) {
+  //   if (ticketId)
+  //     this.api.request.delete(`/ticket/${ticketId}`).subscribe((value) => {
+  //       if (this._id) this.loadData(this._id)
+  //     })
 
-  }
-  getTiceket(seatId: string): Ticket | null {
-    let search = this.tickets.filter(es => es.seatId == seatId)
-    if (search.length > 0)
-      return search[0]
-    return null
-  }
-  startSell(seatId: string, priceTierId: string) {
-    if (this._id)
-      this.api.request.post(`/ticket?create`, { seatId: seatId, eventId: this._id, priceTierId: priceTierId }).subscribe((value) => {
-        if (this._id) this.loadData(this._id)
-      })
+  // }
+  // getTiceket(seatId: string): Ticket | null {
+  //   let search = this.tickets.filter(es => es.seatId == seatId)
+  //   if (search.length > 0)
+  //     return search[0]
+  //   return null
+  // }
+  // startSell(seatId: string, priceTierId: string) {
+  //   if (this._id)
+  //     this.api.request.post(`/ticket?create`, { seatId: seatId, eventId: this._id, priceTierId: priceTierId }).subscribe((value) => {
+  //       if (this._id) this.loadData(this._id)
+  //     })
 
-  }
-  actionSnackbarRef?: MatSnackBarRef<TextOnlySnackBar>
+  // }
+  actionSnackbarRef?: MatSnackBarRef<SeatSelectedComponent>
+  selectedSeatIds: Set<string> = new Set<string>()
 
   checkAction() {
-    if (this.actionSnackbarRef == undefined) {
-      this.actionSnackbarRef = this._snackBar.open('Message archived', 'Undo');
-      this.actionSnackbarRef.onAction().subscribe(() => {
-        
+    if (this.actionSnackbarRef == undefined && this.seatingPlan) {
+      this.actionSnackbarRef = this._snackBar.openFromComponent(SeatSelectedComponent, {
+        data: {
+          eventId: this._id,
+          seats: this.seats,
+          tickets: this.tickets,
+          selectedSeatIds: Array.from(this.selectedSeatIds.values()),
+          priceTiers: this.priceTiers,
+          priceTiersColors: this.seatingPlan?.priceTiersColors
+        }
       });
+      this.actionSnackbarRef.afterDismissed().subscribe(() => {
+        this.actionSnackbarRef = undefined
+        if (this._id)
+          this.loadData(this._id);
+      });
+    }
+    else if (this.actionSnackbarRef && this.seatingPlan) {
+      this.actionSnackbarRef.instance.data.selectedSeatIds = Array.from(this.selectedSeatIds.values())
     }
   }
   openForm() {
@@ -114,19 +128,10 @@ export class EventseatComponent {
           }
         })
         if (this.seatingPlan) {
-          this.seatingPlan.selectedSeatIds = new Set<string>(seatIds)
+          this.selectedSeatIds = new Set<string>(seatIds)
+          this.checkAction()
         }
       })
     }
   }
-}
-
-export interface Ticket {
-  eventId: string,
-  seatId: string,
-  priceTierId: string,
-  occupantId: string
-  priceTier?: PriceTier,
-  occupant?: any
-  _id: string
 }

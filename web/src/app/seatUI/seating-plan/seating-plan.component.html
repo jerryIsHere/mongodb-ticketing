@@ -18,14 +18,14 @@
         [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
         @if (getTiceket(row,col)){
         @if(getBuyer(row,col)){
-        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'tick':'airline_seat_recline_normal'"></mat-icon>
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'airline_seat_recline_normal'"></mat-icon>
         }
         @else{
-        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'tick':'event_seat'"></mat-icon>
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'event_seat'"></mat-icon>
         }
         }
         @else{
-        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'tick':isTicketPlanning?'block':'event_seat'">
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':isTicketPlanning?'block':'event_seat'">
         </mat-icon>
         }
       </button>

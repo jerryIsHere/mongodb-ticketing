@@ -40,6 +40,7 @@ export namespace Ticket {
                         dao.eventId = t.eventId
                         dao.seatId = t.seatId
                         dao.priceTierId = t.priceTierId
+                        dao.paid = false
                         return dao;
                     })
                     TicketDAO.batchCreate(daos).then((tickets: TicketDAO[]) => {
@@ -52,6 +53,7 @@ export namespace Ticket {
                     req.body.priceTierId && typeof req.body.priceTierId == "string"
                 ) {
                     var dao = new TicketDAO({});
+                    dao.paid = false
                     var promises: Promise<any>[] = []
                     dao.eventId = req.body.eventId
                     dao.seatId = req.body.seatId
@@ -70,9 +72,9 @@ export namespace Ticket {
                         res.json({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
                     }).catch((error) => next(error))
                 }
-                else if (req.query.priceTier === "string") {
+                else if (typeof req.query.priceTier === "string") {
                     TicketDAO.getByIds(req.body.ticketIds).then(daos => {
-                        if (req.query.priceTier === "string") {
+                        if (typeof req.query.priceTier === "string") {
                             return TicketDAO.batchUdatePriceTier(daos, req.query.priceTier)
                         }
                         else {
