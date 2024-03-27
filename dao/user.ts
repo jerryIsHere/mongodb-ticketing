@@ -38,12 +38,28 @@ export class UserDAO extends BaseDAO {
     private _singingPart?: string | undefined | null
     public get singingPart(): string | undefined | null { return this._singingPart }
     public set singingPart(value: string | undefined | null) { this._singingPart = value; }
+
+    private _verified: boolean = false;
+    public get verified(): boolean { return this._verified }
+    public set verified(value: boolean) { this._verified = value; }
+
+    private _resetToken?: string | undefined | null
+    public get resetToken(): string | undefined | null { return this._resetToken }
+    public set resetToken(value: string | undefined | null) { this._resetToken = value; }
+
+    private _verificationToken?: string | undefined | null
+    public get verificationToken(): string | undefined | null { return this._verificationToken }
+    public set verificationToken(value: string | undefined | null) { this._verificationToken = value; }
+
     constructor(params:
         {
             username?: string;
             fullname?: string;
             email?: string;
             singingPart?: string | null;
+            verified?: boolean;
+            resetToken?: string | null;
+            verificationToken?: string | null;
         } & {
             doc?: WithId<Document>
         }
@@ -55,13 +71,19 @@ export class UserDAO extends BaseDAO {
             this._email = params.doc.email
             this._saltedpassword = params.doc.saltedpassword
             this._singingPart = params.doc.singingPart
+            this._verified = params.doc.verified
+            this._verificationToken = params.doc.verificationToken
+            this._resetToken = params.doc.resetToken
             if (params.doc.isAdmin) this._isAdmin = true;
         }
         else {
-            this.username = params.username
-            this.fullname = params.fullname
-            this.email = params.email
-            this.singingPart = params.singingPart
+            this._username = params.username
+            this._fullname = params.fullname
+            this._email = params.email
+            this._singingPart = params.singingPart
+            this._verified = false;
+            this._verificationToken = params.verificationToken
+            this._resetToken = params.resetToken
         }
     }
     // static fetchAndDeserialize(id: string) {
@@ -79,6 +101,33 @@ export class UserDAO extends BaseDAO {
             return null
         }
         return new UserDAO({ doc: doc })
+    }
+
+    static async findByEmail(email: string): Promise<UserDAO | null> {
+
+        var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ email: email })
+
+        if (!doc) 
+            return null;
+        return new UserDAO({ doc: doc });
+    }
+
+    static async findByResetToken(resetToken: string): Promise<UserDAO | null> {
+
+        var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ resetToken: resetToken })
+
+        if (!doc) 
+            return null;
+        return new UserDAO({ doc: doc });
+    }
+
+    static async findByVerificationToken(verificationToken: string): Promise<UserDAO | null> {
+
+        var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken })
+
+        if (!doc) 
+            return null;
+        return new UserDAO({ doc: doc });
     }
 
     static async login(username: string, password: string): Promise<UserDAO> {
@@ -124,6 +173,22 @@ export class UserDAO extends BaseDAO {
                 }
             })
         })
+    }
+
+    public async update(userData: UserDAO) {
+        try {
+            const result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: userData.id! }, {
+                ...userData
+            });
+            if (!result.acknowledged || result.matchedCount === 0 || result.upsertedCount === 0) throw new RequestError(`Update User Data (${this.username}) fail!`)
+            return {
+                success: true,
+                data: userData
+            };
+        } catch (error) {
+            console.error(error);
+            throw new RequestError(`Update User Data (${this.username}) fail!`)
+        }
     }
 }
 
