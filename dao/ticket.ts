@@ -440,14 +440,14 @@ export class TicketDAO extends BaseDAO {
                 Promise.all(daos.filter(dao => dao.id != undefined).map(dao =>
                     new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                         if (dao.occupantId != null) {
-                            daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${this.id} failed as it has occupant.`))
+                            daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed as it has occupant.`))
                         }
                         var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true))
                         if (result.deletedCount > 0) {
                             daoresolve(dao)
                         }
                         else {
-                            daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${this.id} failed with unknown reason.`))
+                            daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`))
                         }
                     })
                 )).then(daos => {
