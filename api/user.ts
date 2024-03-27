@@ -23,7 +23,6 @@ export namespace User {
         user.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.login != undefined) {
                 if (req.body.password) {
-                    console.log("test")
                     UserDAO.login(req.body.username, req.body.password).then(user => {
                         req.session['user'] = user.withoutCredential()
                         res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
