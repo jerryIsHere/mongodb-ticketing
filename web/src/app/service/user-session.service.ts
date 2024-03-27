@@ -14,7 +14,6 @@ export class UserSessionService {
     cookieStore.get("user").then((cookie: any) => {
       if (cookie && cookie.value) { this.user = JSON.parse(decodeURIComponent(cookie.value)) } else {
         this.user = null
-        location.reload()
       }
     });
   }
