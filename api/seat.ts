@@ -10,7 +10,7 @@ export namespace Seat {
         seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 SeatDAO.listByVenueId(req.query.venueId).then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Hydrated())  })
+                    res.json({ success: true, data: result.map(dao => dao.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
@@ -18,10 +18,21 @@ export namespace Seat {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 let venueId = req.query.venueId
                 if (req.query.batch != undefined && req.body.seats && Array.isArray(req.body.seats)) {
-                    var daos: SeatDAO[] = req.body.seats.map((seat: { row: string, no: string }) => {
+                    type seatType = { no: number, row: string, coord: { x: number, y: number, sectX: number, sectY: number } }
+                    var SeatTypeCheck = (s: seatType): s is seatType => {
+                        return typeof s.no == "number" &&
+                            typeof s.row == "string" &&
+                            s.coord &&
+                            typeof s.coord.x == "number" &&
+                            typeof s.coord.y == "number" &&
+                            typeof s.coord.sectX == "number" &&
+                            typeof s.coord.sectY == "number"
+                    }
+                    var daos: SeatDAO[] = req.body.seats.filter((s: seatType) => SeatTypeCheck(s)).map((s: any) => {
                         var dao = new SeatDAO({
-                            row: seat.row,
-                            no: Number(seat.no),
+                            row: s.row,
+                            no: Number(s.no),
+                            coord: s.coord
                         })
                         dao.venueId = venueId
                         return dao;
@@ -33,10 +44,18 @@ export namespace Seat {
             }
         })
         seat.patch("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
-            if (req.body.tierName && req.body.price) {
-                var dao = new SeatDAO({})
-                dao.update().then((value) => {
-                    res.json({ success: true })
+            if (req.body.coord) {
+                type coordType = { x: number, y: number, sectX: number, sectY: number }
+                var coordTypeCheck = (c: coordType): c is coordType => {
+                    return typeof c.x == "number" &&
+                        typeof c.y == "number" &&
+                        typeof c.sectX == "number" &&
+                        typeof c.sectY == "number"
+                }
+                var dao = await SeatDAO.getById(req.params.seatId)
+                dao.coord = req.body.coord
+                dao.update().then((seat: SeatDAO) => {
+                    res.json({ success: true, data: seat.Hydrated() })
                 }).catch((error) => next(error))
             }
         })

@@ -5,6 +5,13 @@ import { VenueDAO } from "./venue";
 import { TicketDAO } from "./ticket";
 
 
+type coordType = { x: number, y: number, sectX: number, sectY: number }
+var coordTypeCheck = (c: coordType): c is coordType => {
+    return c && typeof c.x == "number" &&
+        typeof c.y == "number" &&
+        typeof c.sectX == "number" &&
+        typeof c.sectY == "number"
+}
 
 export class SeatDAO extends BaseDAO {
     public static readonly collection_name = "seats"
@@ -15,6 +22,13 @@ export class SeatDAO extends BaseDAO {
     private _no: number | undefined
     public get no() { return this._no }
     public set no(value: number | undefined) { this._no = value; }
+    private _coord: { x: number, y: number, sectX: number, sectY: number } | undefined
+    public get coord() { return this._coord }
+    public set coord(value: coordType | undefined) {
+        if (value && coordTypeCheck(value)) {
+            this._coord = value
+        }
+    }
 
     private _venueId: ObjectId | undefined
     public get venueId() { return this._venueId }
@@ -31,6 +45,7 @@ export class SeatDAO extends BaseDAO {
     constructor(params: {
         row?: string,
         no?: number,
+        coord?: { x: number, y: number, sectX: number, sectY: number }
     } & { doc?: WithId<Document> }
     ) {
         super(params.doc && params.doc._id ? params.doc._id : undefined);
@@ -38,12 +53,15 @@ export class SeatDAO extends BaseDAO {
             this._row = params.doc.row
             this._no = params.doc.no
             this._venueId = params.doc.venueId
+            this._coord = params.doc.coord
         }
         if (params.row)
             this.row = params.row
 
         if (params.no)
             this.no = params.no
+        if (params.coord)
+            this.coord = params.coord
     }
     static async listByVenueId(venueId: string) {
         return new Promise<SeatDAO[]>(async (resolve, reject) => {
@@ -69,11 +87,19 @@ export class SeatDAO extends BaseDAO {
             }
         })
     }
+    async duplicationChecking() {
+        await Database.mongodb.collection(SeatDAO.collection_name).findOne({ venueId: this.venueId, no: this.no, row: this.row }).then(instance => {
+            if (instance) {
+                throw new RequestError(`Seat in the same venue with id ${this.venueId} at row ${this.row} with no ${this.no} already exists.`)
+            }
+        })
+    }
     async create(): Promise<SeatDAO> {
         return new Promise<SeatDAO>((resolve, reject) => {
             Database.session.withTransaction(async () => {
                 try {
                     await this.checkReference()
+                    await this.duplicationChecking()
                 }
                 catch (error) {
                     reject(error)
@@ -101,6 +127,7 @@ export class SeatDAO extends BaseDAO {
                     new Promise<SeatDAO>(async (daoresolve, daoreject) => {
                         try {
                             await dao.checkReference()
+                            await dao.duplicationChecking()
                         }
                         catch (err) {
                             daoreject(err)
@@ -127,12 +154,20 @@ export class SeatDAO extends BaseDAO {
     async update(): Promise<SeatDAO> {
         return new Promise<SeatDAO>(async (resolve, reject) => {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
+            try {
+                await this.checkReference()
+                await this.duplicationChecking()
+            }
+            catch (err) {
+                reject(err)
+                return
+            }
             var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
             if (result.modifiedCount > 0) {
-                return this
+                resolve(this)
             }
             else {
-                throw new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`)
+                reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
             }
 
         })
