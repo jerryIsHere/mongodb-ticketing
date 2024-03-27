@@ -4,19 +4,32 @@ import { BaseDAO } from "./dao";
 import { SeatDAO } from "./seat";
 import { EventDAO } from "./event";
 
+export type sectionType = { x: number, y: number }
+export function sectionTypeCheck(s: sectionType): s is sectionType {
+    return typeof s.x == "number" &&
+        typeof s.y == "number"
+}
+
 export class VenueDAO extends BaseDAO {
     public static readonly collection_name = "venues"
+    private _sections: sectionType[] | undefined
+    public get sections() { return this._sections }
+    public set sections(value: sectionType[] | undefined) { this._sections = value; }
+
     private _venuename: string | undefined
     public get venuename() { return this._venuename }
     public set venuename(value: string | undefined) { this._venuename = value; }
 
-    constructor(params: { venuename?: string } & { doc?: WithId<Document> }) {
+    constructor(params: { venuename?: string, sections?: sectionType[] } & { doc?: WithId<Document> }) {
         super(params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._venuename = params.doc.venuename
+            this._sections = params.doc.sections
         }
         if (params.venuename)
             this.venuename = params.venuename
+        if (params.sections)
+            this.sections = params.sections
     }
     static async listAll() {
         return new Promise<VenueDAO[]>(async (resolve, reject) => {

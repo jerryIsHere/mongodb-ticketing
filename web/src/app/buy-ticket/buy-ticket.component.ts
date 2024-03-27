@@ -4,7 +4,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
 import { Event } from '../management-panel/management-panel.component';
 import { MatMenuModule } from '@angular/material/menu';
-import { Seat } from '../venue-seat/venue-seat.component';
+import { Seat } from '../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
 import { PriceTier } from '../management-panel/management-panel.component';
 import { UserSessionService } from '../service/user-session.service';
@@ -17,7 +17,7 @@ import { UserSessionService } from '../service/user-session.service';
   styleUrl: './buy-ticket.component.sass'
 })
 export class BuyTicketComponent {
-  cols: string[] = []
+  cols: number[] = []
   rows: string[] = []
   slots: (Seat | undefined)[] = []
   seats: Seat[] | undefined
@@ -30,7 +30,7 @@ export class BuyTicketComponent {
     this._id = id
     if (id) this.loadData(id)
   }
-  constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService ) {
+  constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService) {
     this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.priceTiers = result.data
@@ -50,7 +50,7 @@ export class BuyTicketComponent {
             this.seats = result.data
             if (this.seats) {
               this.rows = Array.from((result.data as Array<Seat>).map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
-              this.cols = Array.from((result.data as Array<Seat>).map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
+              this.cols = Array.from((result.data as Array<Seat>).map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<number>())).sort()
               this.slots = []
               for (let row of this.rows) {
                 for (let col of this.cols) {

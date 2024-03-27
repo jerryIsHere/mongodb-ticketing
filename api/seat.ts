@@ -1,7 +1,7 @@
 
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
-import { SeatDAO } from "../dao/seat";
+import { SeatDAO, coordType, coordTypeCheck } from "../dao/seat";
 
 export namespace Seat {
     export function RouterFactory(): Express.Router {
@@ -18,15 +18,12 @@ export namespace Seat {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 let venueId = req.query.venueId
                 if (req.query.batch != undefined && req.body.seats && Array.isArray(req.body.seats)) {
-                    type seatType = { no: number, row: string, coord: { x: number, y: number, sectX: number, sectY: number } }
+                    type seatType = { no: number, row: string, coord: coordType }
                     var SeatTypeCheck = (s: seatType): s is seatType => {
                         return typeof s.no == "number" &&
                             typeof s.row == "string" &&
                             s.coord &&
-                            typeof s.coord.x == "number" &&
-                            typeof s.coord.y == "number" &&
-                            typeof s.coord.sectX == "number" &&
-                            typeof s.coord.sectY == "number"
+                            coordTypeCheck(s.coord)
                     }
                     var daos: SeatDAO[] = req.body.seats.filter((s: seatType) => SeatTypeCheck(s)).map((s: any) => {
                         var dao = new SeatDAO({
@@ -45,17 +42,17 @@ export namespace Seat {
         })
         seat.patch("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.coord) {
-                type coordType = { x: number, y: number, sectX: number, sectY: number }
-                var coordTypeCheck = (c: coordType): c is coordType => {
-                    return typeof c.x == "number" &&
-                        typeof c.y == "number" &&
-                        typeof c.sectX == "number" &&
-                        typeof c.sectY == "number"
-                }
                 var dao = await SeatDAO.getById(req.params.seatId)
                 dao.coord = req.body.coord
                 dao.update().then((seat: SeatDAO) => {
                     res.json({ success: true, data: seat.Hydrated() })
+                }).catch((error) => next(error))
+            }
+        })
+        seat.delete("/", async (req: Request, res: Response, next): Promise<any> => {
+            if (req.query.batch != undefined && req.body.seatIds && Array.isArray(req.body.seatIds)) {
+                SeatDAO.getByIds(req.body.seatIds).then(daos => SeatDAO.batchDelete(daos)).then((seats: SeatDAO[]) => {
+                    res.json({ success: true, data: seats.map(seat => seat.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })

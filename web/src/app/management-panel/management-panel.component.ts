@@ -107,6 +107,7 @@ export interface Event {
 }
 export interface Venue {
   venuename?: string;
+  sections?: { x: number, y: number }[]
   _id?: string;
 }
 export interface PriceTier {

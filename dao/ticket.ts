@@ -232,15 +232,18 @@ export class TicketDAO extends BaseDAO {
     }
     static async getByIds(ids: string[]): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>(async (resolve, reject) => {
-            var tickets: TicketDAO[] = []
-            ids.map(async id => {
-                var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
-                if (doc) {
-                    return new TicketDAO({ doc: doc })
-                }
-                reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+            Promise.all(
+                ids.map(async id =>
+                    new Promise<TicketDAO>(async (daoresolve, daoreject) => {
+                        var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
+                        if (doc) {
+                            daoresolve(new TicketDAO({ doc: doc }))
+                        }
+                        daoreject(new RequestError(`${this.name} has no instance with id ${id}.`))
+                    }))
+            ).then(daos => {
+                resolve(daos)
             })
-            resolve(tickets)
         })
     }
     async checkReference() {

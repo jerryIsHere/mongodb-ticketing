@@ -1,0 +1,46 @@
+  <mat-form-field>
+    <mat-label>Venue section</mat-label>
+    <mat-select [(ngModel)]="selectedSection" (selectionChange)="selectedSection = $event.value;render()"
+      [compareWith]="compareSection">
+      @for(section of venue.sections; track section){
+      <mat-option [value]="section">{{section.x}}-{{section.y}}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-list>
+    @for(row of rows; track row){
+    <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
+      <span>{{row}}</span>
+      @for(col of cols; track col){
+      @if (getSeat(row,col)) {
+      <button (click)="toggleSelect(getSeat(row,col))" mat-stroked-button
+        [style.background-color]="getTiceket(row,col)?getColorByTicket(getTiceket(row,col)):'grey'" cdkDrag
+        [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
+        @if (getTiceket(row,col)){
+        @if(getBuyer(row,col)){
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'tick':'airline_seat_recline_normal'"></mat-icon>
+        }
+        @else{
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'tick':'event_seat'"></mat-icon>
+        }
+        }
+        @else{
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'tick':isTicketPlanning?'block':'event_seat'">
+        </mat-icon>
+        }
+      </button>
+      }
+      @else {
+      <button mat-button style="background-color: black" cdkDrag [cdkDragDisabled]="seatingPlanEditing" disabled>
+      </button>
+      }
+      }
+    </mat-list-item>
+    }
+  </mat-list>
+  <mat-chip-listbox>
+    @for( priceTier of priceTiers; track priceTier){
+    <mat-chip [style.background-color]="priceTier._id?'#'+priceTiersColors.get(priceTier._id):''">
+      {{priceTier.tierName}}:{{priceTier.price}}</mat-chip>
+    }
+  </mat-chip-listbox>

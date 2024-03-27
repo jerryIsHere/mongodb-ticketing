@@ -1,16 +1,8 @@
-<form [formGroup]="seatMatrixForm">
+<form [formGroup]="queryForm">
   <mat-form-field>
     <mat-label>Code for rows</mat-label>
-    <input matInput formControlName="rows" placeholder="a,b,c,aa,bb" required>
-    @if (seatMatrixForm.controls['rows'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-  <br>
-  <mat-form-field>
-    <mat-label>No of seats in earch row</mat-label>
-    <input matInput formControlName="nos" placeholder="1,2,3,4,5" required>
-    @if (seatMatrixForm.controls['nos'].hasError('required')) {
+    <textarea matInput formControlName="query" placeholder="a1-za35,b1,c2,za1,bb" required></textarea>
+    @if (queryForm.controls['query'].hasError('required')) {
     <mat-error>This field is required</mat-error>
     }
   </mat-form-field>

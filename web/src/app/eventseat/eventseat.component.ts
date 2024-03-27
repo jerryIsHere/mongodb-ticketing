@@ -1,17 +1,18 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { Event } from '../management-panel/management-panel.component';
-import { MatMenuModule } from '@angular/material/menu';
-import { Seat } from '../venue-seat/venue-seat.component';
+import { Event, Venue } from '../management-panel/management-panel.component';
+import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
+import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
+import { Seat } from '../seatUI/seating-plan/seating-plan.component';;
 import { MatButtonModule } from '@angular/material/button';
 import { PriceTier } from '../management-panel/management-panel.component';
-
+import { MatSnackBar, MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
 @Component({
   selector: 'app-eventseat',
   standalone: true,
-  imports: [MatGridListModule, MatMenuModule, MatButtonModule],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent],
   templateUrl: './eventseat.component.html',
   styleUrl: './eventseat.component.sass'
 })
@@ -23,13 +24,15 @@ export class EventseatComponent {
   tickets: Ticket[] = []
   _id: string | undefined
   event: Event | undefined
+  venue: Venue | undefined
+  @ViewChild('seatingPlan') seatingPlan?: SeatingPlanComponent;
   priceTiers: PriceTier[] | undefined
   @Input()
   set id(id: string) {
     this._id = id
     if (id) this.loadData(id)
   }
-  constructor(private api: ApiService, public dialog: MatDialog) {
+  constructor(private api: ApiService, public dialog: MatDialog, private _snackBar: MatSnackBar) {
     this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.priceTiers = result.data
@@ -47,16 +50,11 @@ export class EventseatComponent {
         this.api.request.get(`/seat?venueId=${event.venueId}`).toPromise().then((result: any) => {
           if (result && result.data) {
             this.seats = result.data
-            if (this.seats) {
-              this.rows = Array.from((result.data as Array<Seat>).map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
-              this.cols = Array.from((result.data as Array<Seat>).map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort()
-              this.slots = []
-              for (let row of this.rows) {
-                for (let col of this.cols) {
-                  this.slots.push(this.seats.find(seat => seat.no == col && seat.row == row))
-                }
-              }
-            }
+          }
+        })
+        this.api.request.get(`/venue/${event.venueId}`).toPromise().then((result: any) => {
+          if (result && result.data) {
+            this.venue = result.data
           }
         })
       }
@@ -68,8 +66,8 @@ export class EventseatComponent {
     })
   }
   getBuyer(seatId: string) {
-    this.getTiceket(seatId)?.occupant 
-    return this.getTiceket(seatId)?.occupant 
+    this.getTiceket(seatId)?.occupant
+    return this.getTiceket(seatId)?.occupant
   }
   delete(ticketId: string | undefined) {
     if (ticketId)
@@ -90,6 +88,36 @@ export class EventseatComponent {
         if (this._id) this.loadData(this._id)
       })
 
+  }
+  actionSnackbarRef?: MatSnackBarRef<TextOnlySnackBar>
+
+  checkAction() {
+    if (this.actionSnackbarRef == undefined) {
+      this.actionSnackbarRef = this._snackBar.open('Message archived', 'Undo');
+      this.actionSnackbarRef.onAction().subscribe(() => {
+        
+      });
+    }
+  }
+  openForm() {
+    if (this._id && this.seatingPlan?.selectedSection) {
+      const dialogRef = this.dialog.open(SeatFormComponent, {
+        data: { _id: this._id }
+      });
+      dialogRef.afterClosed().subscribe((rowsNcols: { row: string, no: string }[]) => {
+        let seatIds: string[] = []
+        rowsNcols.forEach((rc) => {
+          let seat = this.seats?.filter(s => s.row == rc.row && s.no == Number(rc.no) &&
+            s.coord.sectX == this.seatingPlan?.selectedSection?.x && s.coord.sectY == this.seatingPlan?.selectedSection?.y)
+          if (seat && seat.length > 0) {
+            seatIds.push(seat[0]._id)
+          }
+        })
+        if (this.seatingPlan) {
+          this.seatingPlan.selectedSeatIds = new Set<string>(seatIds)
+        }
+      })
+    }
   }
 }
 

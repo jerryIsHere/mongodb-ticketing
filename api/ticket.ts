@@ -76,7 +76,8 @@ export namespace Ticket {
                             return TicketDAO.batchUdatePriceTier(daos, req.query.priceTier)
                         }
                         else {
-                            throw new RequestError(`${req.query.priceTier} is not of type string`)
+                            next(new RequestError(`${req.query.priceTier} is not of type string`))
+                            return []
                         }
                     }
                     ).then((tickets: TicketDAO[]) => {

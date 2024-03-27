@@ -1,4 +1,4 @@
-import { ActivatedRouteSnapshot, RouterStateSnapshot, Routes } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, Routes } from '@angular/router';
 import { ShowListComponent } from './show-list/show-list.component';
 import { ManagementPanelComponent } from './management-panel/management-panel.component';
 import { VenueSeatComponent } from './venue-seat/venue-seat.component';
@@ -12,7 +12,13 @@ export const routes: Routes = [
     { path: '', component: ShowListComponent },
     {
         path: 'management', component: ManagementPanelComponent, canActivate: [(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
-            return inject(UserSessionService).user?.hasAdminRight == true
+            if (inject(UserSessionService).user?.hasAdminRight == true) {
+                return true
+            }
+            else {
+                inject(Router).navigate(['/'])
+                return false
+            }
         }]
     },
     { path: 'my-ticket', component: MyticketComponent },

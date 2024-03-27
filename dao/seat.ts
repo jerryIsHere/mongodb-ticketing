@@ -5,10 +5,9 @@ import { VenueDAO } from "./venue";
 import { TicketDAO } from "./ticket";
 
 
-type coordType = { x: number, y: number, sectX: number, sectY: number }
-var coordTypeCheck = (c: coordType): c is coordType => {
-    return c && typeof c.x == "number" &&
-        typeof c.y == "number" &&
+export type coordType = { orderInRow: number, sectX: number, sectY: number }
+export function coordTypeCheck(c: coordType): c is coordType {
+    return c && typeof c.orderInRow == "number" &&
         typeof c.sectX == "number" &&
         typeof c.sectY == "number"
 }
@@ -22,7 +21,7 @@ export class SeatDAO extends BaseDAO {
     private _no: number | undefined
     public get no() { return this._no }
     public set no(value: number | undefined) { this._no = value; }
-    private _coord: { x: number, y: number, sectX: number, sectY: number } | undefined
+    private _coord: coordType | undefined
     public get coord() { return this._coord }
     public set coord(value: coordType | undefined) {
         if (value && coordTypeCheck(value)) {
@@ -45,7 +44,7 @@ export class SeatDAO extends BaseDAO {
     constructor(params: {
         row?: string,
         no?: number,
-        coord?: { x: number, y: number, sectX: number, sectY: number }
+        coord?: coordType
     } & { doc?: WithId<Document> }
     ) {
         super(params.doc && params.doc._id ? params.doc._id : undefined);
@@ -80,10 +79,30 @@ export class SeatDAO extends BaseDAO {
             reject(new RequestError(`${this.name} has no instance with id ${id}.`))
         })
     }
+
+
+    static async getByIds(ids: string[]): Promise<SeatDAO[]> {
+        return new Promise<SeatDAO[]>(async (resolve, reject) => {
+            Promise.all(
+                ids.map(async id =>
+                    new Promise<SeatDAO>(async (daoresolve, daoreject) => {
+                        var doc = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(id) })
+                        if (doc) {
+                            daoresolve(new SeatDAO({ doc: doc }))
+                        }
+                        daoreject(new RequestError(`${this.name} has no instance with id ${id}.`))
+                    }))
+            ).then(daos => {
+                resolve(daos)
+            })
+        })
+    }
     async checkReference() {
         await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
             if (instance == null) {
                 throw new RequestError(`Venue with id ${this._venueId} doesn't exists.`)
+            } else if (instance.sections.filter((s: any) => s.x == this.coord?.sectX && s.y == this.coord?.sectY).length == 0) {
+                throw new RequestError(`Venue with id ${this._venueId} doesn't contain section ${this.coord?.sectX}-${this.coord?.sectY}.`)
             }
         })
     }
@@ -193,6 +212,28 @@ export class SeatDAO extends BaseDAO {
                     }
                 }
                 else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
+            })
+        }).finally(() => {
+            Database.session.endSession();
+        })
+    }
+    static async batchDelete(daos: SeatDAO[]): Promise<SeatDAO[]> {
+        return new Promise<SeatDAO[]>((resolve, reject) => {
+            Database.session.withTransaction(async () => {
+                Promise.all(daos.filter(dao => dao.id != undefined).map(dao =>
+                    new Promise<SeatDAO>(async (daoresolve, daoreject) => {
+                        var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true))
+                        if (result.deletedCount > 0) {
+                            daoresolve(dao)
+                        }
+                        else {
+                            daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`))
+                        }
+                    })
+                )).then(daos => {
+                    resolve(daos)
+                    Database.session.commitTransaction();
+                })
             })
         }).finally(() => {
             Database.session.endSession();
