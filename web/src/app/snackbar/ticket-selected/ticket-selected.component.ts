@@ -21,9 +21,9 @@ export class TicketSelectedComponent {
     @Inject(MAT_SNACK_BAR_DATA) public data: {
       tickets: Ticket[],
     }, private api: ApiService, private router: Router,) {
-      router.events.subscribe((_) => {
-        snackRef.dismiss()
-      })
+    router.events.subscribe((_) => {
+      snackRef.dismiss()
+    })
     this.data.tickets = this.data.tickets.filter(t => t.occupant == null || t.occupant == undefined || t.occupied)
   }
   totalCost() {
@@ -36,8 +36,9 @@ export class TicketSelectedComponent {
         ticketIds: this.data.tickets.map(t => t._id)
       },).toPromise().then((result: any) => {
         if (result && result.success) {
+          this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: Ticket) => ticket._id) } })
         }
-      }).then(_ => {
+      }).then(result => {
         this.snackRef.dismiss();
       })
       this.doing = true

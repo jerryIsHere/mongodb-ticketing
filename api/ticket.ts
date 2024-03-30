@@ -40,6 +40,24 @@ export namespace Ticket {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
+            else if (req.query.list != undefined) {
+                let ids: string[] | undefined
+                try {
+
+                    ids = (JSON.parse(req.query.list as string)).filter((value: any) => typeof value == "string")
+
+                } catch (e) {
+
+                }
+                if (ids) {
+                    TicketDAO.listByIds(ids, false).then(result => {
+                        next({ success: true, data: result })
+                    }).catch((error) => next(error))
+                }
+                else {
+                    next(new RequestError("unregconized list query"))
+                }
+            }
         })
 
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {

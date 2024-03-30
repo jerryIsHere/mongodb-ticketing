@@ -1,11 +1,11 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { ApiService } from '../service/api.service';
+import { ApiService } from '../../service/api.service';
 import { MatDialog } from '@angular/material/dialog';
-import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
+import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
-import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
-import { Seat } from '../interface';
+import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
+import { Seat } from '../../interface';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,

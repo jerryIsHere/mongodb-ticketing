@@ -200,6 +200,13 @@ export class TicketDAO extends BaseDAO {
             resolve((await cursor.toArray()));
         })
     }
+    static async listByIds(ids: string[], showOccupant: boolean) {
+        return new Promise<Document[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(TicketDAO.collection_name).
+                aggregate(this.aggregateQuery({ $match: { _id: { $in: ids.map(id => new ObjectId(id)) } } }, showOccupant))
+            resolve((await cursor.toArray()));
+        })
+    }
     static async ofUser(userId: string, showOccupant: boolean) {
         return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
