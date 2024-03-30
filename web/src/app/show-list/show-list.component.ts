@@ -6,12 +6,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { Show } from '../interface'
 import { ApiService } from '../service/api.service';
 @Component({
   selector: 'app-show-list',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, RouterModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, RouterModule, MatButtonModule],
   templateUrl: './show-list.component.html',
   styleUrl: './show-list.component.sass'
 })
