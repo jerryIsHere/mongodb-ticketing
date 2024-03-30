@@ -10,7 +10,7 @@
   <mat-form-field>
     <mat-label>Sections</mat-label>
     <mat-chip-grid #chipGrid aria-label="Enter fruits">
-      @for (section of sections; track section) {
+      @for (section of data.sections; track section) {
       <mat-chip-row (removed)="remove(section)">
         {{section.x}}-{{section.y}}
         <button matChipRemove>
@@ -18,10 +18,11 @@
         </button>
       </mat-chip-row>
       }
-      <input placeholder=" e.g. 1-1,1-2" [matChipInputFor]="chipGrid" [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-        matChipInputAddOnBlur (matChipInputTokenEnd)="add($event)" />
+      <input placeholder=" e.g. 1-1,1-2" [matChipInputFor]="chipGrid"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes" matChipInputAddOnBlur
+        (matChipInputTokenEnd)="add($event)" />
     </mat-chip-grid>
-    @if (sections.length == 0) {
+    @if (data.sections?.length == 0) {
     <mat-error>This field is required</mat-error>
     }
   </mat-form-field>

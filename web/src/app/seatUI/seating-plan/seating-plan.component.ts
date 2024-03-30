@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select'
 import { FormsModule } from '@angular/forms';
-import { PriceTier, Venue } from '../../management-panel/management-panel.component';
+import { PriceTier, Venue, Ticket, Seat } from '../../interface';
 const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors for pricetiers
 type Section = { x: number, y: number }
 @Component({
@@ -20,15 +20,22 @@ type Section = { x: number, y: number }
 export class SeatingPlanComponent {
   @Input() venue: Venue = { sections: [] }
   selectedSection?: { x: number, y: number }
+  private _selectedSeatIds: Set<string> = new Set<string>()
   @Input()
-  selectedSeatIds: Set<string> = new Set<string>()
+  get selectedSeatIds(): Set<string> { return this._selectedSeatIds }
+  set selectedSeatIds(value: Set<string>) {
+    value.forEach(ids => {
+      this._selectedSeatIds.add(ids)
+    })
+  }
+
   @Output() selectedSeatIdsChange = new EventEmitter<Set<string>>();
   toggleSelect(seat: Seat | null) {
-    if (seat) this.selectedSeatIds.has(seat._id) ? this.selectedSeatIds.delete(seat._id) : this.selectedSeatIds.add(seat._id)
-    this.selectedSeatIdsChange.emit(this.selectedSeatIds)
+    if (seat) this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this._selectedSeatIds.add(seat._id)
+    this.selectedSeatIdsChange.emit(this._selectedSeatIds)
   }
   isSeatSelected(id: string | undefined): undefined | boolean {
-    if (id) return this.selectedSeatIds.has(id)
+    if (id) return this._selectedSeatIds.has(id)
     return
   }
   @Input() seats: Seat[] = []
@@ -57,7 +64,7 @@ export class SeatingPlanComponent {
   ngOnChangnges(changes: SimpleChanges) {
     console.log(changes)
     this.init()
-    if(changes["selectedSeatIds"]) this.selectedSeatIdsChange.emit(this.selectedSeatIds)
+    if (changes["selectedSeatIds"]) this.selectedSeatIdsChange.emit(this._selectedSeatIds)
   }
   ngOnInit() {
     this.init()
@@ -114,22 +121,4 @@ export class SeatingPlanComponent {
     let filtered = this.seats?.filter(s => s.coord.sectX == this.selectedSection?.x && s.coord.sectY == this.selectedSection?.y)
     return filtered ? filtered : []
   }
-}
-
-export interface Seat {
-  row: string
-  no: number
-  venueId: string
-  _id: string
-  coord: { orderInRow: number, sectX: number, sectY: number }
-}
-export interface Ticket {
-  eventId: string,
-  seatId: string,
-  priceTierId: string,
-  occupantId: string
-  priceTier: PriceTier,
-  occupied?: boolean
-  occupant?: any
-  _id: string
 }

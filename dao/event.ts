@@ -140,7 +140,7 @@ export class EventDAO extends BaseDAO {
             if (this._id) {
                 var result = await Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
                 if (result.modifiedCount > 0) {
-                    return this
+                    resolve(this)
                 }
                 else {
                     reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))

@@ -1,13 +1,12 @@
 import { Component, Inject } from '@angular/core';
-import { PriceTier } from '../../management-panel/management-panel.component';
-import { Seat } from '../../seatUI/seating-plan/seating-plan.component';
-import { Ticket } from '../../seatUI/seating-plan/seating-plan.component'
+import { PriceTier, Seat, Ticket } from '../../interface';
 import {
   MAT_SNACK_BAR_DATA,
   MatSnackBarRef,
 } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiService } from '../../service/api.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-seat-selected',
@@ -26,8 +25,10 @@ export class SeatSelectedComponent {
       priceTiers: PriceTier[] | undefined,
       priceTiersColors?: Map<string, string>,
       eventId?: string | undefined
-    }, private api: ApiService,) {
-
+    }, private api: ApiService, private router: Router) {
+      router.events.subscribe((_)=>{
+        snackRef.dismiss()
+      })
   }
   sellAt(priceTier: PriceTier) {
     if (this.data.seats && this.data.eventId) {

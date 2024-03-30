@@ -2,12 +2,10 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { Event, Venue } from '../management-panel/management-panel.component';
+import { Show, Venue, Ticket, Seat, PriceTier } from '../interface';
 import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
-import { SeatingPlanComponent, Ticket } from '../seatUI/seating-plan/seating-plan.component';
-import { Seat } from '../seatUI/seating-plan/seating-plan.component';;
+import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
-import { PriceTier } from '../management-panel/management-panel.component';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { UserSessionService } from '../service/user-session.service';
 import { TicketSelectedComponent } from '../snackbar/ticket-selected/ticket-selected.component';
@@ -23,7 +21,7 @@ export class BuyTicketComponent {
   seats: Seat[] | undefined
   tickets: Ticket[] = []
   _id: string | undefined
-  event: Event | undefined
+  event: Show | undefined
   venue: Venue | undefined
   @ViewChild('seatingPlan') seatingPlan?: SeatingPlanComponent;
   priceTiers: PriceTier[] | undefined
@@ -33,7 +31,8 @@ export class BuyTicketComponent {
     if (id) this.loadData(id)
   }
 
-  constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService, private _snackBar: MatSnackBar) {
+  constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService,
+    private _snackBar: MatSnackBar) {
     this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
       if (result && result.data)
         this.priceTiers = result.data

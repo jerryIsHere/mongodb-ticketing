@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../service/api.service';
-import { Event, Venue } from '../../management-panel/management-panel.component';
+import { Show, Venue } from '../../interface';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -27,7 +27,7 @@ export class EventFormComponent {
   });
   constructor(
     public dialogRef: MatDialogRef<EventFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { event: Event, venues: Venue[] },
+    @Inject(MAT_DIALOG_DATA) public data: { event: Show, venues: Venue[] },
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) { }

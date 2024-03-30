@@ -5,8 +5,7 @@ import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
-import { Seat } from '../seatUI/seating-plan/seating-plan.component';
-
+import { Seat } from '../interface';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,

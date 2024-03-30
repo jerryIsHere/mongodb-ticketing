@@ -11,8 +11,10 @@ import { UserSessionService } from './service/user-session.service';
 export const routes: Routes = [
     { path: '', component: ShowListComponent },
     {
-        path: 'management', component: ManagementPanelComponent, canActivate: [(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
-            if (inject(UserSessionService).user?.hasAdminRight == true) {
+        path: 'management', component: ManagementPanelComponent, canActivate: [async (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+            let userService = inject(UserSessionService)
+            await userService.checkUserSession()
+            if (userService.user?.hasAdminRight == true) {
                 return true
             }
             else {
