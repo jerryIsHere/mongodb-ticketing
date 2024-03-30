@@ -1,6 +1,6 @@
 <mat-card>
   <mat-card-title>Sold TIckets</mat-card-title>
-  <app-sold-ticket-list></app-sold-ticket-list>
+  <app-sold-ticket-list [tickets]="soldTickets" (dataChanged)="dataListControls['soldTickets'].loadData()"></app-sold-ticket-list>
 </mat-card>
 <mat-card>
   <mat-card-title>Events</mat-card-title>

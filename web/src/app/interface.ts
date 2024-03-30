@@ -1,4 +1,4 @@
-// refer to Event but named as Show to avoid name conflict with javascript html event
+// refer to Event of backend logic but renamed to Show to avoid name conflict with browser event javascript object
 export interface Show {
     eventname?: string;
     datetime?: Date;
@@ -28,9 +28,13 @@ export interface Ticket {
     eventId: string,
     seatId: string,
     priceTierId: string,
-    occupantId: string
+    occupantId: string | null,
     priceTier: PriceTier,
-    occupied?: boolean
-    occupant?: any
-    _id: string
+    seat?: Seat,
+    event?: Show,
+    occupied?: boolean,
+    occupant?: any,
+    _id: string,
+    paid?: boolean | null,
+    paymentRemark?: string | null,
 }

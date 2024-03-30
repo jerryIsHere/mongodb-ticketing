@@ -15,7 +15,7 @@ export namespace Ticket {
         var ticket = Router()
 
         ticket.use((req: Request, res: Response, next) => {
-            if(req.method != 'PATH' && req.query.buy != undefined){
+            if (req.method != 'PATH' && req.query.buy != undefined) {
                 next()
             }
             else if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
@@ -32,6 +32,11 @@ export namespace Ticket {
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 TicketDAO.ofUser((req.session['user'] as any)._id, (req.session["user"] as any)?._isAdmin).then(result => {
+                    next({ success: true, data: result })
+                }).catch((error) => next(error))
+            }
+            else if (req.query.sold != undefined) {
+                TicketDAO.listSold((req.session["user"] as any)?._isAdmin).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
@@ -110,13 +115,24 @@ export namespace Ticket {
                 }
                 else { next(new RequestError("Buying ticket requires a user login")) }
             }
-            if (req.query.payment != undefined && req.body.paid != undefined &&
+            if (req.query.payment != undefined &&
+                (req.body.paid != undefined || req.body.paid == null || typeof req.body.paid == "boolean") &&
                 (req.body.paymentRemark == undefined || req.body.paymentRemark == null || typeof req.body.paymentRemark == "string") &&
-                req.session['user'] &&
-                (req.session['user'] as any)._isAdmin) {
-                TicketDAO.getById(req.params.ticketId).then(dao => { dao.paid = req.body.paid; dao.paymentRemark = req.body.paymentRemark; return dao.update() }).then((value: TicketDAO) => {
+                req.session['user'] && (req.session['user'] as any)._isAdmin) {
+                TicketDAO.getById(req.params.ticketId).then(dao => {
+                    dao.paid = req.body.paid;
+                    dao.paymentRemark = req.body.paymentRemark;
+                    return dao.update()
+                }).then((value: TicketDAO) => {
                     next({ success: true })
                 }).catch((error) => next(error))
+            }
+            else if (req.query.void != undefined) {
+                TicketDAO.getById(req.params.ticketId).then(dao => dao.void()
+                ).then((value: TicketDAO) => {
+                    next({ success: true })
+                }).catch((error) => next(error))
+
             }
         })
 

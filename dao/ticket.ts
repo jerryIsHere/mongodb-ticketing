@@ -44,6 +44,34 @@ export class TicketDAO extends BaseDAO {
 
     private _occupantId?: ObjectId | undefined | null
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
+    public void() {
+        return new Promise<TicketDAO>(async (resolve, reject) => {
+            Database.session.startTransaction()
+            this._occupantId = null
+            try {
+                await this.checkReference()
+            }
+            catch (err) {
+                reject(err)
+                return
+            }
+            if (this.id) {
+                Database.mongodb.collection(TicketDAO.collection_name)
+                    .updateOne(
+                        { _id: this.id, occupantId: null },
+                        { $set: { "occupantId": null, paid: null, paymentRemark: null } }
+                    ).then((value) => {
+                        if (value.modifiedCount > 0) {
+                            resolve(this)
+                        }
+                        else {
+                            reject(new RequestError(`Ticket with id ${this.id}  not avaliable.`))
+                            return
+                        }
+                    })
+            }
+        })
+    }
     public claim(userId: string): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             Database.session.startTransaction()
@@ -71,7 +99,7 @@ export class TicketDAO extends BaseDAO {
                     })
             }
             else {
-                reject(new RequestError(`User with id ${userId} doesn't exists.`))
+                reject(new RequestError(`${this.constructor.name} with id ${userId} doesn't exists.`))
                 return
             }
         })
@@ -83,6 +111,7 @@ export class TicketDAO extends BaseDAO {
         if (params.doc && params.doc._id) {
             this._eventId = params.doc.eventId
             this._seatId = params.doc.seatId
+            this._occupantId = params.doc.occupantId
             this._priceTierId = params.doc.priceTierId
             this._paid = params.doc.paid
             this._paymentRemark = params.doc.paymentRemark
@@ -161,6 +190,13 @@ export class TicketDAO extends BaseDAO {
         return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
                 aggregate(this.aggregateQuery({ $match: { eventId: new ObjectId(evnetId) } }, showOccupant))
+            resolve((await cursor.toArray()));
+        })
+    }
+    static async listSold(showOccupant: boolean) {
+        return new Promise<Document[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(TicketDAO.collection_name).
+                aggregate(this.aggregateQuery({ $match: { occupantId: { $ne: null } } }, showOccupant))
             resolve((await cursor.toArray()));
         })
     }
@@ -323,7 +359,6 @@ export class TicketDAO extends BaseDAO {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
             try {
                 await this.checkReference()
-                await this.duplicationChecking()
             }
             catch (err) {
                 reject(err)

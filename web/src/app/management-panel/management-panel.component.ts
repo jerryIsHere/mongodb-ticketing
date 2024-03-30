@@ -22,7 +22,7 @@ export class ManagementPanelComponent {
   public events: Show[] = [];
   public venues: Venue[] = [];
   public priceTiers: PriceTier[] = [];
-  public ticket: Ticket[] = [];
+  public soldTickets: Ticket[] = [];
 
   public dataListControls: { [name: string]: IDataListControl } = {
     priceTiers: {
@@ -46,6 +46,14 @@ export class ManagementPanelComponent {
         return this.api.request.get("/event?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.events = result.data
+        })
+      },
+    },
+    soldTickets: {
+      loadData: () => {
+        return this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
+          if (result && result.data)
+            this.soldTickets = result.data
         })
       },
     },

@@ -5,6 +5,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Ticket } from '../interface'
 import { ApiService } from '../service/api.service';
 
@@ -12,14 +13,14 @@ import { ApiService } from '../service/api.service';
 @Component({
   selector: 'app-myticket',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatCheckboxModule],
   templateUrl: './myticket.component.html',
   styleUrl: './myticket.component.sass'
 })
 export class MyticketComponent {
   loaded = false
-  ticketDataSource: MatTableDataSource<Ticket[]> = new MatTableDataSource<Ticket[]>()
-  ticketDataColumn = ['eventname', 'eventdatetime', 'seat', 'priceTier',];
+  ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
+  ticketDataColumn = ['event.eventname', 'event.datetime', 'seat', 'priceTier.price', 'paid', 'paymentRemark'];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   constructor(private api: ApiService) {
@@ -29,9 +30,11 @@ export class MyticketComponent {
     if (this.paginator && this.sort && this.ticketDataSource) {
       this.ticketDataSource.paginator = this.paginator;
       this.ticketDataSource.sort = this.sort;
-      this.ticketDataSource.filterPredicate = (data: any, filter: string) => {
-        const accumulator = (valueString: string, keys: string) => {
-          let cursor: any = data;
+      let valueAccessor = (data: any, keys: string) => {
+        let cursor: any = data;
+        if (keys == 'seat') {
+          return data.seat.row + data.seat.no
+        } else {
           for (let key of keys.split(".")) {
             if (cursor[key]) {
               cursor = cursor[key]
@@ -40,8 +43,14 @@ export class MyticketComponent {
               break;
             }
           }
-          if (typeof cursor === "string") {
-            valueString += cursor
+          return cursor
+        }
+      }
+      this.ticketDataSource.filterPredicate = (data: any, filter: string) => {
+        const accumulator = (valueString: string, keys: string) => {
+          let value: any = valueAccessor(data, keys)
+          if (typeof value === "string") {
+            valueString += value
           }
           return valueString;
         };
@@ -50,18 +59,7 @@ export class MyticketComponent {
         const transformedFilter = filter.trim().toLowerCase();
         return dataStr.indexOf(transformedFilter) !== -1;
       };
-      this.ticketDataSource.sortingDataAccessor = (data: any, keys: string) => {
-        let cursor: any = data;
-        for (let key of keys.split(".")) {
-          if (cursor[key]) {
-            cursor = cursor[key]
-          }
-          else {
-            break;
-          }
-        }
-        return cursor
-      }
+      this.ticketDataSource.sortingDataAccessor = valueAccessor
     }
   }
   loadData() {
