@@ -2,15 +2,28 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 
 import { PriceTierDAO } from "../dao/priceTier"
+import { UserDAO } from "../dao/user";
+declare module "express-session" {
+    interface SessionData {
+        user: UserDAO | null;
+    }
+}
 
 export namespace PriceTier {
     export function RouterFactory(): Express.Router {
         var priceTier = Router()
 
+        priceTier.use((req: Request, res: Response, next) => {
+            if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
+                res.status(401).json({ success: false, reason: "Unauthorized access" })
+            }
+            else { next() }
+        })
+
         priceTier.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
                 PriceTierDAO.listAll().then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Hydrated())  })
+                    next({ success: true, data: result.map(dao => dao.Hydrated())  })
                 }).catch((error) => next(error))
             }
         })
@@ -26,7 +39,7 @@ export namespace PriceTier {
                         price: req.body.price,
                     })
                     dao.create().then((value) => {
-                        res.json({ success: true })
+                        next({ success: true })
                     }).catch((error) => next(error))
                 }
             }
@@ -39,14 +52,14 @@ export namespace PriceTier {
                     dao.price = req.body.price
                     return dao.update()
                 }).then((value) => {
-                    res.json({ success: true })
+                    next({ success: true })
                 }).catch((error) => next(error))
             }
         })
 
         priceTier.delete("/:priceTierId", async (req: Request, res: Response, next): Promise<any> => {
             PriceTierDAO.getById(req.params.priceTierId).then(dao => dao.delete().then((value) => {
-                res.json({ success: true })
+                next({ success: true })
             })).catch((error) => next(error))
         })
 

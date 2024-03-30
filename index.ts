@@ -55,17 +55,37 @@ import { Ticket } from './api/ticket';
 app.use('/ticket', Ticket.RouterFactory());
 
 import { Admin } from './api/admin';
+import { BaseDAO } from "./dao/dao";
 app.use('/admin', Admin.RouterFactory());
 
 app.use('/*', function (_, res: Response) {
   res.redirect("/web/")
 });
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.log(err)
-  if (err instanceof RequestError) {
-    res.status(400).json({ success: false, reason: err.message })
+app.use((output: any, req: Request, res: Response, next: NextFunction) => {
+  if (output instanceof RequestError || BaseDAO.RequestErrorList.length != 0) {
+    if (Database.session.inTransaction()) {
+      Database.session.abortTransaction();
+    }
+    else {
+    }
+    if (output instanceof RequestError) {
+      res.status(400).json({ success: false, reason: output.message })
+    }
+    else {
+      res.status(400).json({ success: false, reasons: BaseDAO.RequestErrorList.map(err => err.message) })
+    }
   }
+  else {
+    if (Database.session.inTransaction()) {
+      Database.session.commitTransaction();
+      res.json(output)
+    }
+    else {
+      res.json(output)
+    }
+  }
+  Database.session.endSession();
 })
 
 app.listen(port, async () => {

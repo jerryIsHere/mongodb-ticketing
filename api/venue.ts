@@ -2,20 +2,33 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { Database, RequestError } from "../dao/database";
 import { VenueDAO, sectionType, sectionTypeCheck } from "../dao/venue";
+import { UserDAO } from "../dao/user";
+declare module "express-session" {
+    interface SessionData {
+        user: UserDAO | null;
+    }
+}
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()
 
+        venue.use((req: Request, res: Response, next) => {
+            if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
+                res.status(401).json({ success: false, reason: "Unauthorized access" })
+            }
+            else { next() }
+        })
+
         venue.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
                 VenueDAO.listAll().then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Hydrated()) })
+                    next({ success: true, data: result.map(dao => dao.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
         venue.get("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
             VenueDAO.getById(req.params.venueId).then(result => {
-                if (result) res.json({ success: true, data: result.Hydrated() });
+                if (result) next({ success: true, data: result.Hydrated() });
             }).catch((error) => next(error))
         })
 
@@ -28,7 +41,7 @@ export namespace Venue {
                     sections: req.body.sections
                 })
                 dao.create().then((value) => {
-                    res.json({ success: true })
+                    next({ success: true })
                 }).catch((error) => next(error))
             }
         })
@@ -42,14 +55,14 @@ export namespace Venue {
                     dao.sections = req.body.sections
                     return dao.update()
                 }).then((value) => {
-                    res.json({ success: true })
+                    next({ success: true })
                 }).catch((error) => next(error))
             }
         })
 
         venue.delete("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
             VenueDAO.getById(req.params.venueId).then(dao => dao.delete()).then((value) => {
-                res.json({ success: true })
+                next({ success: true })
             }).catch((error) => next(error))
         })
         return venue

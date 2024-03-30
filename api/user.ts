@@ -12,6 +12,12 @@ export namespace User {
     export function RouterFactory(): Express.Router {
         var user = Router()
 
+        user.use((req: Request, res: Response, next) => {
+            if (false) {
+            }
+            else { next() }
+        })
+
         user.patch("/:userId", async (req: Request, res: Response, next) => {
 
         })
@@ -26,7 +32,7 @@ export namespace User {
                     UserDAO.login(req.body.username, req.body.password).then(user => {
                         req.session['user'] = user.withoutCredential()
                         res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
-                        res.json({ success: true, message: user.withoutCredential().Hydrated() })
+                        next({ success: true, message: user.withoutCredential().Hydrated() })
                     }).catch((error) => next(error))
                 }
                 else {
@@ -36,7 +42,7 @@ export namespace User {
             else if (req.query.logout != undefined) {
                 req.session['user'] = null;
                 res.clearCookie("user");
-                res.json({ success: true })
+                next({ success: true })
             }
             else if (req.query.register != undefined) {
 
@@ -51,10 +57,10 @@ export namespace User {
                         if (dao.id) {
                             req.session['user'] = dao.withoutCredential()
                             res.cookie("user", JSON.stringify(dao.withoutCredential().Hydrated()))
-                            res.json({ success: true, user: dao.withoutCredential().Hydrated() })
+                            next({ success: true, user: dao.withoutCredential().Hydrated() })
                         }
                     }).catch((error) => next(error))
-                    
+
 
                 }
             }

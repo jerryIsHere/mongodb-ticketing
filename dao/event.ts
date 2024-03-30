@@ -3,6 +3,7 @@ import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { VenueDAO } from "./venue";
 import { TicketDAO } from "./ticket";
+import { SeatDAO } from "./seat";
 
 
 
@@ -20,7 +21,7 @@ export class EventDAO extends BaseDAO {
     public get duration() { return this._duration }
     public set duration(value: number | undefined) {
         if (value && value < 0) {
-            throw new RequestError('Duration must be greater then 0.')
+            BaseDAO.RequestErrorList.push(new RequestError('Duration must be greater then 0.'))
         }
         else {
             this._duration = value;
@@ -30,15 +31,7 @@ export class EventDAO extends BaseDAO {
     private _venueId: ObjectId | undefined
     public get venueId() { return this._venueId }
     public set venueId(value: ObjectId | string | undefined) {
-        // return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: value }).then(instance => {
-        //     if (instance == null) {
-        //         throw new RequestError(`Venue with id ${value} doesn't exists.`)
-        //     }
-        //     else {
-
         this._venueId = new ObjectId(value);
-        //     }
-        // })
     }
 
     constructor(params: {
@@ -102,29 +95,48 @@ export class EventDAO extends BaseDAO {
         })
     }
     async create(): Promise<EventDAO> {
-        return new Promise<EventDAO>((resolve, reject) => {
-            Database.session.withTransaction(async () => {
-                var referror = await this.checkReference()
-                if (referror) {
-                    reject(referror)
-                    return
-                }
-                var result = await Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true))
-                if (result.insertedId) {
-                    Database.session.commitTransaction();
-                    resolve(this)
-                }
-                else {
-                    reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
-                }
-            })
-        }).finally(() => {
-            Database.session.endSession();
+        return new Promise<EventDAO>(async (resolve, reject) => {
+            Database.session.startTransaction()
+            var referror = await this.checkReference()
+            if (referror) {
+                reject(referror)
+                return
+            }
+            var result = await Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true))
+            if (result.insertedId) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`))
+            }
         })
     }
-
+    async checkTicketVenueDependency() {
+        if (this._id) {
+            return (await Database.mongodb.collection(TicketDAO.collection_name).aggregate([
+                { $match: { eventId: new ObjectId(this._id) } },
+                {
+                    $lookup:
+                    {
+                        from: SeatDAO.collection_name,
+                        localField: "seatId",
+                        foreignField: "_id",
+                        as: "seat",
+                    }
+                },
+                { $set: { 'seat': { $first: '$seat' } } },
+                { $match: { 'seat.venueId': { $ne: new ObjectId(this.venueId) } } },
+            ])).next()
+        }
+        return
+    }
     async update(): Promise<EventDAO> {
         return new Promise<EventDAO>(async (resolve, reject) => {
+            var dependency = await this.checkTicketVenueDependency()
+            if (dependency != null) {
+                reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed ` +
+                    `as ticket with id ${dependency._id} depends on another venue ${dependency.seat.venueId}.`)); return
+            }
             if (this._id) {
                 var result = await Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
                 if (result.modifiedCount > 0) {
@@ -140,28 +152,27 @@ export class EventDAO extends BaseDAO {
 
     }
     async checkTicketDependency() {
-        var ticket = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: this._id })
-        return ticket
+        if (this._id) {
+            return await Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: new ObjectId(this._id) })
+        }
+        return
     }
     async delete(): Promise<EventDAO> {
-        return new Promise<EventDAO>((resolve, reject) => {
-            Database.session.withTransaction(async () => {
-                var dependency = await this.checkTicketDependency()
-                if (dependency != null) {
-                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-                        `as ticket with id ${dependency._id} depends on it.`))
+        return new Promise<EventDAO>(async (resolve, reject) => {
+            Database.session.startTransaction()
+            var dependency = await this.checkTicketDependency()
+            if (dependency) {
+                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+                    `as ticket with id ${dependency._id} depends on it.`)); return
+            }
+            if (this._id) {
+                var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                if (result.deletedCount > 0) {
+
+                    resolve(this)
                 }
-                if (this._id) {
-                    var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-                    if (result.deletedCount > 0) {
-                        Database.session.commitTransaction();
-                        resolve(this)
-                    }
-                }
-                else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
-            })
-        }).finally(() => {
-            Database.session.endSession();
+            }
+            else { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
         })
     }
 }

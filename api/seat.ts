@@ -2,15 +2,28 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { SeatDAO, coordType, coordTypeCheck } from "../dao/seat";
+import { UserDAO } from "../dao/user";
+declare module "express-session" {
+    interface SessionData {
+        user: UserDAO | null;
+    }
+}
 
 export namespace Seat {
     export function RouterFactory(): Express.Router {
         var seat = Router()
 
+        seat.use((req: Request, res: Response, next) => {
+            if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
+                res.status(401).json({ success: false, reason: "Unauthorized access" })
+            }
+            else { next() }
+        })
+
         seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 SeatDAO.listByVenueId(req.query.venueId).then(result => {
-                    res.json({ success: true, data: result.map(dao => dao.Hydrated()) })
+                    next({ success: true, data: result.map(dao => dao.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
@@ -35,7 +48,7 @@ export namespace Seat {
                         return dao;
                     })
                     SeatDAO.batchCreate(daos).then((seats: SeatDAO[]) => {
-                        res.json({ success: true, data: seats.map(seat => seat.Hydrated()) })
+                        next({ success: true, data: seats.map(seat => seat.Hydrated()) })
                     }).catch((error) => next(error))
                 }
             }
@@ -45,20 +58,20 @@ export namespace Seat {
                 var dao = await SeatDAO.getById(req.params.seatId)
                 dao.coord = req.body.coord
                 dao.update().then((seat: SeatDAO) => {
-                    res.json({ success: true, data: seat.Hydrated() })
+                    next({ success: true, data: seat.Hydrated() })
                 }).catch((error) => next(error))
             }
         })
         seat.delete("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.batch != undefined && req.body.seatIds && Array.isArray(req.body.seatIds)) {
                 SeatDAO.getByIds(req.body.seatIds).then(daos => SeatDAO.batchDelete(daos)).then((seats: SeatDAO[]) => {
-                    res.json({ success: true, data: seats.map(seat => seat.Hydrated()) })
+                    next({ success: true, data: seats.map(seat => seat.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
         seat.delete("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
             SeatDAO.getById(req.params.seatId).then(dao => dao.delete().then((value) => {
-                res.json({ success: true })
+                next({ success: true })
             })).catch((error) => { next(error) })
         })
         return seat
