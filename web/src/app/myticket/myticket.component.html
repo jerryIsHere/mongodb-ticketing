@@ -28,7 +28,7 @@ no data
   <ng-container matColumnDef="paid">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Payment verified </th>
     <td mat-cell *matCellDef="let element">
-      <mat-checkbox readonly [value]="element.paid"></mat-checkbox>
+      <mat-checkbox readonly [checked]="element.paid" (click)="$event.preventDefault()"></mat-checkbox>
     </td>
   </ng-container>
   <ng-container matColumnDef="paymentRemark">

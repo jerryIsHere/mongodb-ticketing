@@ -58,14 +58,14 @@ export class TicketDAO extends BaseDAO {
             if (this.id) {
                 Database.mongodb.collection(TicketDAO.collection_name)
                     .updateOne(
-                        { _id: this.id, occupantId: null },
+                        { _id: this.id },
                         { $set: { "occupantId": null, paid: null, paymentRemark: null } }
                     ).then((value) => {
                         if (value.modifiedCount > 0) {
                             resolve(this)
                         }
                         else {
-                            reject(new RequestError(`Ticket with id ${this.id}  not avaliable.`))
+                            reject(new RequestError(`Ticket with id ${this.id} is already avaliable.`))
                             return
                         }
                     })
@@ -93,7 +93,7 @@ export class TicketDAO extends BaseDAO {
                             resolve(this)
                         }
                         else {
-                            reject(new RequestError(`Ticket with id ${this.id}  not avaliable.`))
+                            reject(new RequestError(`Ticket with id ${this.id} is not avaliable.`))
                             return
                         }
                     })

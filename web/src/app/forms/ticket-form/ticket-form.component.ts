@@ -41,14 +41,11 @@ export class TicketFormComponent {
       })
     }
   }
-  void() {
-    if (this.ticketForm.valid) {
-      this.api.request.patch(`/ticket/${this.ticket._id}?void`, {}).toPromise().then((result: any) => {
-        if (result && result.success) {
-          this.dialogRef.close(this.ticket)
-        }
-      })
-
-    }
+  voidTicket() {
+    this.api.request.patch(`/ticket/${this.ticket._id}?void`, {}).toPromise().then((result: any) => {
+      if (result && result.success) {
+        this.dialogRef.close(this.ticket)
+      }
+    })
   }
 }
