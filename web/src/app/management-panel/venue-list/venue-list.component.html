@@ -14,11 +14,11 @@ no data
     <td mat-cell *matCellDef="let element"> {{element.venuename}} </td>
   </ng-container>
   <ng-container matColumnDef="_id">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header></th>
+    <th mat-header-cell *matHeaderCellDef>Manage</th>
     <td mat-cell *matCellDef="let element">
       <a mat-button [routerLink]="['/venue-seats', { id: element._id }]">
         Edit Seating Plan
-        <mat-icon>event_seat</mat-icon>
+        <mat-icon>event_seat</mat-icon><mat-icon>edit</mat-icon>
       </a>
       <button mat-button (click)="openForm(element)">Edit</button>
       <button mat-button (click)="delete(element._id)" color="warn">Delete</button>
