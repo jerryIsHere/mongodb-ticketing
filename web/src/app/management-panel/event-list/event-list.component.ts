@@ -91,7 +91,9 @@ export class EventListComponent {
     })
   }
   delete(id: string) {
-    return this.api.request.delete(`/Event/${id}`).toPromise()
+    return this.api.request.delete(`/Event/${id}`).toPromise().then(_ => {
+      this.dataChanged.emit()
+    })
   }
 
 }

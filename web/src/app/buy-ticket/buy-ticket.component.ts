@@ -68,9 +68,9 @@ export class BuyTicketComponent {
   actionSnackbarRef?: MatSnackBarRef<TicketSelectedComponent>
   selectedSeatIds: Set<string> = new Set<string>()
 
-  checkAction() {
+  checkAction($event: Set<string>) {
     let tickets: Ticket[] = []
-    Array.from(this.selectedSeatIds.values()).map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
+    Array.from($event.values()).map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
       if (t && !(t.occupant || t.occupied))
         tickets.push(t)
     })
@@ -84,7 +84,7 @@ export class BuyTicketComponent {
         this.actionSnackbarRef = undefined
         if (this._id)
           this.loadData(this._id);
-          this.seatingPlan?.clearSelectedSeat()
+        this.seatingPlan?.clearSelectedSeat()
       });
     }
     else if (this.actionSnackbarRef && this.seatingPlan) {
@@ -107,7 +107,7 @@ export class BuyTicketComponent {
         })
         if (this.seatingPlan) {
           this.selectedSeatIds = new Set<string>(seatIds)
-          this.checkAction()
+          this.checkAction(this.selectedSeatIds)
         }
       })
     }

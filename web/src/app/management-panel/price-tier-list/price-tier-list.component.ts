@@ -87,7 +87,9 @@ export class PriceTierListComponent {
     })
   }
   delete(id: string) {
-    return this.api.request.delete(`/priceTier/${id}`).toPromise()
+    return this.api.request.delete(`/priceTier/${id}`).toPromise().then(_ => {
+      this.dataChanged.emit()
+    })
   }
 
 }

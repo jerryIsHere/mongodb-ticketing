@@ -87,7 +87,9 @@ export class VenueListComponent {
     })
   }
   delete(id: string) {
-    return this.api.request.delete(`/venue/${id}`).toPromise()
+    return this.api.request.delete(`/venue/${id}`).toPromise().then(_ => {
+      this.dataChanged.emit()
+    })
   }
 
 }

@@ -27,14 +27,16 @@ export class SeatingPlanComponent {
   @Input()
   get selectedSeatIds(): Set<string> { return this._selectedSeatIds }
   set selectedSeatIds(value: Set<string>) {
-    value.forEach(ids => {
-      this._selectedSeatIds.add(ids)
+    value.forEach(id => {
+      if (this.getBuyer(id) == null)
+        this._selectedSeatIds.add(id)
     })
   }
 
   @Output() selectedSeatIdsChange = new EventEmitter<Set<string>>();
   toggleSelect(seat: Seat | null) {
-    if (seat) this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this._selectedSeatIds.add(seat._id)
+    if (seat && this.getBuyer(seat._id) == null)
+      this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this._selectedSeatIds.add(seat._id)
     this.selectedSeatIdsChange.emit(this._selectedSeatIds)
   }
   isSeatSelected(id: string | undefined): undefined | boolean {

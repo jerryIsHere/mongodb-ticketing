@@ -89,14 +89,14 @@ export class EventseatComponent {
   actionSnackbarRef?: MatSnackBarRef<SeatSelectedComponent>
   selectedSeatIds: Set<string> = new Set<string>()
 
-  checkAction() {
+  checkAction($event: Set<string>) {
     if (this.actionSnackbarRef == undefined && this.seatingPlan) {
       this.actionSnackbarRef = this._snackBar.openFromComponent(SeatSelectedComponent, {
         data: {
           eventId: this._id,
           seats: this.seats,
           tickets: this.tickets,
-          selectedSeatIds: Array.from(this.selectedSeatIds.values()),
+          selectedSeatIds: Array.from($event.values()),
           priceTiers: this.priceTiers,
           priceTiersColors: this.seatingPlan?.priceTiersColors
         }
@@ -128,7 +128,7 @@ export class EventseatComponent {
         })
         if (this.seatingPlan) {
           this.selectedSeatIds = new Set<string>(seatIds)
-          this.checkAction()
+          this.checkAction(new Set<string>(seatIds))
         }
       })
     }
