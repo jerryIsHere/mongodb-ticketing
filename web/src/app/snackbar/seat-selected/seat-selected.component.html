@@ -1,0 +1,10 @@
+@if(data.selectedSeatIds){
+{{data.selectedSeatIds.length }} seat{{data.selectedSeatIds.length >1? 's':''}} selected
+@for( priceTier of data.priceTiers; track priceTier){
+<button mat-button [style.background-color]="priceTier._id?'#'+data.priceTiersColors?.get(priceTier._id):''"
+  (click)="sellAt(priceTier)" [disabled]="doing">
+  {{priceTier.tierName}}:{{priceTier.price}}</button>
+}
+<button mat-button (click)="removeTickets()" [disabled]="doing">
+  cancel selling</button>
+}

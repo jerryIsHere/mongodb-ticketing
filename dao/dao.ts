@@ -4,7 +4,7 @@ import { Database } from "./database";
 
 
 export abstract class BaseDAO {
-    public static DirtyList: Set<BaseDAO> = new Set<BaseDAO>();
+    public static RequestErrorList: Array<RequestError> = new Array<RequestError>();
     protected _id: ObjectId | undefined | null
     public get id(): ObjectId | null {
         return this._id ? new ObjectId(this._id.toString()) : null
@@ -26,12 +26,12 @@ export abstract class BaseDAO {
                 })
         );
     }
-    public Serialize(throwErrorWhenUndefined: boolean): Object {
+    public Serialize(pushErrorWhenUndefined: boolean): Object {
         var obj = this.PropertiesWithGetter()
-        if (throwErrorWhenUndefined) {
+        if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined)
             if (undefinedEntries.length > 0)
-                throw new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`)
+                BaseDAO.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
         }
         return obj
     }

@@ -54,6 +54,12 @@ export namespace User {
         }
       });
 
+    user.use((req: Request, res: Response, next) => {
+        if (false) {
+        }
+        else { next() }
+    })
+
     user.patch("/:userId", async (req: Request, res: Response, next) => {});
 
     user.put("/:userId", async (req: Request, res: Response, next) => {});
@@ -69,27 +75,15 @@ export namespace User {
 
       res.json({ success: true, message: "Email verification successful." });
     })
-
+    
     user.post("/", async (req: Request, res: Response, next): Promise<any> => {
       if (req.query.login != undefined) {
         if (req.body.password) {
-          console.log("test");
-          UserDAO.login(req.body.username, req.body.password)
-            .then((user) => {
-              req.session["user"] = user.withoutCredential();
-              res.cookie(
-                "user",
-                JSON.stringify({
-                  ...user.withoutCredential().Hydrated(),
-                  hasAdminRight: user.hasAdminRight(),
-                })
-              );
-              res.json({
-                success: true,
-                message: user.withoutCredential().Hydrated(),
-              });
-            })
-            .catch((error) => next(error));
+          UserDAO.login(req.body.username, req.body.password).then(user => {
+            req.session['user'] = user.withoutCredential()
+            res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
+            next({ success: true, message: user.withoutCredential().Hydrated() })
+        }).catch((error) => next(error))
         } else {
           next(new RequestError("A login must be done with a password."));
         }

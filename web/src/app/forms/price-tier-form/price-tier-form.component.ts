@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiService } from '../../service/api.service';
-import { PriceTier } from '../../management-panel/management-panel.component';
+import { PriceTier } from '../../interface';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,

@@ -1,43 +1,53 @@
-@if(event && event.eventname){
-{{event.eventname}}
-}
-<mat-grid-list [cols]="cols.length" rowHeight="100px">
-  @for (seat of slots; track seat) {
-  <mat-grid-tile>
-    @if(seat && getTiceket(seat._id)) {
-    @if(hasBuyer(seat._id)){
-    <span>{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}} : sold</span>
-    }
-    @else if(userSession.user){
-    <button mat-button [matMenuTriggerFor]="menu"
-      [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
-      :
-      {{getTiceket(seat._id)?.priceTier?.tierName}}
-    </button>
-    }
-    @else {
-    <span>
-      {{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
-      :
-      {{getTiceket(seat._id)?.priceTier?.tierName}}
-    </span>
-    }
-    }
-  </mat-grid-tile>
+@if(seats && venue){
+  <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets" isTicketPlanning
+    (selectedSeatIdsChange)="checkAction()" [(selectedSeatIds)]="selectedSeatIds">
+  </app-seating-plan>
   }
-</mat-grid-list>
-<mat-menu #menu="matMenu">
-  <ng-template matMenuContent let-seat_id="seat_id">
-    @if(seat_id){
-    @if(getTiceket(seat_id)){
-    @if(hasBuyer(seat_id)){
+  @else{
+  loading
+  }
+  <button mat-button (click)="openForm()">Select seats</button>
+  <!-- @if(event && event.eventname){
+    {{event.eventname}}
     }
-    @else{
-    <button mat-menu-item (click)="buy(getTiceket(seat_id)?._id)">buy</button>
-    }
-    }
-    @else {
-    }
-    }
-  </ng-template>
-</mat-menu>
+    <mat-grid-list [cols]="cols.length" rowHeight="100px">
+      @for (seat of slots; track seat) {
+      <mat-grid-tile>
+        @if(seat && getTiceket(seat._id)) {
+        @if(hasBuyer(seat._id)){
+        <span>{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}} : sold</span>
+        }
+        @else if(userSession.user){
+        <button mat-button [matMenuTriggerFor]="menu"
+          [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
+          :
+          {{getTiceket(seat._id)?.priceTier?.tierName}}
+        </button>
+        }
+        @else {
+        <span>
+          {{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
+          :
+          {{getTiceket(seat._id)?.priceTier?.tierName}}
+        </span>
+        }
+        }
+      </mat-grid-tile>
+      }
+    </mat-grid-list>
+    <mat-menu #menu="matMenu">
+      <ng-template matMenuContent let-seat_id="seat_id">
+        @if(seat_id){
+        @if(getTiceket(seat_id)){
+        @if(hasBuyer(seat_id)){
+        }
+        @else{
+        <button mat-menu-item (click)="buy(getTiceket(seat_id)?._id)">buy</button>
+        }
+        }
+        @else {
+        }
+        }
+      </ng-template>
+    </mat-menu> -->
+    

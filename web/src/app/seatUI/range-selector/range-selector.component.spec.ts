@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TicketingFormComponent } from './ticketing-form.component';
+import { RangeSelectorComponent } from './range-selector.component';
 
-describe('TicketingFormComponent', () => {
-  let component: TicketingFormComponent;
-  let fixture: ComponentFixture<TicketingFormComponent>;
+describe('RangeSelectorComponent', () => {
+  let component: RangeSelectorComponent;
+  let fixture: ComponentFixture<RangeSelectorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TicketingFormComponent]
+      imports: [RangeSelectorComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(TicketingFormComponent);
+    fixture = TestBed.createComponent(RangeSelectorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

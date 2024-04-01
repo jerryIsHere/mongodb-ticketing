@@ -2,20 +2,34 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { ObjectId, WithId, Document, } from "mongodb";
 import { EventDAO } from "../dao/event";
+import { UserDAO } from "../dao/user";
+declare module "express-session" {
+    interface SessionData {
+        user: UserDAO | null;
+    }
+}
 
 export namespace Event {
     export function RouterFactory(): Express.Router {
         var event = Router()
+
+        event.use((req: Request, res: Response, next) => {
+            if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
+                res.status(401).json({ success: false, reason: "Unauthorized access" })
+            }
+            else { next() }
+        })
+
         event.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
                 EventDAO.listAll().then((result: Document[]) => {
-                    res.json({ success: true, data: result})
+                    next({ success: true, data: result})
                 }).catch((error) => next(error))
             }
         })
         event.get("/:eventId", async (req: Request, res: Response, next) => {
             EventDAO.getById(req.params.eventId).then(result => {
-                if (result) res.json({ success: true, data: result.Hydrated() });
+                if (result) next({ success: true, data: result.Hydrated() });
             }).catch((error) => next(error))
         })
         event.post("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -29,7 +43,7 @@ export namespace Event {
                     });
                     dao.venueId = req.body.venueId
                     dao.create().then((value) => {
-                        res.json({ success: true })
+                        next({ success: true })
                     }).catch((error) => next(error))
                 }
             }
@@ -44,14 +58,14 @@ export namespace Event {
                     dao.venueId = req.body.venueId
                     return dao.update()
                 }).then((value) => {
-                    res.json({ success: true, data: value.Hydrated() })
+                    next({ success: true, data: value.Hydrated() })
                 }).catch((error) => next(error))
             }
         })
 
         event.delete("/:eventId", async (req: Request, res: Response, next): Promise<any> => {
             EventDAO.getById(req.params.eventId).then(dao => dao.delete().then((value) => {
-                res.json({ success: true })
+                next({ success: true })
             })).catch((error) => next(error))
         })
         return event

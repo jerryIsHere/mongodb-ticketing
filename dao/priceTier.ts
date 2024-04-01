@@ -15,7 +15,7 @@ export class PriceTierDAO extends BaseDAO {
     public get price() { return this._price }
     public set price(value: number | undefined) {
         if (value && value < 0) {
-            throw new RequestError('Price must be greater then 0.')
+            BaseDAO.RequestErrorList.push(new RequestError('Price must be greater then 0.'))
         }
         else {
             this._price = value;
@@ -78,24 +78,20 @@ export class PriceTierDAO extends BaseDAO {
         return ticket
     }
     async delete(): Promise<PriceTierDAO> {
-        return new Promise<PriceTierDAO>((resolve, reject) => {
-            Database.session.withTransaction(async () => {
-                var dependency = await this.checkTicketDependency()
-                if (dependency != null) {
-                    return reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-                        `as ticket with id ${dependency._id} depends on it.`))
+        return new Promise<PriceTierDAO>(async (resolve, reject) => {
+            var dependency = await this.checkTicketDependency()
+            if (dependency != null) {
+                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+                    `as ticket with id ${dependency._id} depends on it.`)); return
+            }
+            if (this._id) {
+                var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                if (result.deletedCount > 0) {
+          
+                    resolve(this)
                 }
-                if (this._id) {
-                    var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
-                    if (result.deletedCount > 0) {
-                        Database.session.commitTransaction();
-                        resolve(this)
-                    }
-                }
-                else { return reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)) }
-            })
-        }).finally(() => {
-            Database.session.endSession();
+            }
+            else { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
         })
     }
 }

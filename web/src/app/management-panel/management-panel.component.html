@@ -1,105 +1,18 @@
 <mat-card>
+  <mat-card-title>Sold TIckets</mat-card-title>
+  <app-sold-ticket-list [tickets]="soldTickets" (dataChanged)="dataListControls['soldTickets'].loadData()"></app-sold-ticket-list>
+</mat-card>
+<mat-card>
   <mat-card-title>Events</mat-card-title>
-  @if (events == null){
-  loading
-  }
-  @else if (events.length > 0){
-  <table mat-table [dataSource]="events">
-    <ng-container matColumnDef="eventname">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.eventname}} </td>
-    </ng-container>
-    <ng-container matColumnDef="datetime">
-      <th mat-header-cell *matHeaderCellDef> Start </th>
-      <td mat-cell *matCellDef="let element"> {{element.datetime}} </td>
-    </ng-container>
-    <ng-container matColumnDef="duration">
-      <th mat-header-cell *matHeaderCellDef> Duration </th>
-      <td mat-cell *matCellDef="let element"> {{element.duration}} </td>
-    </ng-container>
-    <ng-container matColumnDef="venue">
-      <th mat-header-cell *matHeaderCellDef> Venue Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.venue?.venuename}} </td>
-    </ng-container>
-    <ng-container matColumnDef="_id">
-      <th mat-header-cell *matHeaderCellDef> </th>
-      <td mat-cell *matCellDef="let element">
-        <a mat-button [routerLink]="['/event-seats', { id: element._id }]">
-          <mat-icon>event_seat</mat-icon>
-        </a>
-        <button mat-button
-          (click)="openForm(dataListControls['events'], {event: element, venues: venues})">Edit</button>
-        <button mat-button (click)="delete(dataListControls['events'], element._id)" color="warn">Delete</button>
-      </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="['eventname', 'datetime','duration', 'venue', '_id']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['eventname', 'datetime','duration', 'venue', '_id'];"></tr>
-  </table>
-  }
-  <mat-card-actions><button mat-button
-      (click)="openForm(dataListControls['events'], {event: {},venues: venues})">Create</button>
-  </mat-card-actions>
+  <app-event-list [venues]="venues" [shows]="events" (dataChanged)="dataListControls['events'].loadData()">
+  </app-event-list>
 </mat-card>
 <mat-card>
   <mat-card-title>Venues</mat-card-title>
-  @if (venues == null){
-  loading
-  }
-  @else if (venues.length > 0){
-  <table mat-table [dataSource]="venues">
-    <ng-container matColumnDef="venuename">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.venuename}} </td>
-    </ng-container>
-    <ng-container matColumnDef="_id">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let element">
-        <a mat-button [routerLink]="['/venue-seats', { id: element._id }]">
-          <mat-icon>event_seat</mat-icon>
-        </a>
-        <button mat-button (click)="openForm(dataListControls['venues'], element)">Edit</button>
-        <button mat-button (click)="delete(dataListControls['venues'], element._id)" color="warn">Delete</button>
-      </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="['venuename', '_id']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['venuename', '_id'];"></tr>
-  </table>
-  }
-  @else {
-  no data
-  }
-  <mat-card-actions><button mat-button (click)="openForm(dataListControls['venues'])">Create</button>
-  </mat-card-actions>
+  <app-venue-list [venues]="venues" (dataChanged)="dataListControls['venues'].loadData()"></app-venue-list>
 </mat-card>
 <mat-card>
   <mat-card-title>Price Tiers</mat-card-title>
-  @if (priceTiers == null){
-  loading
-  }
-  @else if (priceTiers.length > 0){
-  <table mat-table [dataSource]="priceTiers">
-    <ng-container matColumnDef="tierName">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.tierName}} </td>
-    </ng-container>
-    <ng-container matColumnDef="price">
-      <th mat-header-cell *matHeaderCellDef> Price </th>
-      <td mat-cell *matCellDef="let element"> {{element.price}} </td>
-    </ng-container>
-    <ng-container matColumnDef="_id">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let element">
-        <button mat-button (click)="openForm(dataListControls['priceTiers'], element)">Edit</button>
-        <button mat-button (click)="delete(dataListControls['priceTiers'], element._id)" color="warn">Delete</button>
-      </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="['tierName', 'price', '_id']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['tierName', 'price', '_id'];"></tr>
-  </table>
-  }
-  @else {
-  no data
-  }
-  <mat-card-actions><button mat-button (click)="openForm(dataListControls['priceTiers'])">Create</button>
-  </mat-card-actions>
+  <app-price-tier-list [priceTiers]="priceTiers" (dataChanged)="dataListControls['priceTiers'].loadData()">
+  </app-price-tier-list>
 </mat-card>

@@ -1,4 +1,15 @@
-@if(event && event.eventname){
+@if(seats && venue){
+<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets" isTicketPlanning
+  (selectedSeatIdsChange)="checkAction()" [(selectedSeatIds)]="selectedSeatIds">
+</app-seating-plan>
+}
+@else{
+loading
+}
+<button mat-button (click)="openForm()">Select seats</button>
+
+
+<!-- @if(event && event.eventname){
 {{event.eventname}}
 }
 <mat-grid-list [cols]="cols.length" rowHeight="100px">
@@ -45,4 +56,4 @@
     }
     }
   </ng-template>
-</mat-menu>
+</mat-menu> -->

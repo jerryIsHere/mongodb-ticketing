@@ -1,0 +1,11 @@
+@if(seats){
+<!-- <app-seating-plan #seatingPlan [venue]="venue" [seats]="seats" seatingPlanEditing>
+</app-seating-plan> -->
+<app-seating-plan #seatingPlan [venue]="venue" [seats]="seats">
+</app-seating-plan>
+}
+@else{
+loading
+}
+<button mat-button (click)="openCreationForm()">batch create</button>
+<button mat-button (click)="openDeletationForm()">batch delete</button>

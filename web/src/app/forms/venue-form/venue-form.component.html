@@ -6,5 +6,25 @@
     <mat-error>This field is required</mat-error>
     }
   </mat-form-field>
+  <br>
+  <mat-form-field>
+    <mat-label>Sections</mat-label>
+    <mat-chip-grid #chipGrid aria-label="Enter fruits">
+      @for (section of data.sections; track section) {
+      <mat-chip-row (removed)="remove(section)">
+        {{section.x}}-{{section.y}}
+        <button matChipRemove>
+          <mat-icon>cancel</mat-icon>
+        </button>
+      </mat-chip-row>
+      }
+      <input placeholder=" e.g. 1-1,1-2" [matChipInputFor]="chipGrid"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes" matChipInputAddOnBlur
+        (matChipInputTokenEnd)="add($event)" />
+    </mat-chip-grid>
+    @if (data.sections?.length == 0) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
 </form>
 <button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>
