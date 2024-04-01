@@ -2,6 +2,7 @@ import { ObjectId, WithId, Document } from "mongodb";
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
+import { REGEX } from "../utils/regex";
 
 export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
@@ -31,8 +32,12 @@ export class UserDAO extends BaseDAO {
     private _email: string | undefined
     public get email() { return this._email }
     public set email(value: string | undefined) {
-
-        this._email = value;
+        if (value && REGEX.EMAIL.test(value)) {
+            this._email = value;
+        }
+        else{
+            BaseDAO.RequestErrorList.push(new RequestError("User email is not in a valid format"))
+        }
     }
 
     private _singingPart?: string | undefined | null
@@ -77,13 +82,13 @@ export class UserDAO extends BaseDAO {
             if (params.doc.isAdmin) this._isAdmin = true;
         }
         else {
-            this._username = params.username
-            this._fullname = params.fullname
-            this._email = params.email
-            this._singingPart = params.singingPart
-            this._verified = false;
-            this._verificationToken = params.verificationToken
-            this._resetToken = params.resetToken
+            this.username = params.username
+            this.fullname = params.fullname
+            this.email = params.email
+            this.singingPart = params.singingPart
+            this.verified = false;
+            this.verificationToken = params.verificationToken
+            this.resetToken = params.resetToken
         }
     }
     // static fetchAndDeserialize(id: string) {
@@ -107,7 +112,7 @@ export class UserDAO extends BaseDAO {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ email: email })
 
-        if (!doc) 
+        if (!doc)
             return null;
         return new UserDAO({ doc: doc });
     }
@@ -116,7 +121,7 @@ export class UserDAO extends BaseDAO {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ resetToken: resetToken })
 
-        if (!doc) 
+        if (!doc)
             return null;
         return new UserDAO({ doc: doc });
     }
@@ -125,7 +130,7 @@ export class UserDAO extends BaseDAO {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken })
 
-        if (!doc) 
+        if (!doc)
             return null;
         return new UserDAO({ doc: doc });
     }
