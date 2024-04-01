@@ -21,7 +21,7 @@ import {
 export class EventFormComponent {
   eventForm: FormGroup = this._formBuilder.group({
     eventname: new FormControl(this.data.event.eventname, [Validators.required]),
-    datetime: new FormControl(this.data.event.datetime, [Validators.required,]),
+    datetime: new FormControl(this.data.event.datetime ? new Date(this.data.event.datetime).toISOString().split('Z')[0] : '', [Validators.required,]),
     duration: new FormControl(this.data.event.duration, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
     venueId: new FormControl(this.data.event.venueId, [Validators.required,]),
   });
@@ -30,8 +30,11 @@ export class EventFormComponent {
     @Inject(MAT_DIALOG_DATA) public data: { event: Show, venues: Venue[] },
     private api: ApiService,
     private _formBuilder: FormBuilder
-  ) { }
+  ) {
+    console.log(this.data.event.datetime ? new Date(this.data.event.datetime).toISOString().split('Z')[0] : '')
+  }
   submit() {
+    console.log(this.eventForm.controls["eventname"].value)
     if (this.eventForm.valid) {
       this.data.event.eventname = this.eventForm.controls["eventname"].value;
       this.data.event.datetime = this.eventForm.controls["datetime"].value;

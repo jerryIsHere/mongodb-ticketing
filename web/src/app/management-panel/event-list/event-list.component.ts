@@ -9,6 +9,8 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { DatePipe } from '@angular/common';
+import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { Show, Venue } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { EventFormComponent } from '../../forms/event-form/event-form.component';
@@ -18,7 +20,7 @@ import { EventFormComponent } from '../../forms/event-form/event-form.component'
   selector: 'app-event-list',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule,
-    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule],
+    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, DatePipe, DatetimeOffsetPipe],
   templateUrl: './event-list.component.html',
   styleUrl: './event-list.component.sass'
 })

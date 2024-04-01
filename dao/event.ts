@@ -15,7 +15,19 @@ export class EventDAO extends BaseDAO {
 
     private _datetime: Date | undefined
     public get datetime() { return this._datetime }
-    public set datetime(value: Date | undefined) { this._datetime = value; }
+    public set datetime(value: Date | string | undefined) {
+        if (typeof value == "string") {
+            try {
+                this._datetime = new Date(value);
+            }
+            catch (err) {
+                BaseDAO.RequestErrorList.push(new RequestError("Cannot parse datetime parameter of event request"))
+            }
+        }
+        else if (value instanceof Date) {
+            this._datetime = value;
+        }
+    }
 
     private _duration: number | undefined
     public get duration() { return this._duration }

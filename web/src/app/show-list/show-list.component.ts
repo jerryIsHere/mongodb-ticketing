@@ -7,12 +7,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { DatePipe } from '@angular/common';
+import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
 import { Show } from '../interface'
 import { ApiService } from '../service/api.service';
 @Component({
   selector: 'app-show-list',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, RouterModule, MatButtonModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule,
+    RouterModule, MatButtonModule, DatePipe, DatetimeOffsetPipe],
   templateUrl: './show-list.component.html',
   styleUrl: './show-list.component.sass'
 })

@@ -25,6 +25,11 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Price </th>
     <td mat-cell *matCellDef="let element"> {{element.priceTier.price}} </td>
   </ng-container>
+  <ng-container matColumnDef="occupant.fullname">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header> Buyer </th>
+    <td mat-cell *matCellDef="let element"
+      [matTooltip]="element.occupant.email + '(' + element.occupant.username + ')'"> {{element.occupant.fullname}} </td>
+  </ng-container>
   <ng-container matColumnDef="_id">
     <th mat-header-cell *matHeaderCellDef>Manage</th>
     <td mat-cell *matCellDef="let element">

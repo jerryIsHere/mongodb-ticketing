@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Ticket } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
@@ -15,14 +16,14 @@ import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.compone
 @Component({
   selector: 'app-sold-ticket-list',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatButtonModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatTooltipModule],
   templateUrl: './sold-ticket-list.component.html',
   styleUrl: './sold-ticket-list.component.sass'
 })
 export class SoldTicketListComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'event.datetime', 'seat', 'priceTier.price', '_id'];
+  ticketDataColumn = ['event.eventname', 'event.datetime', 'seat', 'occupant.fullname', 'priceTier.price', '_id'];
   @Output() dataChanged = new EventEmitter()
   @Input()
   get tickets() { return this.ticketDataSource.data }
@@ -60,7 +61,7 @@ export class SoldTicketListComponent {
           }
           return valueString;
         };
-        const dataStr = this.ticketDataColumn.reduce(accumulator, '').toLowerCase();
+        const dataStr = ['occupant.email', 'occupant.username', ...this.ticketDataColumn].reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
         const transformedFilter = filter.trim().toLowerCase();
         return dataStr.indexOf(transformedFilter) !== -1;
