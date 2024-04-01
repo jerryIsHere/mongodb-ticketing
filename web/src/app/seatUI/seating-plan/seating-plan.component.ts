@@ -21,6 +21,9 @@ export class SeatingPlanComponent {
   @Input() venue: Venue = { sections: [] }
   selectedSection?: { x: number, y: number }
   private _selectedSeatIds: Set<string> = new Set<string>()
+  clearSelectedSeat() {
+    this._selectedSeatIds.clear()
+  }
   @Input()
   get selectedSeatIds(): Set<string> { return this._selectedSeatIds }
   set selectedSeatIds(value: Set<string>) {

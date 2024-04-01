@@ -105,6 +105,7 @@ export class EventseatComponent {
         this.actionSnackbarRef = undefined
         if (this._id)
           this.loadData(this._id);
+        this.seatingPlan?.clearSelectedSeat()
       });
     }
     else if (this.actionSnackbarRef && this.seatingPlan) {

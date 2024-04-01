@@ -50,8 +50,8 @@ export class ShowListComponent {
         };
         const dataStr = this.eventDataColumn.reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
-        const transformedFilter = filter.trim().toLowerCase();
-        return dataStr.indexOf(transformedFilter) !== -1;
+        const transformedFilter = filter.split("+").map(f => f.trim().toLowerCase());
+        return transformedFilter.filter(f => dataStr.indexOf(f) !== -1).length == transformedFilter.length;
       };
       this.eventDataSource.sortingDataAccessor = (data: any, keys: string) => {
         let cursor: any = data;

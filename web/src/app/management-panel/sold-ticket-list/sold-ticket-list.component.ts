@@ -23,7 +23,7 @@ import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.compone
 export class SoldTicketListComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'event.datetime', 'seat', 'occupant.fullname', 'priceTier.price', '_id'];
+  ticketDataColumn = ['event.eventname', 'seat', 'occupant.fullname', 'priceTier.price', '_id'];
   @Output() dataChanged = new EventEmitter()
   @Input()
   get tickets() { return this.ticketDataSource.data }
@@ -63,8 +63,8 @@ export class SoldTicketListComponent {
         };
         const dataStr = ['occupant.email', 'occupant.username', ...this.ticketDataColumn].reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
-        const transformedFilter = filter.trim().toLowerCase();
-        return dataStr.indexOf(transformedFilter) !== -1;
+        const transformedFilter = filter.split("+").map(f => f.trim().toLowerCase());
+        return transformedFilter.filter(f => dataStr.indexOf(f) !== -1).length == transformedFilter.length;
       };
       this.ticketDataSource.sortingDataAccessor = valueAccessor
     }

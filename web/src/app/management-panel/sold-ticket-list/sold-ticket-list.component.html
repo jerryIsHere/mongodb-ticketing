@@ -1,6 +1,7 @@
 <mat-form-field style="width: 100%">
-  <mat-label>Filter</mat-label>
-  <input matInput (keyup)="applyFilter($event)" placeholder="Ex. ium" #input>
+  <mat-label>Filter (possible to use '+' for combination)</mat-label>
+  <input matInput (keyup)="applyFilter($event)"
+    placeholder="For search a specific seat in a event, concat the query with '+', e.g. Amazing event + a1" #input>
 </mat-form-field>
 @if (!loaded){
 loading
@@ -12,10 +13,6 @@ no data
   <ng-container matColumnDef="event.eventname">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
     <td mat-cell *matCellDef="let element"> {{element.event.eventname}} </td>
-  </ng-container>
-  <ng-container matColumnDef="event.datetime">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header> Time </th>
-    <td mat-cell *matCellDef="let element"> {{element.event.datetime}} </td>
   </ng-container>
   <ng-container matColumnDef="seat">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Seat </th>
@@ -33,9 +30,12 @@ no data
   <ng-container matColumnDef="_id">
     <th mat-header-cell *matHeaderCellDef>Manage</th>
     <td mat-cell *matCellDef="let element">
-      <button mat-button (click)="openForm(element)">
+      <button [matTooltip]="element.paymentRemark" mat-button (click)="openForm(element)">
         <mat-icon>confirmation_number</mat-icon>
-        <mat-icon>support_agent</mat-icon>
+        <mat-icon>paid</mat-icon>
+        @if(element.paid){
+        <mat-icon>receipt</mat-icon>
+        }
       </button>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="ticketDataColumn"></tr>

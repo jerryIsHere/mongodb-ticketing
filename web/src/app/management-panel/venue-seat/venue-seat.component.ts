@@ -55,6 +55,7 @@ export class VenueSeatComponent {
               rowsNcols.map(rw => { return { row: rw.row, no: rw.no, coord: { orderInRow: Number(rw.no), sectX: this.seatingPlan?.selectedSection?.x, sectY: this.seatingPlan?.selectedSection?.y } } })
           }).toPromise().then((result: any) => {
             if (result && result.success && this._id) {
+              this.seatingPlan?.clearSelectedSeat()
               this.loadData(this._id)
             }
           })
@@ -83,14 +84,10 @@ export class VenueSeatComponent {
           },).toPromise().then((result: any) => {
             if (result && result.success && this._id) {
               this.loadData(this._id)
+              this.seatingPlan?.clearSelectedSeat()
             }
           })
       })
     }
-  }
-  delete(_id: string) {
-    return this.api.request.delete(`/seat/${_id}`).subscribe((value) => {
-      if (this._id) this.loadData(this._id)
-    })
   }
 }

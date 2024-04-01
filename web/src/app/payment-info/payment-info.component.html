@@ -4,12 +4,40 @@ loading
 @else if(ticketDataSource.data.length == 0){
 no data
 }
-Event:
-@for(eventname of summary.events; track eventname){
-{{eventname}}
-<br>
-}
-Total cost: {{summary.price}}
+<h1>
+  Event:
+  @for(eventname of summary.events; track eventname; let i = $index){
+  {{eventname}}{{summary.events.size != 1 && i!=summary.events.size -1?', ':''}}
+  <br>
+  }
+</h1>
+<p>Total cost: {{summary.price}}</p>
+<mat-tab-group>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <mat-icon>account_balance</mat-icon>
+      bank
+    </ng-template>
+    <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;"
+      src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg">
+  </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <mat-icon class="example-tab-icon">savings</mat-icon>
+      payme
+    </ng-template>
+    <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;"
+      src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg">
+  </mat-tab>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <mat-icon class="example-tab-icon">account_balance_wallet</mat-icon>
+      wallet
+    </ng-template>
+    <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;"
+      src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg">
+  </mat-tab>
+</mat-tab-group>
 <table mat-table [dataSource]="ticketDataSource" matSort>
   <ng-container matColumnDef="seat">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Seat </th>

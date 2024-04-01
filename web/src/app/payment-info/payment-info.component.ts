@@ -5,13 +5,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+
+import { MatTabsModule } from '@angular/material/tabs';
 import { Ticket } from '../interface'
 import { ApiService } from '../service/api.service';
 
 @Component({
   selector: 'app-payment-info',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, MatTabsModule],
   templateUrl: './payment-info.component.html',
   styleUrl: './payment-info.component.sass'
 })
@@ -56,8 +58,8 @@ export class PaymentInfoComponent {
         };
         const dataStr = this.ticketDataColumn.reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
-        const transformedFilter = filter.trim().toLowerCase();
-        return dataStr.indexOf(transformedFilter) !== -1;
+        const transformedFilter = filter.split("+").map(f => f.trim().toLowerCase());
+        return transformedFilter.filter(f => dataStr.indexOf(f) !== -1).length == transformedFilter.length;
       };
       this.ticketDataSource.sortingDataAccessor = valueAccessor
     }

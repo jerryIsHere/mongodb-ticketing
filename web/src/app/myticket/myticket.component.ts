@@ -6,6 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { DatePipe } from '@angular/common';
+import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
 import { Ticket } from '../interface'
 import { ApiService } from '../service/api.service';
 
@@ -13,14 +15,15 @@ import { ApiService } from '../service/api.service';
 @Component({
   selector: 'app-myticket',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatCheckboxModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatCheckboxModule
+    , DatePipe, DatetimeOffsetPipe],
   templateUrl: './myticket.component.html',
   styleUrl: './myticket.component.sass'
 })
 export class MyticketComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'event.datetime', 'seat', 'priceTier.price', 'paid', 'paymentRemark'];
+  ticketDataColumn = ['event.eventname', 'event.datetime', 'duration', 'seat', 'priceTier.price', 'paid', 'paymentRemark'];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   constructor(private api: ApiService) {
@@ -56,8 +59,8 @@ export class MyticketComponent {
         };
         const dataStr = this.ticketDataColumn.reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
-        const transformedFilter = filter.trim().toLowerCase();
-        return dataStr.indexOf(transformedFilter) !== -1;
+        const transformedFilter = filter.split("+").map(f => f.trim().toLowerCase());
+        return transformedFilter.filter(f => dataStr.indexOf(f) !== -1).length == transformedFilter.length;
       };
       this.ticketDataSource.sortingDataAccessor = valueAccessor
     }

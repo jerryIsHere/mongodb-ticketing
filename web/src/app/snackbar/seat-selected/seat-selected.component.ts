@@ -5,13 +5,14 @@ import {
   MatSnackBarRef,
 } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
+ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../service/api.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-seat-selected',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './seat-selected.component.html',
   styleUrl: './seat-selected.component.sass'
 })
@@ -26,9 +27,9 @@ export class SeatSelectedComponent {
       priceTiersColors?: Map<string, string>,
       eventId?: string | undefined
     }, private api: ApiService, private router: Router) {
-      router.events.subscribe((_)=>{
-        snackRef.dismiss()
-      })
+    router.events.subscribe((_) => {
+      snackRef.dismiss()
+    })
   }
   sellAt(priceTier: PriceTier) {
     if (this.data.seats && this.data.eventId) {

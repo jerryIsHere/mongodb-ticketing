@@ -5,13 +5,14 @@ import {
   MatSnackBarRef,
 } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../service/api.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-seat-selected',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './ticket-selected.component.html',
   styleUrl: './ticket-selected.component.sass'
 })
