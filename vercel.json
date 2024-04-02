@@ -11,8 +11,8 @@
     ],
     "functions": {
         "build/index.js": {
-            "memory": 3009,
-            "maxDuration": 30
+            "memory": 5000,
+            "maxDuration": 60
         }
     }
 }
