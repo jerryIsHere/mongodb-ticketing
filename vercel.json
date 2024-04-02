@@ -4,6 +4,10 @@
         {
             "src": "/api/index.js",
             "use": "@vercel/node" 
+        },
+        {
+            "src": "web/dist/ticketing/browser",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
