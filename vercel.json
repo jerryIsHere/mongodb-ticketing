@@ -8,11 +8,11 @@
             "source": "/(.*)",
             "destination": "/build/index.js"
         }
-    ]
-  "functions": {
-    "build/index.js": {
-      "memory": 3009,
-      "maxDuration": 30
+    ],
+    "functions": {
+        "build/index.js": {
+            "memory": 3009,
+            "maxDuration": 30
+        }
     }
-  }
 }
