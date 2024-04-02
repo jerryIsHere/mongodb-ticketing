@@ -11,8 +11,7 @@
     ],
     "functions": {
         "build/index.js": {
-            "memory": 3009,
-            "maxDuration": 60
+            "runtime": "vercel-node"
         }
     }
 }
