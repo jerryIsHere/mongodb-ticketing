@@ -13,11 +13,10 @@
     "routes": [
         {
             "src": "/web/(.*)",
-            "dest": "/web/dist/ticketing/browser/$1"
+            "handle": "filesystem"
         },
         {
             "src": "/web/(.*)",
-            "status": 404,
             "dest": "/web/dist/ticketing/browser/index.html"
         },
         {
