@@ -6,7 +6,7 @@
             "use": "@vercel/node" 
         },
         {
-            "src": "web/dist/ticketing/browser",
+            "src": "web/dist/ticketing/browser/**",
             "use": "@vercel/static"
         }
     ],
