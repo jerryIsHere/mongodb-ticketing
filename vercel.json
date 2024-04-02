@@ -1,4 +1,4 @@
-{
+9{
     "version": 2,
     "installCommand": "npm install && npm install --prefix web",
     "buildCommand": "npm run build",
@@ -11,7 +11,7 @@
     ],
     "functions": {
         "build/index.js": {
-            "memory": 5000,
+            "memory": 3009,
             "maxDuration": 60
         }
     }
