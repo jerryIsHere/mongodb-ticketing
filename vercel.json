@@ -2,12 +2,6 @@
     "version": 2,
     "installCommand": "npm install",
     "buildCommand": "npm run build",
-    "builds": [
-        {
-            "src": "/build/index.js",
-            "use": "@vercel/node" 
-        }
-    ],
     "routes": [
         {
             "src": "/(.*)",
