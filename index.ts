@@ -36,25 +36,25 @@ app.use('/web/*', function (_, res: Response) {
 });
 app.use(express.json())
 
-import { User } from './api/user';
+import { User } from './express/user';
 app.use('/user', User.RouterFactory());
 
-import { Event } from './api/event';
+import { Event } from './express/event';
 app.use('/event', Event.RouterFactory());
 
-import { Seat } from './api/seat';
+import { Seat } from './express/seat';
 app.use('/seat', Seat.RouterFactory());
 
-import { Venue } from './api/venue';
+import { Venue } from './express/venue';
 app.use('/venue', Venue.RouterFactory());
 
-import { PriceTier } from './api/priceTier';
+import { PriceTier } from './express/priceTier';
 app.use('/priceTier', PriceTier.RouterFactory());
 
-import { Ticket } from './api/ticket';
+import { Ticket } from './express/ticket';
 app.use('/ticket', Ticket.RouterFactory());
 
-import { Admin } from './api/admin';
+import { Admin } from './express/admin';
 import { BaseDAO } from "./dao/dao";
 app.use('/admin', Admin.RouterFactory());
 
