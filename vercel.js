@@ -28,7 +28,7 @@ fs.readdir(`.${path}`, (err, fileIter) => {
     });
     vercel.routes = [...files.map(f => {
         return {
-            "src": "/web/(.*)",
+            "src": "/web/" + f,
             "dest": "/web/dist/ticketing/browser/" + f
         }
     }), ...vercel.routes]
