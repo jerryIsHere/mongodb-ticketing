@@ -13,7 +13,7 @@
     "routes": [
         {
             "src": "/web/(.*)",
-            "dest": "/web/dist/ticketing/browser/index.html"
+            "dest": "/web/dist/ticketing/browser/$1"
         },
         {
             "src": "/web/(.*)",
