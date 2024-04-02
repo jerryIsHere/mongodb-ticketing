@@ -5,8 +5,8 @@
     "outputDirectory": "build",
     "rewrites": [
         {
-            "src": "/(.*)",
-            "dest": "/build/index.js"
+            "source": "/(.*)",
+            "destination": "/build/index.js"
         }
     ]
 }
