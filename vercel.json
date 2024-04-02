@@ -12,6 +12,10 @@
     ],
     "routes": [
         {
+            "src": "/web/(.*)",
+            "dest": "/web/dist/ticketing/browser/index.html"
+        },
+        {
             "src": "/(.*)",
             "dest": "/api/index.js"
         }
