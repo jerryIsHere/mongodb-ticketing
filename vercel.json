@@ -2,16 +2,11 @@
     "version": 2,
     "installCommand": "npm install && npm install --prefix web",
     "buildCommand": "npm run build",
-    "outputDirectory": "build",
+    "outputDirectory": "api",
     "rewrites": [
         {
             "source": "/(.*)",
-            "destination": "/build/index.js"
+            "destination": "/api/index.js"
         }
-    ],
-    "functions": {
-        "build/index.js": {
-            "runtime": "vercel-node"
-        }
-    }
+    ]
 }
