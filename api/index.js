@@ -87,12 +87,13 @@ app.use((output, req, res, next) => {
     }
     database_1.Database.session.endSession();
 });
-app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        // Connect the client to the server	(optional starting in v4.7)
-        yield database_1.Database.init();
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    }
-    catch (_) {
-    }
-}));
+database_1.Database.init().then(_ => {
+    app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            // Connect the client to the server	(optional starting in v4.7)
+            console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        }
+        catch (_) {
+        }
+    }));
+});

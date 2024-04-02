@@ -87,13 +87,14 @@ app.use((output: any, req: Request, res: Response, next: NextFunction) => {
   }
   Database.session.endSession();
 })
+Database.init().then(_ => {
+  app.listen(port, async () => {
+    try {
+      // Connect the client to the server	(optional starting in v4.7)
 
-app.listen(port, async () => {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await Database.init()
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } catch (_) {
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } catch (_) {
 
-  }
-});
+    }
+  });
+})
