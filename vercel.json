@@ -2,7 +2,6 @@
     "version": 2,
     "installCommand": "npm install && npm install --prefix web",
     "buildCommand": "npm run build",
-    "outputDirectory": "api",
     "rewrites": [
         {
             "source": "/(.*)",
