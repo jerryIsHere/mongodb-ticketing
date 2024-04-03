@@ -74,7 +74,7 @@ export class PriceTierDAO extends BaseDAO {
         })
     }
     async checkTicketDependency() {
-        var ticket = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ priceTier_id: this._id })
+        var ticket = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ priceTierId: this._id })
         return ticket
     }
     async delete(): Promise<PriceTierDAO> {

@@ -2,7 +2,7 @@ import { ObjectId, WithId, Document } from "mongodb";
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
-import { REGEX } from "../utils/regex";
+import { REGEX } from "../../utils/regex";
 
 export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"

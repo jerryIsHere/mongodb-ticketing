@@ -1,6 +1,6 @@
 import express, { Express, Request, Response, NextFunction, Send } from "express";
 import session from 'express-session';
-import { Database, RequestError } from "./dao/database";
+import { Database, RequestError } from "./express/dao/database";
 var MongoDBStore = require('connect-mongodb-session')(session);
 
 
@@ -36,26 +36,26 @@ app.use('/web/*', function (_, res: Response) {
 });
 app.use(express.json())
 
-import { User } from './express/user';
+import { User } from './express/router/user';
 app.use('/user', User.RouterFactory());
 
-import { Event } from './express/event';
+import { Event } from './express/router/event';
 app.use('/event', Event.RouterFactory());
 
-import { Seat } from './express/seat';
+import { Seat } from './express/router/seat';
 app.use('/seat', Seat.RouterFactory());
 
-import { Venue } from './express/venue';
+import { Venue } from './express/router/venue';
 app.use('/venue', Venue.RouterFactory());
 
-import { PriceTier } from './express/priceTier';
+import { PriceTier } from './express/router/priceTier';
 app.use('/priceTier', PriceTier.RouterFactory());
 
-import { Ticket } from './express/ticket';
+import { Ticket } from './express/router/ticket';
 app.use('/ticket', Ticket.RouterFactory());
 
-import { Admin } from './express/admin';
-import { BaseDAO } from "./dao/dao";
+import { Admin } from './express/router/admin';
+import { BaseDAO } from "./express/dao/dao";
 app.use('/admin', Admin.RouterFactory());
 
 app.use('/*', function (_, res: Response) {

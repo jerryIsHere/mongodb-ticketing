@@ -2,8 +2,8 @@ import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
-import EmailService from "../services/email";
-import { generateResetToken } from "../utils/token";
+import EmailService from "../../services/email";
+import { generateResetToken } from "../../utils/token";
 declare module "express-session" {
   interface SessionData {
     user: UserDAO | null;
