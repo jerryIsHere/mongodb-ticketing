@@ -31,7 +31,6 @@ export class SoldTicketListComponent {
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   constructor(public dialog: MatDialog, private api: ApiService) {
-    this.loadData()
   }
   ngAfterViewInit() {
     if (this.paginator && this.sort && this.ticketDataSource) {
@@ -68,14 +67,6 @@ export class SoldTicketListComponent {
       };
       this.ticketDataSource.sortingDataAccessor = valueAccessor
     }
-  }
-  loadData() {
-    return this.api.request.get("/ticket?my").toPromise().then((result: any) => {
-      if (result && result.data) {
-        this.loaded = true
-        this.ticketDataSource.data = result.data
-      }
-    })
   }
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;

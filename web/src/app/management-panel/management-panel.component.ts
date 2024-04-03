@@ -1,4 +1,4 @@
-import { Component, } from '@angular/core';
+import { Component, ViewChild, viewChild, } from '@angular/core';
 import { Show, Venue, PriceTier, Ticket } from '../interface'
 import { EventListComponent } from './event-list/event-list.component';
 import { VenueListComponent } from './venue-list/venue-list.component';
@@ -23,6 +23,10 @@ export class ManagementPanelComponent {
   public venues: Venue[] = [];
   public priceTiers: PriceTier[] = [];
   public soldTickets: Ticket[] = [];
+  @ViewChild("soldTicketListComp") soldTicketListComp?: SoldTicketListComponent
+  @ViewChild("eventListComp") eventListComp?: EventListComponent
+  @ViewChild("venueListComp") venueListComp?: VenueListComponent
+  @ViewChild("priceTierListComp") priceTierListComp?: PriceTierListComponent
 
   public dataListControls: { [name: string]: IDataListControl } = {
     priceTiers: {
@@ -30,6 +34,7 @@ export class ManagementPanelComponent {
         return this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.priceTiers = result.data
+          if (this.priceTierListComp) this.priceTierListComp.loaded = true;
         })
       },
     },
@@ -38,6 +43,7 @@ export class ManagementPanelComponent {
         return this.api.request.get("/venue?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.venues = result.data
+          if (this.venueListComp) this.venueListComp.loaded = true;
         })
       },
     },
@@ -46,6 +52,7 @@ export class ManagementPanelComponent {
         return this.api.request.get("/event?list").toPromise().then((result: any) => {
           if (result && result.data)
             this.events = result.data
+          if (this.eventListComp) this.eventListComp.loaded = true;
         })
       },
     },
@@ -54,6 +61,7 @@ export class ManagementPanelComponent {
         return this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
           if (result && result.data)
             this.soldTickets = result.data
+          if (this.soldTicketListComp) this.soldTicketListComp.loaded = true;
         })
       },
     },
