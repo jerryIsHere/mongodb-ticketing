@@ -5,7 +5,7 @@ import {
   MatSnackBarRef,
 } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
- import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../service/api.service';
 import { Router } from '@angular/router';
 
@@ -34,6 +34,7 @@ export class SeatSelectedComponent {
   sellAt(priceTier: PriceTier) {
     if (this.data.seats && this.data.eventId) {
       console.log(this.data.selectedSeatIds, this.data.tickets)
+      let promise: Promise<any>[] = []
       let existing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seatId == seatId).length > 0)
         .map(seatId => this.data.tickets.filter(t => t.seatId == seatId)[0]._id)
       let missing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seatId == seatId).length == 0)
@@ -42,25 +43,43 @@ export class SeatSelectedComponent {
       console.log(missing.map(seatId => {
         return { seatId: seatId, eventId: this.data.eventId, priceTierId: priceTier._id }
       }))
-      let promise = []
       if (missing.length > 0) {
-        promise.push(this.api.request.post(`/ticket?batch&create`, {
-          tickets: missing.map(seatId => {
-            return { seatId: seatId, eventId: this.data.eventId, priceTierId: priceTier._id }
-          })
-        },).toPromise().then((result: any) => {
-          if (result && result.success) {
+        missing.reduce((chunk: string[][], id, i) => {
+          if (chunk[chunk.length - 1].length < 50) {
+            chunk[chunk.length - 1].push(id)
           }
-        }))
+          else {
+            chunk.push([id])
+          }
+          return chunk
+        }, [[]]).forEach(ids => {
+          promise.push(this.api.request.post(`/ticket?batch&create`, {
+            tickets: ids.map(seatId => {
+              return { seatId: seatId, eventId: this.data.eventId, priceTierId: priceTier._id }
+            })
+          },).toPromise().then((result: any) => {
+            if (result && result.success) {
+            }
+          }))
+        })
       }
       if (existing.length > 0) {
-        promise.push(this.api.request.patch(`/ticket?batch&priceTier=${priceTier._id}`, {
-          ticketIds: existing
-        },).toPromise().then((result: any) => {
-          if (result && result.success) {
+        existing.reduce((chunk: string[][], id, i) => {
+          if (chunk[chunk.length - 1].length < 50) {
+            chunk[chunk.length - 1].push(id)
           }
-        }))
-
+          else {
+            chunk.push([id])
+          }
+          return chunk
+        }, [[]]).forEach(ids => {
+          promise.push(this.api.request.patch(`/ticket?batch&priceTier=${priceTier._id}`, {
+            ticketIds: ids
+          },).toPromise().then((result: any) => {
+            if (result && result.success) {
+            }
+          }))
+        })
       }
       Promise.all(promise).then(_ => {
         this.snackRef.dismiss();
@@ -74,6 +93,15 @@ export class SeatSelectedComponent {
       let existing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seatId == seatId).length > 0)
         .map(seatId => this.data.tickets.filter(t => t.seatId == seatId)[0]._id)
       if (existing.length > 0) {
+        existing.reduce((chunk: string[][], id, i) => {
+          if (chunk[chunk.length - 1].length < 50) {
+            chunk[chunk.length - 1].push(id)
+          }
+          else {
+            chunk.push([id])
+          }
+          return chunk
+        }, [[]])
         this.api.request.delete(`/ticket?batch`, {
           body: {
             ticketIds: existing

@@ -67,7 +67,7 @@ export class BuyTicketComponent {
   }
   actionSnackbarRef?: MatSnackBarRef<TicketSelectedComponent>
   selectedSeatIds: Set<string> = new Set<string>()
-
+  limit: number = 6
   checkAction($event: Set<string>) {
     let tickets: Ticket[] = []
     Array.from($event.values()).map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
@@ -78,6 +78,7 @@ export class BuyTicketComponent {
       this.actionSnackbarRef = this._snackBar.openFromComponent(TicketSelectedComponent, {
         data: {
           tickets: tickets,
+          limit: this.limit
         }
       });
       this.actionSnackbarRef.afterDismissed().subscribe(() => {

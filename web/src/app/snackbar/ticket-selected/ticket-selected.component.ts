@@ -17,11 +17,14 @@ import { Router } from '@angular/router';
   styleUrl: './ticket-selected.component.sass'
 })
 export class TicketSelectedComponent {
+  limit: number
   constructor(
     public snackRef: MatSnackBarRef<TicketSelectedComponent>,
     @Inject(MAT_SNACK_BAR_DATA) public data: {
       tickets: Ticket[],
+      limit: number
     }, private api: ApiService, private router: Router,) {
+    this.limit = data.limit;
     router.events.subscribe((_) => {
       snackRef.dismiss()
     })

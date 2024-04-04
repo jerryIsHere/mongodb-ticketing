@@ -1,13 +1,13 @@
 @if(data.tickets){
-{{data.tickets.length }} ticket{{data.tickets.length >1? 's':''}} selected
+{{data.tickets.length }} ticket{{data.tickets.length >1? 's':''}} selected (up to {{limit}})
 (cost: {{totalCost()}})
 
 <button mat-button (click)="buy()" [disabled]="doing">
-  
+
   @if(doing){
-    <mat-spinner></mat-spinner>
-    }
-    @else{buy
-    }
-  </button>
+  <mat-spinner></mat-spinner>
+  }
+  @else{buy
+  }
+</button>
 }
