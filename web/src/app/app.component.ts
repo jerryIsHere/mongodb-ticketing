@@ -23,7 +23,9 @@ import { Router } from '@angular/router';
 export class AppComponent {
   title = 'HK City Choir Ticketing';
   loginOrRegister() {
-    const dialogRef = this.dialog.open(LoginOrRegisterDialogComponent,);
+    const dialogRef = this.dialog.open(LoginOrRegisterDialogComponent, {
+      autoFocus: false
+    });
   }
   constructor(public userSession: UserSessionService, public api: ApiService, public dialog: MatDialog, public router: Router) {
   }

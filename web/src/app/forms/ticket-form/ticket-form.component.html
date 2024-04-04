@@ -1,3 +1,6 @@
+<button mat-icon-button style="margin-left: auto" (click)="close()">
+  <mat-icon>close</mat-icon>
+</button>
 <mat-card>
   <mat-card-header>{{ticket.event?.eventname}} {{ticket.seat?.row}}{{ticket.seat?.no}}</mat-card-header>
   <mat-card-content>
@@ -5,7 +8,7 @@
     <br>
     Email: {{ticket.occupant?.email}}
     <form [formGroup]="ticketForm">
-        <mat-checkbox formControlName="paid">Paid</mat-checkbox>
+      <mat-checkbox formControlName="paid">Paid</mat-checkbox>
       <br>
       <mat-form-field>
         <mat-label>Remark</mat-label>

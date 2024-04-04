@@ -84,10 +84,11 @@ export class EventListComponent {
   }
   openForm(data: any = {}) {
     const dialogRef = this.dialog.open(EventFormComponent, {
-      data: JSON.parse(JSON.stringify(data))
+      data: JSON.parse(JSON.stringify(data)),
+      autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      this.dataChanged.emit()
+      if(result)this.dataChanged.emit()
     })
   }
   delete(id: string) {

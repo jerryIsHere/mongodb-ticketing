@@ -1,10 +1,17 @@
-<form [formGroup]="queryForm">
-  <mat-form-field>
-    <mat-label>Code for rows</mat-label>
-    <textarea matInput formControlName="query" placeholder="a1-za35,b1,c2,za1,bb" required></textarea>
-    @if (queryForm.controls['query'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-</form>
-<button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>
+<button mat-icon-button style="margin-left: auto" (click)="close()">
+  <mat-icon>close</mat-icon>
+</button>
+<mat-dialog-content>
+  <form [formGroup]="queryForm">
+    <mat-form-field>
+      <mat-label>Code for rows</mat-label>
+      <textarea matInput formControlName="query" placeholder="a1-za35,b1,c2,za1,bb" required></textarea>
+      @if (queryForm.controls['query'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>
+</mat-dialog-actions>

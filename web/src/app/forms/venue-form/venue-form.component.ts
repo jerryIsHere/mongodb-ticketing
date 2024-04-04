@@ -3,19 +3,20 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../service/api.service';
 import { Venue } from '../../interface';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
+  MatDialogModule
 } from '@angular/material/dialog';
 @Component({
   selector: 'app-venue-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatChipsModule, MatIconModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatChipsModule, MatIconModule, MatIconModule, MatDialogModule],
   templateUrl: './venue-form.component.html',
   styleUrl: './venue-form.component.sass'
 })
@@ -68,5 +69,8 @@ export class VenueFormComponent {
         })
       }
     }
+  }
+  close() {
+    this.dialogRef.close();
   }
 }

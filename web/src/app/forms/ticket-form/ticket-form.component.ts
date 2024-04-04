@@ -3,19 +3,21 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
 import { ApiService } from '../../service/api.service';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
+  MatDialogModule
 } from '@angular/material/dialog';
 import { Ticket } from '../../interface'
 
 @Component({
   selector: 'app-ticket-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatCheckboxModule, MatCardModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatCheckboxModule, MatCardModule, MatIconModule, MatDialogModule],
   templateUrl: './ticket-form.component.html',
   styleUrl: './ticket-form.component.sass'
 })
@@ -47,5 +49,8 @@ export class TicketFormComponent {
         this.dialogRef.close(this.ticket)
       }
     })
+  }
+  close() {
+    this.dialogRef.close();
   }
 }

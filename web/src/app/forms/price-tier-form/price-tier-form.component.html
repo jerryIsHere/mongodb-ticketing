@@ -1,26 +1,32 @@
-<form [formGroup]="priceTierForm">
-  <mat-form-field>
-    <mat-label>Tier Name</mat-label>
-    <input matInput formControlName="tierName" required>
-    @if (priceTierForm.controls['tierName'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-  <br>
+<button mat-icon-button style="margin-left: auto" (click)="close()">
+  <mat-icon>close</mat-icon>
+</button>
+<mat-dialog-content>
+  <form [formGroup]="priceTierForm">
+    <mat-form-field>
+      <mat-label>Tier Name</mat-label>
+      <input matInput formControlName="tierName" required>
+      @if (priceTierForm.controls['tierName'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
 
-  <mat-form-field>
-    <mat-label>Price</mat-label>
-    <input matInput formControlName="price" required>
-    @if (priceTierForm.controls['price'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-    @if (priceTierForm.controls['price'].hasError('min')) {
-    <mat-error>Price should be positive</mat-error>
-    }
-    @if (priceTierForm.controls['price'].hasError('pattern')) {
-    <mat-error>Price should be a number</mat-error>
-    }
-  </mat-form-field>
-
-</form>
-<button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>
+    <mat-form-field>
+      <mat-label>Price</mat-label>
+      <input matInput formControlName="price" required>
+      @if (priceTierForm.controls['price'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+      @if (priceTierForm.controls['price'].hasError('min')) {
+      <mat-error>Price should be positive</mat-error>
+      }
+      @if (priceTierForm.controls['price'].hasError('pattern')) {
+      <mat-error>Price should be a number</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="submit()">{{data._id?"update":"create"}}</button>
+</mat-dialog-actions>

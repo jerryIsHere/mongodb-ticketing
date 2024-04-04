@@ -3,17 +3,19 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../service/api.service';
 import { PriceTier } from '../../interface';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
+  MatDialogModule
 } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-price-tier-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatIconModule, MatDialogModule],
   templateUrl: './price-tier-form.component.html',
   styleUrl: './price-tier-form.component.sass'
 })
@@ -48,5 +50,7 @@ export class PriceTierFormComponent {
       }
     }
   }
-
+  close() {
+    this.dialogRef.close();
+  }
 }

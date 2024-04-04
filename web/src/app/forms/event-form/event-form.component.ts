@@ -3,18 +3,20 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../service/api.service';
 import { Show, Venue } from '../../interface';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
+  MatDialogModule
 } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatSelectModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatSelectModule, MatIconModule, MatDialogModule],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.sass'
 })
@@ -56,5 +58,7 @@ export class EventFormComponent {
       }
     }
   }
-
+  close() {
+    this.dialogRef.close();
+  }
 }

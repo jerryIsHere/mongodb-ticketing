@@ -76,10 +76,11 @@ export class SoldTicketListComponent {
   }
   openForm(data: Ticket) {
     const dialogRef = this.dialog.open(TicketFormComponent, {
-      data: JSON.parse(JSON.stringify(data))
+      data: JSON.parse(JSON.stringify(data)),
+      autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      this.dataChanged.emit()
+      if(result)this.dataChanged.emit()
     })
   }
 

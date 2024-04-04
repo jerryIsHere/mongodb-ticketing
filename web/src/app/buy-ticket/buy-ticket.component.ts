@@ -94,7 +94,8 @@ export class BuyTicketComponent {
   openForm() {
     if (this._id && this.seatingPlan?.selectedSection) {
       const dialogRef = this.dialog.open(SeatFormComponent, {
-        data: { _id: this._id }
+        data: { _id: this._id },
+        autoFocus: false
       });
       dialogRef.afterClosed().subscribe((rowsNcols: { row: string, no: string }[]) => {
         let seatIds: string[] = []

@@ -3,10 +3,12 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../service/api.service';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
+  MatDialogModule
 } from '@angular/material/dialog';
 
 const charCodeOfA = "a".charCodeAt(0)
@@ -15,7 +17,7 @@ const charCodeOfZ = "z".charCodeAt(0)
 @Component({
   selector: 'app-seat-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatDialogModule],
   templateUrl: './seat-form.component.html',
   styleUrl: './seat-form.component.sass'
 })
@@ -70,7 +72,7 @@ export class SeatFormComponent {
           }
           for (let row of rows) {
             for (let col of cols) {
-              seats.push({ row: row, no: col})
+              seats.push({ row: row, no: col })
             }
           }
 
@@ -80,5 +82,7 @@ export class SeatFormComponent {
       this.dialogRef.close(seats)
     }
   }
-
+  close() {
+    this.dialogRef.close();
+  }
 }
