@@ -4,7 +4,7 @@
 <mat-dialog-content>
   <form [formGroup]="venueForm">
     <mat-form-field>
-      <mat-label>Tier Name</mat-label>
+      <mat-label>Venue Name</mat-label>
       <input matInput formControlName="venuename" required>
       @if (venueForm.controls['venuename'].hasError('required')) {
       <mat-error>This field is required</mat-error>
