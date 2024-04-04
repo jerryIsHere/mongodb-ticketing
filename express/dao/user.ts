@@ -35,7 +35,7 @@ export class UserDAO extends BaseDAO {
         if (value && REGEX.EMAIL.test(value)) {
             this._email = value;
         }
-        else{
+        else {
             BaseDAO.RequestErrorList.push(new RequestError("User email is not in a valid format"))
         }
     }
@@ -98,6 +98,16 @@ export class UserDAO extends BaseDAO {
     //             return new UserDAO({ username: doc.username, fullname: doc.fullname, email: doc.email })
     //     })
     // }
+
+    public Serialize(pushErrorWhenUndefined: boolean): Object {
+        var obj = this.PropertiesWithGetter()
+        if (pushErrorWhenUndefined) {
+            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "verified" && entry[0] != "verificationToken" && entry[0] != "resetToken")
+            if (undefinedEntries.length > 0)
+                BaseDAO.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
+        }
+        return obj
+    }
     static async fetchByUsernameAndDeserialize(username: string): Promise<UserDAO | null> {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username })

@@ -32,6 +32,7 @@ fs.readdir(`.${path}`, (err, fileIter) => {
             "dest": "/web/dist/ticketing/browser/" + f
         }
     }), ...vercel.routes]
+    console.log("vercel.json for: \n",files)
     fs.writeFile('vercel.json',
         JSON.stringify(vercel), 'utf8', () => {});
 });

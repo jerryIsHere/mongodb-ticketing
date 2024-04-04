@@ -79,6 +79,15 @@ class UserDAO extends dao_1.BaseDAO {
     //             return new UserDAO({ username: doc.username, fullname: doc.fullname, email: doc.email })
     //     })
     // }
+    Serialize(pushErrorWhenUndefined) {
+        var obj = this.PropertiesWithGetter();
+        if (pushErrorWhenUndefined) {
+            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "verified" && entry[0] != "verificationToken" && entry[0] != "resetToken");
+            if (undefinedEntries.length > 0)
+                dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
+        }
+        return obj;
+    }
     static fetchByUsernameAndDeserialize(username) {
         return __awaiter(this, void 0, void 0, function* () {
             var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username });
