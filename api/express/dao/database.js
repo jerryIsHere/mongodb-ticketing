@@ -17,7 +17,6 @@ class Database {
             yield this.mongo.connect();
             // Send a ping to confirm a successful connection
             yield this.mongo.db("admin").command({ ping: 1 });
-            this.session = this.mongo.startSession();
             this.mongodb = this.mongo.db(this.db_name);
         });
     }

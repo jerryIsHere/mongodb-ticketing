@@ -2,6 +2,7 @@ import { WithId, Document, ObjectId } from "mongodb";
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { TicketDAO } from "./ticket";
+import { Response } from "express";
 
 
 export class PriceTierDAO extends BaseDAO {
@@ -15,15 +16,16 @@ export class PriceTierDAO extends BaseDAO {
     public get price() { return this._price }
     public set price(value: number | undefined) {
         if (value && value < 0) {
-            BaseDAO.RequestErrorList.push(new RequestError('Price must be greater then 0.'))
+            this.res.locals.RequestErrorList.push(new RequestError('Price must be greater then 0.'))
         }
         else {
             this._price = value;
         }
     }
 
-    constructor(params: { tierName?: string, price?: number } & { doc?: WithId<Document> }) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(
+        res: Response, params: { tierName?: string, price?: number } & { doc?: WithId<Document> }) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._tierName = params.doc.tierName
             this._price = params.doc.price
@@ -31,18 +33,20 @@ export class PriceTierDAO extends BaseDAO {
         if (params.tierName) this.tierName = params.tierName
         if (params.price) this.price = params.price
     }
-    static async listAll() {
+    static async listAll(
+        res: Response,) {
         return new Promise<PriceTierDAO[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(PriceTierDAO.collection_name).find()
-            resolve((await cursor.toArray()).map(doc => new PriceTierDAO({ doc: doc })));
+            resolve((await cursor.toArray()).map(doc => new PriceTierDAO(res, { doc: doc })));
         })
     }
-    static async getById(id: string) {
+    static async getById(
+        res: Response, id: string) {
 
         return new Promise<PriceTierDAO>(async (resolve, reject) => {
             var doc = await Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new ObjectId(id) })
             if (doc) {
-                resolve(new PriceTierDAO({ doc: doc }))
+                resolve(new PriceTierDAO(res, { doc: doc }))
             }
             reject(new RequestError(`${this.name} has no instance with id ${id}.`))
         })
@@ -50,7 +54,7 @@ export class PriceTierDAO extends BaseDAO {
 
     async create(): Promise<PriceTierDAO> {
         return new Promise<PriceTierDAO>(async (resolve, reject) => {
-            var result = await Database.mongodb.collection(PriceTierDAO.collection_name).insertOne(this.Serialize(true))
+            var result = await Database.mongodb.collection(PriceTierDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session })
             if (result.insertedId) {
                 resolve(this)
             }
@@ -63,7 +67,7 @@ export class PriceTierDAO extends BaseDAO {
     async update(): Promise<PriceTierDAO> {
         return new Promise<PriceTierDAO>(async (resolve, reject) => {
             if (this._id) {
-                var result = await Database.mongodb.collection(PriceTierDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+                var result = await Database.mongodb.collection(PriceTierDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
                 if (result.modifiedCount > 0) {
                     resolve(this)
                 }
@@ -85,9 +89,9 @@ export class PriceTierDAO extends BaseDAO {
                     `as ticket with id ${dependency._id} depends on it.`)); return
             }
             if (this._id) {
-                var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                var result = await Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) }, { session: this.res.locals.session })
                 if (result.deletedCount > 0) {
-          
+
                     resolve(this)
                 }
             }

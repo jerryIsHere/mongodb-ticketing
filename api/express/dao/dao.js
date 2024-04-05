@@ -7,8 +7,9 @@ class BaseDAO {
     get id() {
         return this._id ? new mongodb_1.ObjectId(this._id.toString()) : null;
     }
-    constructor(id) {
+    constructor(res, id) {
         this._id = id;
+        this.res = res;
     }
     PropertiesWithGetter() {
         return Object.fromEntries(Object.entries(Object.getOwnPropertyDescriptors(Reflect.getPrototypeOf(this)))
@@ -23,7 +24,7 @@ class BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined);
             if (undefinedEntries.length > 0)
-                BaseDAO.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
         }
         return obj;
     }
@@ -34,4 +35,3 @@ class BaseDAO {
     }
 }
 exports.BaseDAO = BaseDAO;
-BaseDAO.RequestErrorList = new Array();

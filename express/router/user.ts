@@ -24,8 +24,8 @@ export namespace User {
         // Generate a password reset token and save it in the user in the database
         const validUser = 
             req.body.type === "email" ? 
-            await UserDAO.findByEmail(req.body.email): 
-            await UserDAO.fetchByUsernameAndDeserialize(req.body.username);
+            await UserDAO.findByEmail(res, req.body.email): 
+            await UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
         if (!validUser) return next(new RequestError("User not found."));
         const resetToken = await generateResetToken();
         validUser.resetToken = resetToken;
@@ -41,7 +41,7 @@ export namespace User {
         const newPassword = req.body.newPassword;
       
         if (resetToken && newPassword) {
-          const validUser = await UserDAO.findByResetToken(resetToken);
+          const validUser = await UserDAO.findByResetToken(res, resetToken);
           if (!validUser) return next(new RequestError("Invalid or expired reset token."));
             // Reset the user's password and clear the reset token
             await validUser.setPassword(newPassword);
@@ -67,7 +67,7 @@ export namespace User {
     user.post("/verify/:verificationToken", async(req: Request, res: Response, next: NextFunction) => {
       if (!req.params.verificationToken) next(new RequestError("Verification token is required."));
 
-      const user = await UserDAO.findByVerificationToken(req.params.verificationToken);
+      const user = await UserDAO.findByVerificationToken(res, req.params.verificationToken);
       if (!user) return next(new RequestError("User not found."));
       user.verified = true;
       user.verificationToken = null;
@@ -79,7 +79,7 @@ export namespace User {
     user.post("/", async (req: Request, res: Response, next): Promise<any> => {
       if (req.query.login != undefined) {
         if (req.body.password) {
-          UserDAO.login(req.body.username, req.body.password).then(user => {
+          UserDAO.login(res, req.body.username, req.body.password).then(user => {
             req.session['user'] = user.withoutCredential()
             res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
             next({ success: true, message: user.withoutCredential().Hydrated() })
@@ -98,7 +98,7 @@ export namespace User {
           req.body.email &&
           req.body.password
         ) {
-          var dao = new UserDAO({
+          var dao = new UserDAO(res, {
             username: req.body.username,
             fullname: req.body.fullname,
             email: req.body.email,

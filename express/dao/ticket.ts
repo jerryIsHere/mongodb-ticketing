@@ -6,7 +6,7 @@ import { EventDAO } from './event';
 import { PriceTierDAO } from "./priceTier";
 import { SeatDAO } from "./seat";
 import { UserDAO } from "./user";
-
+import { Response } from "express";
 
 export class TicketDAO extends BaseDAO {
     public static readonly collection_name = "tickets"
@@ -46,7 +46,7 @@ export class TicketDAO extends BaseDAO {
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
     public void() {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            Database.session.startTransaction()
+            this.res.locals.session.startTransaction()
             this._occupantId = null
             try {
                 await this.checkReference()
@@ -55,11 +55,13 @@ export class TicketDAO extends BaseDAO {
                 reject(err)
                 return
             }
+            if (this.res.locals.RequestErrorList.length > 0)
+                reject(null)
             if (this.id) {
                 Database.mongodb.collection(TicketDAO.collection_name)
                     .updateOne(
                         { _id: this.id },
-                        { $set: { "occupantId": null, paid: null, paymentRemark: null } }
+                        { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }
                     ).then((value) => {
                         if (value.modifiedCount > 0) {
                             resolve(this)
@@ -74,10 +76,10 @@ export class TicketDAO extends BaseDAO {
     }
     public claim(userId: string): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            Database.session.startTransaction()
+            this.res.locals.session.startTransaction()
             this._occupantId = new ObjectId(userId)
             try {
-                await this.checkReference()
+                await this.checkReference(true)
             }
             catch (err) {
                 reject(err)
@@ -87,7 +89,7 @@ export class TicketDAO extends BaseDAO {
                 Database.mongodb.collection(TicketDAO.collection_name)
                     .updateOne(
                         { _id: this.id, occupantId: null },
-                        { $set: { "occupantId": userId } }
+                        { $set: { "occupantId": userId } }, { session: this.res.locals.session }
                     ).then((value) => {
                         if (value.modifiedCount > 0) {
                             resolve(this)
@@ -105,9 +107,10 @@ export class TicketDAO extends BaseDAO {
         })
     }
     constructor(
+        res: Response,
         params: { paid?: boolean, paymentRemark?: string } & { doc?: WithId<Document> }
     ) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._eventId = params.doc.eventId
             this._seatId = params.doc.seatId
@@ -126,7 +129,7 @@ export class TicketDAO extends BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId" && entry[0] != "paid" && entry[0] != "paymentRemark")
             if (undefinedEntries.length > 0)
-                BaseDAO.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
         }
         return obj
     }
@@ -226,23 +229,25 @@ export class TicketDAO extends BaseDAO {
             }
         })
     }
-    static async getById(id: string) {
+    static async getById(
+        res: Response, id: string) {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
             if (doc) {
-                resolve(new TicketDAO({ doc: doc }))
+                resolve(new TicketDAO(res, { doc: doc }))
             }
             reject(new RequestError(`${this.name} has no instance with id ${id}.`))
         })
     }
-    static async getByIds(ids: string[]): Promise<TicketDAO[]> {
+    static async getByIds(
+        res: Response, ids: string[]): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>(async (resolve, reject) => {
             Promise.all(
                 ids.map(async id =>
                     new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                         var doc = await Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new ObjectId(id) })
                         if (doc) {
-                            daoresolve(new TicketDAO({ doc: doc }))
+                            daoresolve(new TicketDAO(res, { doc: doc }))
                         }
                         daoreject(new RequestError(`${this.name} has no instance with id ${id}.`))
                     }))
@@ -251,42 +256,55 @@ export class TicketDAO extends BaseDAO {
             })
         })
     }
-    async checkReference() {
-        var eventdoc = await Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: this._eventId })
-        if (eventdoc) {
-            let venueId = eventdoc.venueId
+    async checkReference(checkIsSelling: boolean = false) {
+        if (this._eventId == undefined) {
+            this.res.locals.RequestErrorList.push(new RequestError(`Ticket with id ${this._id} has no associate event.`))
+            return null
+        }
+        var event = await EventDAO.getById(this.res, this._eventId.toString())
+        var condition = checkIsSelling ?
+            (event && event.startSellDate && event.endSellDate &&
+                event.startSellDate <= new Date() && event.endSellDate >= new Date()) : event
+        if (condition) {
+            let venueId = event.venueId
             await Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: this._priceTierId }).then(instance => {
                 if (instance == null) {
-                    BaseDAO.RequestErrorList.push(new RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`))
+                    this.res.locals.RequestErrorList.push(new RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`))
                 }
             })
             await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: venueId }).then(instance => {
                 if (instance == null) {
-                    BaseDAO.RequestErrorList.push(new RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`))
+                    this.res.locals.RequestErrorList.push(new RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`))
                 }
             })
             if (this._occupantId)
                 await Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
                     if (instance == null) {
-                        BaseDAO.RequestErrorList.push(new RequestError(`User with id ${this._seatId} doesn't exists.`))
+                        this.res.locals.RequestErrorList.push(new RequestError(`User with id ${this._seatId} doesn't exists.`))
                     }
                 })
         }
         else {
-            BaseDAO.RequestErrorList.push(new RequestError(`Event with id ${this._eventId} doesn't exists.`))
+            if (event == null)
+                this.res.locals.RequestErrorList.push(new RequestError(`Event with id ${this._eventId} doesn't exists.`))
+            if (!checkIsSelling) return null
+            if (event.startSellDate == undefined || event.startSellDate > new Date())
+                this.res.locals.RequestErrorList.push(new RequestError(`Ticket selling of event with id ${this._eventId} is not started yet.`))
+            if (event.endSellDate == undefined || event.endSellDate < new Date())
+                this.res.locals.RequestErrorList.push(new RequestError(`Ticket selling of event with id ${this._eventId} was ended.`))
             return null
         }
     }
     async duplicationChecking() {
         await Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: this.eventId, seatId: this.seatId }).then(instance => {
             if (instance) {
-                BaseDAO.RequestErrorList.push(new RequestError(`Ticket with same event with id ${this.eventId} and seat with id ${this.seatId} already exists.`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Ticket with same event with id ${this.eventId} and seat with id ${this.seatId} already exists.`))
             }
         })
     }
     async create(): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            Database.session.startTransaction()
+            this.res.locals.session.startTransaction()
             try {
                 await this.checkReference()
                 await this.duplicationChecking()
@@ -295,7 +313,7 @@ export class TicketDAO extends BaseDAO {
                 reject(err)
                 return
             }
-            var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true))
+            var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session })
             if (result.insertedId) {
                 resolve(this)
             }
@@ -304,9 +322,9 @@ export class TicketDAO extends BaseDAO {
             }
         })
     }
-    static async batchCreate(daos: TicketDAO[]): Promise<TicketDAO[]> {
+    static async batchCreate(res: Response, daos: TicketDAO[]): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            Database.session.startTransaction()
+            res.locals.session.startTransaction()
             Promise.all(daos.map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     try {
@@ -317,7 +335,7 @@ export class TicketDAO extends BaseDAO {
                         daoreject(err)
                         return
                     }
-                    var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true))
+                    var result = await Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session })
                     if (result.insertedId) {
                         daoresolve(dao)
                     }
@@ -330,9 +348,9 @@ export class TicketDAO extends BaseDAO {
             })
         })
     }
-    static async batchUdatePriceTier(daos: TicketDAO[], priceTierId: string): Promise<TicketDAO[]> {
+    static async batchUdatePriceTier(res: Response, daos: TicketDAO[], priceTierId: string): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            Database.session.startTransaction()
+            res.locals.session.startTransaction()
             Promise.all(daos.map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     try {
@@ -344,7 +362,7 @@ export class TicketDAO extends BaseDAO {
                         return
                     }
                     if (dao._id) {
-                        var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao._id }, { $set: dao.Serialize(true) })
+                        var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao._id }, { $set: dao.Serialize(true) }, { session: res.locals.session })
                         if (result) {
                             daoresolve(dao)
                         }
@@ -371,7 +389,7 @@ export class TicketDAO extends BaseDAO {
                 reject(err)
                 return
             }
-            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
             if (result.modifiedCount > 0) {
                 resolve(this)
             }
@@ -382,14 +400,14 @@ export class TicketDAO extends BaseDAO {
         })
 
     }
-    static async batchClaim(daos: TicketDAO[], userId: string): Promise<TicketDAO[]> {
+    static async batchClaim(res: Response, daos: TicketDAO[], userId: string): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            Database.session.startTransaction()
+            res.locals.session.startTransaction()
             Promise.all(daos.map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     dao._occupantId = new ObjectId(userId)
                     try {
-                        await dao.checkReference()
+                        await dao.checkReference(true)
                     }
                     catch (err) {
                         daoreject(err)
@@ -398,7 +416,7 @@ export class TicketDAO extends BaseDAO {
                     if (dao.id) {
                         var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne(
                             { _id: dao.id, occupantId: null },
-                            { $set: { "occupantId": userId } })
+                            { $set: { "occupantId": userId } }, { session: res.locals.session })
                         if (result.modifiedCount > 0) {
                             daoresolve(dao)
                         }
@@ -415,7 +433,7 @@ export class TicketDAO extends BaseDAO {
     async delete(): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
-            var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+            var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) }, { session: this.res.locals.session })
             if (result.deletedCount > 0) {
                 resolve(this)
             }
@@ -425,15 +443,15 @@ export class TicketDAO extends BaseDAO {
 
         })
     }
-    static async batchDelete(daos: TicketDAO[]): Promise<TicketDAO[]> {
+    static async batchDelete(res: Response, daos: TicketDAO[]): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            Database.session.startTransaction()
+            res.locals.session.startTransaction()
             Promise.all(daos.filter(dao => dao.id != undefined).map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     if (dao.occupantId != null) {
                         daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed as it has occupant.`))
                     }
-                    var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true))
+                    var result = await Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session })
                     if (result.deletedCount > 0) {
                         daoresolve(dao)
                     }

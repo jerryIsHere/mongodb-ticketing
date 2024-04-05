@@ -1,13 +1,20 @@
-@if(seats && venue){
-  <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets" isTicketPlanning
-    (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="limit">
-  </app-seating-plan>
-  }
-  @else{
-  loading
-  }
-  <button mat-button (click)="openForm()">Select seats</button>
-  <!-- @if(event && event.eventname){
+@if(seats && venue && event){
+{{event.eventname}}
+@if(isShowSelling(event)){
+<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
+  isTicketPlanning (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="limit">
+</app-seating-plan>
+<button mat-button (click)="openForm()">Select seats</button>
+}
+@else {
+Ticket selling {{isShowSellingStarted(event)?'has already ended':'is not started'}}.
+{{event.startSellDate | date : 'short'}} - {{event.endSellDate | date : 'short'}}
+}
+}
+@else{
+loading
+}
+<!-- @if(event && event.eventname){
     {{event.eventname}}
     }
     <mat-grid-list [cols]="cols.length" rowHeight="100px">
@@ -50,4 +57,3 @@
         }
       </ng-template>
     </mat-menu> -->
-    

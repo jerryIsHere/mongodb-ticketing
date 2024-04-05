@@ -32,8 +32,8 @@ var User;
                 res.status(400).send("Email Address / Username are Required.");
             // Generate a password reset token and save it in the user in the database
             const validUser = req.body.type === "email" ?
-                yield user_1.UserDAO.findByEmail(req.body.email) :
-                yield user_1.UserDAO.fetchByUsernameAndDeserialize(req.body.username);
+                yield user_1.UserDAO.findByEmail(res, req.body.email) :
+                yield user_1.UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
             if (!validUser)
                 return next(new database_1.RequestError("User not found."));
             const resetToken = yield (0, token_1.generateResetToken)();
@@ -47,7 +47,7 @@ var User;
             const resetToken = req.params.resetToken;
             const newPassword = req.body.newPassword;
             if (resetToken && newPassword) {
-                const validUser = yield user_1.UserDAO.findByResetToken(resetToken);
+                const validUser = yield user_1.UserDAO.findByResetToken(res, resetToken);
                 if (!validUser)
                     return next(new database_1.RequestError("Invalid or expired reset token."));
                 // Reset the user's password and clear the reset token
@@ -72,7 +72,7 @@ var User;
         user.post("/verify/:verificationToken", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (!req.params.verificationToken)
                 next(new database_1.RequestError("Verification token is required."));
-            const user = yield user_1.UserDAO.findByVerificationToken(req.params.verificationToken);
+            const user = yield user_1.UserDAO.findByVerificationToken(res, req.params.verificationToken);
             if (!user)
                 return next(new database_1.RequestError("User not found."));
             user.verified = true;
@@ -83,7 +83,7 @@ var User;
         user.post("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.login != undefined) {
                 if (req.body.password) {
-                    user_1.UserDAO.login(req.body.username, req.body.password).then(user => {
+                    user_1.UserDAO.login(res, req.body.username, req.body.password).then(user => {
                         req.session['user'] = user.withoutCredential();
                         res.cookie("user", JSON.stringify(Object.assign(Object.assign({}, user.withoutCredential().Hydrated()), { hasAdminRight: user.hasAdminRight() })));
                         next({ success: true, message: user.withoutCredential().Hydrated() });
@@ -103,7 +103,7 @@ var User;
                     req.body.fullname &&
                     req.body.email &&
                     req.body.password) {
-                    var dao = new user_1.UserDAO({
+                    var dao = new user_1.UserDAO(res, {
                         username: req.body.username,
                         fullname: req.body.fullname,
                         email: req.body.email,

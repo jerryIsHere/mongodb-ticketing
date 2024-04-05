@@ -26,17 +26,45 @@ class EventDAO extends dao_1.BaseDAO {
                 this._datetime = new Date(value);
             }
             catch (err) {
-                dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError("Cannot parse datetime parameter of event request"));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse datetime parameter of event request"));
             }
         }
         else if (value instanceof Date) {
             this._datetime = value;
         }
     }
+    get startSellDate() { return this._startSellDate; }
+    set startSellDate(value) {
+        if (typeof value == "string") {
+            try {
+                this._startSellDate = new Date(value);
+            }
+            catch (err) {
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse startSellDate parameter of event request"));
+            }
+        }
+        else if (value instanceof Date) {
+            this._startSellDate = value;
+        }
+    }
+    get endSellDate() { return this._endSellDate; }
+    set endSellDate(value) {
+        if (typeof value == "string") {
+            try {
+                this._endSellDate = new Date(value);
+            }
+            catch (err) {
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse endSellDate parameter of event request"));
+            }
+        }
+        else if (value instanceof Date) {
+            this._endSellDate = value;
+        }
+    }
     get duration() { return this._duration; }
     set duration(value) {
         if (value && value < 0) {
-            dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError('Duration must be greater then 0.'));
+            this.res.locals.RequestErrorList.push(new database_1.RequestError('Duration must be greater then 0.'));
         }
         else {
             this._duration = value;
@@ -46,11 +74,13 @@ class EventDAO extends dao_1.BaseDAO {
     set venueId(value) {
         this._venueId = new mongodb_1.ObjectId(value);
     }
-    constructor(params) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(res, params) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._eventname = params.doc.eventname;
             this._datetime = params.doc.datetime;
+            this._startSellDate = params.doc.startSellDate;
+            this._endSellDate = params.doc.endSellDate;
             this._duration = params.doc.duration;
             this._venueId = params.doc.venueId;
         }
@@ -58,6 +88,10 @@ class EventDAO extends dao_1.BaseDAO {
             this.eventname = params.eventname;
         if (params.datetime)
             this.datetime = params.datetime;
+        if (params.startSellDate)
+            this.startSellDate = params.startSellDate;
+        if (params.endSellDate)
+            this.endSellDate = params.endSellDate;
         if (params.duration)
             this.duration = params.duration;
     }
@@ -79,12 +113,38 @@ class EventDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static getById(id) {
+    static listSelling() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var doc = yield database_1.Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
+                var cursor = database_1.Database.mongodb.collection(EventDAO.collection_name).aggregate([
+                    {
+                        $match: {
+                            $and: [
+                                { startSellDate: { $lte: new Date() } },
+                                { endSellDate: { $gte: new Date() } },
+                            ]
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: venue_1.VenueDAO.collection_name,
+                            localField: "venueId",
+                            foreignField: "_id",
+                            as: "venue",
+                        }
+                    },
+                    { $set: { 'venue': { $first: '$venue' } } }
+                ]);
+                resolve((yield cursor.toArray()));
+            }));
+        });
+    }
+    static getById(res, id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                var doc = yield database_1.Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) }, { session: res.locals.session });
                 if (doc) {
-                    resolve(new EventDAO({ doc: doc }));
+                    resolve(new EventDAO(res, { doc: doc }));
                 }
                 reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
             }));
@@ -92,7 +152,7 @@ class EventDAO extends dao_1.BaseDAO {
     }
     checkReference() {
         return __awaiter(this, void 0, void 0, function* () {
-            return database_1.Database.mongodb.collection(venue_1.VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
+            return database_1.Database.mongodb.collection(venue_1.VenueDAO.collection_name).findOne({ _id: this._venueId }, { session: this.res.locals.session }).then(instance => {
                 if (instance == null) {
                     return new database_1.RequestError(`Venue with id ${this._venueId} doesn't exists.`);
                 }
@@ -105,13 +165,13 @@ class EventDAO extends dao_1.BaseDAO {
     create() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                database_1.Database.session.startTransaction();
+                this.res.locals.session.startTransaction();
                 var referror = yield this.checkReference();
                 if (referror) {
                     reject(referror);
                     return;
                 }
-                var result = yield database_1.Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true));
+                var result = yield database_1.Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
                 if (result.insertedId) {
                     resolve(this);
                 }
@@ -136,7 +196,7 @@ class EventDAO extends dao_1.BaseDAO {
                     },
                     { $set: { 'seat': { $first: '$seat' } } },
                     { $match: { 'seat.venueId': { $ne: new mongodb_1.ObjectId(this.venueId) } } },
-                ])).next();
+                ], { session: this.res.locals.session })).next();
             }
             return;
         });
@@ -151,7 +211,7 @@ class EventDAO extends dao_1.BaseDAO {
                     return;
                 }
                 if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+                    var result = yield database_1.Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
                     if (result.modifiedCount > 0) {
                         resolve(this);
                     }
@@ -168,7 +228,7 @@ class EventDAO extends dao_1.BaseDAO {
     checkTicketDependency() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this._id) {
-                return yield database_1.Database.mongodb.collection(ticket_1.TicketDAO.collection_name).findOne({ eventId: new mongodb_1.ObjectId(this._id) });
+                return yield database_1.Database.mongodb.collection(ticket_1.TicketDAO.collection_name).findOne({ eventId: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
             }
             return;
         });
@@ -176,7 +236,7 @@ class EventDAO extends dao_1.BaseDAO {
     delete() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                database_1.Database.session.startTransaction();
+                this.res.locals.session.startTransaction();
                 var dependency = yield this.checkTicketDependency();
                 if (dependency) {
                     reject(new database_1.RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
@@ -184,7 +244,7 @@ class EventDAO extends dao_1.BaseDAO {
                     return;
                 }
                 if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) });
+                    var result = yield database_1.Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
                     if (result.deletedCount > 0) {
                         resolve(this);
                     }

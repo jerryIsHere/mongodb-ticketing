@@ -28,13 +28,13 @@ var Venue;
         });
         venue.get("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.list != undefined) {
-                venue_1.VenueDAO.listAll().then(result => {
+                venue_1.VenueDAO.listAll(res).then(result => {
                     next({ success: true, data: result.map(dao => dao.Hydrated()) });
                 }).catch((error) => next(error));
             }
         }));
         venue.get("/:venueId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            venue_1.VenueDAO.getById(req.params.venueId).then(result => {
+            venue_1.VenueDAO.getById(res, req.params.venueId).then(result => {
                 if (result)
                     next({ success: true, data: result.Hydrated() });
             }).catch((error) => next(error));
@@ -43,7 +43,7 @@ var Venue;
             if (req.query.create != undefined && req.body.venuename && req.body.sections) {
                 if (req.body.sections.filter((s) => !(0, venue_1.sectionTypeCheck)(s)).length > 0)
                     return next(new database_1.RequestError("Requested sections is not in correct format"));
-                var dao = new venue_1.VenueDAO({
+                var dao = new venue_1.VenueDAO(res, {
                     venuename: req.body.venuename,
                     sections: req.body.sections
                 });
@@ -56,7 +56,7 @@ var Venue;
             if (req.body.venuename) {
                 if (req.body.sections.filter((s) => !(0, venue_1.sectionTypeCheck)(s)).length > 0)
                     return next(new database_1.RequestError("Requested sections is not in correct format"));
-                venue_1.VenueDAO.getById(req.params.venueId).then(dao => {
+                venue_1.VenueDAO.getById(res, req.params.venueId).then(dao => {
                     dao.venuename = req.body.venuename;
                     dao.sections = req.body.sections;
                     return dao.update();
@@ -66,7 +66,7 @@ var Venue;
             }
         }));
         venue.delete("/:venueId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            venue_1.VenueDAO.getById(req.params.venueId).then(dao => dao.delete()).then((value) => {
+            venue_1.VenueDAO.getById(res, req.params.venueId).then(dao => dao.delete()).then((value) => {
                 next({ success: true });
             }).catch((error) => next(error));
         }));

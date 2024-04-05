@@ -1,16 +1,16 @@
 import { ObjectId } from "mongodb";
 import { RequestError } from "./database";
-import { Database } from "./database";
-
+import { Response } from "express";
 
 export abstract class BaseDAO {
-    public static RequestErrorList: Array<RequestError> = new Array<RequestError>();
     protected _id: ObjectId | undefined | null
     public get id(): ObjectId | null {
         return this._id ? new ObjectId(this._id.toString()) : null
     }
-    constructor(id?: ObjectId) {
+    public res: Response;
+    constructor(res: Response, id?: ObjectId) {
         this._id = id;
+        this.res = res
     }
     public PropertiesWithGetter(): Object {
         return Object.fromEntries(
@@ -31,7 +31,7 @@ export abstract class BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined)
             if (undefinedEntries.length > 0)
-                BaseDAO.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
         }
         return obj
     }

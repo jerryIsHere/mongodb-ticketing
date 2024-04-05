@@ -3,6 +3,7 @@ import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
 import { REGEX } from "../../utils/regex";
+import { Response } from "express";
 
 export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
@@ -36,7 +37,7 @@ export class UserDAO extends BaseDAO {
             this._email = value;
         }
         else {
-            BaseDAO.RequestErrorList.push(new RequestError("User email is not in a valid format"))
+            this.res.locals.RequestErrorList.push(new RequestError("User email is not in a valid format"))
         }
     }
 
@@ -56,20 +57,21 @@ export class UserDAO extends BaseDAO {
     public get verificationToken(): string | undefined | null { return this._verificationToken }
     public set verificationToken(value: string | undefined | null) { this._verificationToken = value; }
 
-    constructor(params:
-        {
-            username?: string;
-            fullname?: string;
-            email?: string;
-            singingPart?: string | null;
-            verified?: boolean;
-            resetToken?: string | null;
-            verificationToken?: string | null;
-        } & {
-            doc?: WithId<Document>
-        }
+    constructor(
+        res: Response, params:
+            {
+                username?: string;
+                fullname?: string;
+                email?: string;
+                singingPart?: string | null;
+                verified?: boolean;
+                resetToken?: string | null;
+                verificationToken?: string | null;
+            } & {
+                doc?: WithId<Document>
+            }
     ) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._username = params.doc.username
             this._fullname = params.doc.fullname
@@ -104,50 +106,57 @@ export class UserDAO extends BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "verified" && entry[0] != "verificationToken" && entry[0] != "resetToken")
             if (undefinedEntries.length > 0)
-                BaseDAO.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
         }
         return obj
     }
-    static async fetchByUsernameAndDeserialize(username: string): Promise<UserDAO | null> {
+    static async fetchByUsernameAndDeserialize(
+        res: Response, username: string): Promise<UserDAO | null> {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username })
 
         if (doc == null) {
             return null
         }
-        return new UserDAO({ doc: doc })
+        return new UserDAO(res, { doc: doc })
     }
 
-    static async findByEmail(email: string): Promise<UserDAO | null> {
+    static async findByEmail(
+        res: Response, email: string): Promise<UserDAO | null> {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ email: email })
 
         if (!doc)
             return null;
-        return new UserDAO({ doc: doc });
+        return new UserDAO(res, { doc: doc });
     }
 
-    static async findByResetToken(resetToken: string): Promise<UserDAO | null> {
+    static async findByResetToken(
+        res: Response, resetToken: string): Promise<UserDAO | null> {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ resetToken: resetToken })
 
         if (!doc)
             return null;
-        return new UserDAO({ doc: doc });
+        return new UserDAO(res, { doc: doc });
     }
 
-    static async findByVerificationToken(verificationToken: string): Promise<UserDAO | null> {
+    static async findByVerificationToken(
+        res: Response, verificationToken: string): Promise<UserDAO | null> {
 
         var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken })
 
         if (!doc)
             return null;
-        return new UserDAO({ doc: doc });
+        return new UserDAO(
+            res, { doc: doc });
     }
 
-    static async login(username: string, password: string): Promise<UserDAO> {
+    static async login(
+        res: Response, username: string, password: string): Promise<UserDAO> {
         return new Promise<UserDAO>(async (resolve, reject) => {
-            var user = await this.fetchByUsernameAndDeserialize(username)
+            var user = await this.fetchByUsernameAndDeserialize(
+                res, username)
             if (user == null) {
                 reject(new RequestError(`User with username ${username} not found.`))
             }

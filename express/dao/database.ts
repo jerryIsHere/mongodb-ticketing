@@ -15,14 +15,12 @@ export abstract class Database {
     public static mongo: MongoClient = new MongoClient(Database.uri)
 
     public static mongodb: Db;
-    public static session: ClientSession;
 
     public static async init() {
         await this.mongo.connect();
         // Send a ping to confirm a successful connection
         await this.mongo.db("admin").command({ ping: 1 });
 
-        this.session = this.mongo.startSession();
 
         this.mongodb = this.mongo.db(this.db_name)
 

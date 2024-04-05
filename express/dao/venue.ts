@@ -3,6 +3,7 @@ import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { SeatDAO } from "./seat";
 import { EventDAO } from "./event";
+import { Response } from "express";
 
 export type sectionType = { x: number, y: number }
 export function sectionTypeCheck(s: sectionType): s is sectionType {
@@ -20,8 +21,9 @@ export class VenueDAO extends BaseDAO {
     public get venuename() { return this._venuename }
     public set venuename(value: string | undefined) { this._venuename = value; }
 
-    constructor(params: { venuename?: string, sections?: sectionType[] } & { doc?: WithId<Document> }) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(
+        res: Response, params: { venuename?: string, sections?: sectionType[] } & { doc?: WithId<Document> }) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._venuename = params.doc.venuename
             this._sections = params.doc.sections
@@ -31,18 +33,19 @@ export class VenueDAO extends BaseDAO {
         if (params.sections)
             this.sections = params.sections
     }
-    static async listAll() {
+    static async listAll(res: Response,) {
         return new Promise<VenueDAO[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(VenueDAO.collection_name).find()
-            resolve((await cursor.toArray()).map(doc => new VenueDAO({ doc: doc })));
+            resolve((await cursor.toArray()).map(doc => new VenueDAO(res, { doc: doc })));
         })
     }
-    static async getById(id: string) {
+    static async getById(
+        res: Response, id: string) {
 
         return new Promise<VenueDAO>(async (resolve, reject) => {
             var doc = await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: new ObjectId(id) })
             if (doc) {
-                resolve(new VenueDAO({ doc: doc }))
+                resolve(new VenueDAO(res, { doc: doc }))
             }
             reject(new RequestError(`${this.name} has no instance with id ${id}.`))
         })
@@ -50,7 +53,7 @@ export class VenueDAO extends BaseDAO {
     async create(): Promise<VenueDAO> {
 
         return new Promise<VenueDAO>(async (resolve, reject) => {
-            var result = await Database.mongodb.collection(VenueDAO.collection_name).insertOne(this.Serialize(true))
+            var result = await Database.mongodb.collection(VenueDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session })
             if (result.insertedId) {
                 resolve(this)
             }
@@ -79,7 +82,7 @@ export class VenueDAO extends BaseDAO {
                     reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed ` +
                         `as seat  with id ${dependency._id} depends on section ${dependency.coord.sectX}-${dependency.coord.sectY}.`)); return
                 }
-                var result = await Database.mongodb.collection(VenueDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+                var result = await Database.mongodb.collection(VenueDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
                 if (result.modifiedCount > 0) {
                     resolve(this)
                 }
@@ -99,7 +102,7 @@ export class VenueDAO extends BaseDAO {
     }
     async delete(): Promise<VenueDAO> {
         return new Promise<VenueDAO>(async (resolve, reject) => {
-            Database.session.startTransaction()
+            this.res.locals.session.startTransaction()
             var dependency = await this.checkDependency()
             if (dependency.event != null || dependency.seat != null) {
                 var dependencyType = dependency.event != null ? "event" : "seat"
@@ -108,7 +111,7 @@ export class VenueDAO extends BaseDAO {
                     `as ${dependencyType}  with id ${dependencyId} depends on it.`)); return
             }
             if (this._id) {
-                var result = await Database.mongodb.collection(VenueDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                var result = await Database.mongodb.collection(VenueDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) }, { session: this.res.locals.session })
                 if (result.deletedCount > 0) {
 
                     resolve(this)

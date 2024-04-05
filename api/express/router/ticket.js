@@ -73,21 +73,21 @@ var Ticket;
             if (req.query.create != undefined) {
                 if (req.query.batch != undefined && req.body.tickets && Array.isArray(req.body.tickets)) {
                     var daos = req.body.tickets.map((t) => {
-                        var dao = new ticket_1.TicketDAO({});
+                        var dao = new ticket_1.TicketDAO(res, {});
                         dao.eventId = t.eventId;
                         dao.seatId = t.seatId;
                         dao.priceTierId = t.priceTierId;
                         dao.paid = false;
                         return dao;
                     });
-                    ticket_1.TicketDAO.batchCreate(daos).then((tickets) => {
+                    ticket_1.TicketDAO.batchCreate(res, daos).then((tickets) => {
                         next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) });
                     }).catch((error) => next(error));
                 }
                 else if (req.body.eventId && typeof req.body.eventId == "string" &&
                     req.body.seatId && typeof req.body.seatId == "string" &&
                     req.body.priceTierId && typeof req.body.priceTierId == "string") {
-                    var dao = new ticket_1.TicketDAO({});
+                    var dao = new ticket_1.TicketDAO(res, {});
                     dao.paid = false;
                     var promises = [];
                     dao.eventId = req.body.eventId;
@@ -103,7 +103,7 @@ var Ticket;
             if (req.query.batch != undefined && req.body.ticketIds && Array.isArray(req.body.ticketIds)) {
                 if (req.query.buy != undefined) {
                     if (req.session['user'] && req.session['user']._id) {
-                        ticket_1.TicketDAO.getByIds(req.body.ticketIds).then(daos => ticket_1.TicketDAO.batchClaim(daos, req.session['user']._id)).then((tickets) => {
+                        ticket_1.TicketDAO.getByIds(res, req.body.ticketIds).then(daos => ticket_1.TicketDAO.batchClaim(res, daos, req.session['user']._id)).then((tickets) => {
                             next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) });
                         }).catch((error) => next(error));
                     }
@@ -112,9 +112,9 @@ var Ticket;
                     }
                 }
                 else if (typeof req.query.priceTier === "string") {
-                    ticket_1.TicketDAO.getByIds(req.body.ticketIds).then(daos => {
+                    ticket_1.TicketDAO.getByIds(res, req.body.ticketIds).then(daos => {
                         if (typeof req.query.priceTier === "string") {
-                            return ticket_1.TicketDAO.batchUdatePriceTier(daos, req.query.priceTier);
+                            return ticket_1.TicketDAO.batchUdatePriceTier(res, daos, req.query.priceTier);
                         }
                         else {
                             next(new database_1.RequestError(`${req.query.priceTier} is not of type string`));
@@ -129,7 +129,7 @@ var Ticket;
         ticket.patch("/:ticketId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.buy != undefined) {
                 if (req.session['user'] && req.session['user']._id) {
-                    ticket_1.TicketDAO.getById(req.params.ticketId).then(dao => dao.claim(req.session['user']._id)).then((value) => {
+                    ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => dao.claim(req.session['user']._id)).then((value) => {
                         next({ success: true });
                     }).catch((error) => next(error));
                 }
@@ -141,7 +141,7 @@ var Ticket;
                 (req.body.paid != undefined || req.body.paid == null || typeof req.body.paid == "boolean") &&
                 (req.body.paymentRemark == undefined || req.body.paymentRemark == null || typeof req.body.paymentRemark == "string") &&
                 req.session['user'] && req.session['user']._isAdmin) {
-                ticket_1.TicketDAO.getById(req.params.ticketId).then(dao => {
+                ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => {
                     dao.paid = req.body.paid;
                     dao.paymentRemark = req.body.paymentRemark;
                     return dao.update();
@@ -150,20 +150,20 @@ var Ticket;
                 }).catch((error) => next(error));
             }
             else if (req.query.void != undefined) {
-                ticket_1.TicketDAO.getById(req.params.ticketId).then(dao => dao.void()).then((value) => {
+                ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void()).then((value) => {
                     next({ success: true });
                 }).catch((error) => next(error));
             }
         }));
         ticket.delete("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.batch != undefined && req.body.ticketIds && Array.isArray(req.body.ticketIds)) {
-                ticket_1.TicketDAO.getByIds(req.body.ticketIds).then(daos => ticket_1.TicketDAO.batchDelete(daos)).then((tickets) => {
+                ticket_1.TicketDAO.getByIds(res, req.body.ticketIds).then(daos => ticket_1.TicketDAO.batchDelete(res, daos)).then((tickets) => {
                     next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) });
                 }).catch((error) => next(error));
             }
         }));
         ticket.delete("/:ticketId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            ticket_1.TicketDAO.getById(req.params.ticketId).then(dao => dao.delete()).then((value) => {
+            ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => dao.delete()).then((value) => {
                 next({ success: true });
             }).catch((error) => { next(error); });
         }));

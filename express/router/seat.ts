@@ -22,7 +22,7 @@ export namespace Seat {
 
         seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
-                SeatDAO.listByVenueId(req.query.venueId).then(result => {
+                SeatDAO.listByVenueId(res, req.query.venueId).then(result => {
                     next({ success: true, data: result.map(dao => dao.Hydrated()) })
                 }).catch((error) => next(error))
             }
@@ -39,7 +39,7 @@ export namespace Seat {
                             coordTypeCheck(s.coord)
                     }
                     var daos: SeatDAO[] = req.body.seats.filter((s: seatType) => SeatTypeCheck(s)).map((s: any) => {
-                        var dao = new SeatDAO({
+                        var dao = new SeatDAO(res, {
                             row: s.row,
                             no: Number(s.no),
                             coord: s.coord
@@ -47,7 +47,7 @@ export namespace Seat {
                         dao.venueId = venueId
                         return dao;
                     })
-                    SeatDAO.batchCreate(daos).then((seats: SeatDAO[]) => {
+                    SeatDAO.batchCreate(res, daos).then((seats: SeatDAO[]) => {
                         next({ success: true, data: seats.map(seat => seat.Hydrated()) })
                     }).catch((error) => next(error))
                 }
@@ -55,7 +55,7 @@ export namespace Seat {
         })
         seat.patch("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.coord) {
-                var dao = await SeatDAO.getById(req.params.seatId)
+                var dao = await SeatDAO.getById(res, req.params.seatId)
                 dao.coord = req.body.coord
                 dao.update().then((seat: SeatDAO) => {
                     next({ success: true, data: seat.Hydrated() })
@@ -64,13 +64,13 @@ export namespace Seat {
         })
         seat.delete("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.batch != undefined && req.body.seatIds && Array.isArray(req.body.seatIds)) {
-                SeatDAO.getByIds(req.body.seatIds).then(daos => SeatDAO.batchDelete(daos)).then((seats: SeatDAO[]) => {
+                SeatDAO.getByIds(res, req.body.seatIds).then(daos => SeatDAO.batchDelete(res, daos)).then((seats: SeatDAO[]) => {
                     next({ success: true, data: seats.map(seat => seat.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
         seat.delete("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
-            SeatDAO.getById(req.params.seatId).then(dao => dao.delete().then((value) => {
+            SeatDAO.getById(res, req.params.seatId).then(dao => dao.delete().then((value) => {
                 next({ success: true })
             })).catch((error) => { next(error) })
         })

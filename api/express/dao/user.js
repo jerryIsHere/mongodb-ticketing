@@ -34,7 +34,7 @@ class UserDAO extends dao_1.BaseDAO {
             this._email = value;
         }
         else {
-            dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError("User email is not in a valid format"));
+            this.res.locals.RequestErrorList.push(new database_1.RequestError("User email is not in a valid format"));
         }
     }
     get singingPart() { return this._singingPart; }
@@ -45,8 +45,8 @@ class UserDAO extends dao_1.BaseDAO {
     set resetToken(value) { this._resetToken = value; }
     get verificationToken() { return this._verificationToken; }
     set verificationToken(value) { this._verificationToken = value; }
-    constructor(params) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(res, params) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         this._isAdmin = false;
         this.hasAdminRight = () => { return this._isAdmin; };
         this._verified = false;
@@ -84,47 +84,47 @@ class UserDAO extends dao_1.BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "verified" && entry[0] != "verificationToken" && entry[0] != "resetToken");
             if (undefinedEntries.length > 0)
-                dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
         }
         return obj;
     }
-    static fetchByUsernameAndDeserialize(username) {
+    static fetchByUsernameAndDeserialize(res, username) {
         return __awaiter(this, void 0, void 0, function* () {
             var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username });
             if (doc == null) {
                 return null;
             }
-            return new UserDAO({ doc: doc });
+            return new UserDAO(res, { doc: doc });
         });
     }
-    static findByEmail(email) {
+    static findByEmail(res, email) {
         return __awaiter(this, void 0, void 0, function* () {
             var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ email: email });
             if (!doc)
                 return null;
-            return new UserDAO({ doc: doc });
+            return new UserDAO(res, { doc: doc });
         });
     }
-    static findByResetToken(resetToken) {
+    static findByResetToken(res, resetToken) {
         return __awaiter(this, void 0, void 0, function* () {
             var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ resetToken: resetToken });
             if (!doc)
                 return null;
-            return new UserDAO({ doc: doc });
+            return new UserDAO(res, { doc: doc });
         });
     }
-    static findByVerificationToken(verificationToken) {
+    static findByVerificationToken(res, verificationToken) {
         return __awaiter(this, void 0, void 0, function* () {
             var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken });
             if (!doc)
                 return null;
-            return new UserDAO({ doc: doc });
+            return new UserDAO(res, { doc: doc });
         });
     }
-    static login(username, password) {
+    static login(res, username, password) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var user = yield this.fetchByUsernameAndDeserialize(username);
+                var user = yield this.fetchByUsernameAndDeserialize(res, username);
                 if (user == null) {
                     reject(new database_1.RequestError(`User with username ${username} not found.`));
                 }

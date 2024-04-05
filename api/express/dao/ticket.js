@@ -41,7 +41,7 @@ class TicketDAO extends dao_1.BaseDAO {
     get occupantId() { return this._occupantId; }
     void() {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            database_1.Database.session.startTransaction();
+            this.res.locals.session.startTransaction();
             this._occupantId = null;
             try {
                 yield this.checkReference();
@@ -50,9 +50,11 @@ class TicketDAO extends dao_1.BaseDAO {
                 reject(err);
                 return;
             }
+            if (this.res.locals.RequestErrorList.length > 0)
+                reject(null);
             if (this.id) {
                 database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                    .updateOne({ _id: this.id }, { $set: { "occupantId": null, paid: null, paymentRemark: null } }).then((value) => {
+                    .updateOne({ _id: this.id }, { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }).then((value) => {
                     if (value.modifiedCount > 0) {
                         resolve(this);
                     }
@@ -66,10 +68,10 @@ class TicketDAO extends dao_1.BaseDAO {
     }
     claim(userId) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            database_1.Database.session.startTransaction();
+            this.res.locals.session.startTransaction();
             this._occupantId = new mongodb_1.ObjectId(userId);
             try {
-                yield this.checkReference();
+                yield this.checkReference(true);
             }
             catch (err) {
                 reject(err);
@@ -77,7 +79,7 @@ class TicketDAO extends dao_1.BaseDAO {
             }
             if (this.id) {
                 database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                    .updateOne({ _id: this.id, occupantId: null }, { $set: { "occupantId": userId } }).then((value) => {
+                    .updateOne({ _id: this.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: this.res.locals.session }).then((value) => {
                     if (value.modifiedCount > 0) {
                         resolve(this);
                     }
@@ -93,8 +95,8 @@ class TicketDAO extends dao_1.BaseDAO {
             }
         }));
     }
-    constructor(params) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(res, params) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._eventId = params.doc.eventId;
             this._seatId = params.doc.seatId;
@@ -113,7 +115,7 @@ class TicketDAO extends dao_1.BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId" && entry[0] != "paid" && entry[0] != "paymentRemark");
             if (undefinedEntries.length > 0)
-                dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
         }
         return obj;
     }
@@ -168,25 +170,25 @@ class TicketDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static getById(id) {
+    static getById(res, id) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var doc = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
                 if (doc) {
-                    resolve(new TicketDAO({ doc: doc }));
+                    resolve(new TicketDAO(res, { doc: doc }));
                 }
                 reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
             }));
         });
     }
-    static getByIds(ids) {
+    static getByIds(res, ids) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 Promise.all(ids.map((id) => __awaiter(this, void 0, void 0, function* () {
                     return new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                         var doc = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
                         if (doc) {
-                            daoresolve(new TicketDAO({ doc: doc }));
+                            daoresolve(new TicketDAO(res, { doc: doc }));
                         }
                         daoreject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
                     }));
@@ -196,30 +198,44 @@ class TicketDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    checkReference() {
+    checkReference(checkIsSelling = false) {
         return __awaiter(this, void 0, void 0, function* () {
-            var eventdoc = yield database_1.Database.mongodb.collection(event_1.EventDAO.collection_name).findOne({ _id: this._eventId });
-            if (eventdoc) {
-                let venueId = eventdoc.venueId;
+            if (this._eventId == undefined) {
+                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket with id ${this._id} has no associate event.`));
+                return null;
+            }
+            var event = yield event_1.EventDAO.getById(this.res, this._eventId.toString());
+            var condition = checkIsSelling ?
+                (event && event.startSellDate && event.endSellDate &&
+                    event.startSellDate <= new Date() && event.endSellDate >= new Date()) : event;
+            if (condition) {
+                let venueId = event.venueId;
                 yield database_1.Database.mongodb.collection(priceTier_1.PriceTierDAO.collection_name).findOne({ _id: this._priceTierId }).then(instance => {
                     if (instance == null) {
-                        dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`));
+                        this.res.locals.RequestErrorList.push(new database_1.RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`));
                     }
                 });
                 yield database_1.Database.mongodb.collection(seat_1.SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: venueId }).then(instance => {
                     if (instance == null) {
-                        dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`));
+                        this.res.locals.RequestErrorList.push(new database_1.RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`));
                     }
                 });
                 if (this._occupantId)
                     yield database_1.Database.mongodb.collection(user_1.UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
                         if (instance == null) {
-                            dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`User with id ${this._seatId} doesn't exists.`));
+                            this.res.locals.RequestErrorList.push(new database_1.RequestError(`User with id ${this._seatId} doesn't exists.`));
                         }
                     });
             }
             else {
-                dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Event with id ${this._eventId} doesn't exists.`));
+                if (event == null)
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Event with id ${this._eventId} doesn't exists.`));
+                if (!checkIsSelling)
+                    return null;
+                if (event.startSellDate == undefined || event.startSellDate > new Date())
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket selling of event with id ${this._eventId} is not started yet.`));
+                if (event.endSellDate == undefined || event.endSellDate < new Date())
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket selling of event with id ${this._eventId} was ended.`));
                 return null;
             }
         });
@@ -228,7 +244,7 @@ class TicketDAO extends dao_1.BaseDAO {
         return __awaiter(this, void 0, void 0, function* () {
             yield database_1.Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: this.eventId, seatId: this.seatId }).then(instance => {
                 if (instance) {
-                    dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Ticket with same event with id ${this.eventId} and seat with id ${this.seatId} already exists.`));
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket with same event with id ${this.eventId} and seat with id ${this.seatId} already exists.`));
                 }
             });
         });
@@ -236,7 +252,7 @@ class TicketDAO extends dao_1.BaseDAO {
     create() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                database_1.Database.session.startTransaction();
+                this.res.locals.session.startTransaction();
                 try {
                     yield this.checkReference();
                     yield this.duplicationChecking();
@@ -245,7 +261,7 @@ class TicketDAO extends dao_1.BaseDAO {
                     reject(err);
                     return;
                 }
-                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true));
+                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
                 if (result.insertedId) {
                     resolve(this);
                 }
@@ -255,10 +271,10 @@ class TicketDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static batchCreate(daos) {
+    static batchCreate(res, daos) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
-                database_1.Database.session.startTransaction();
+                res.locals.session.startTransaction();
                 Promise.all(daos.map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         yield dao.checkReference();
@@ -268,7 +284,7 @@ class TicketDAO extends dao_1.BaseDAO {
                         daoreject(err);
                         return;
                     }
-                    var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true));
+                    var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session });
                     if (result.insertedId) {
                         daoresolve(dao);
                     }
@@ -281,10 +297,10 @@ class TicketDAO extends dao_1.BaseDAO {
             });
         });
     }
-    static batchUdatePriceTier(daos, priceTierId) {
+    static batchUdatePriceTier(res, daos, priceTierId) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
-                database_1.Database.session.startTransaction();
+                res.locals.session.startTransaction();
                 Promise.all(daos.map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         dao.priceTierId = new mongodb_1.ObjectId(priceTierId);
@@ -295,7 +311,7 @@ class TicketDAO extends dao_1.BaseDAO {
                         return;
                     }
                     if (dao._id) {
-                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao._id }, { $set: dao.Serialize(true) });
+                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao._id }, { $set: dao.Serialize(true) }, { session: res.locals.session });
                         if (result) {
                             daoresolve(dao);
                         }
@@ -326,7 +342,7 @@ class TicketDAO extends dao_1.BaseDAO {
                     reject(err);
                     return;
                 }
-                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
                 if (result.modifiedCount > 0) {
                     resolve(this);
                 }
@@ -336,21 +352,21 @@ class TicketDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static batchClaim(daos, userId) {
+    static batchClaim(res, daos, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
-                database_1.Database.session.startTransaction();
+                res.locals.session.startTransaction();
                 Promise.all(daos.map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                     dao._occupantId = new mongodb_1.ObjectId(userId);
                     try {
-                        yield dao.checkReference();
+                        yield dao.checkReference(true);
                     }
                     catch (err) {
                         daoreject(err);
                         return;
                     }
                     if (dao.id) {
-                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId } });
+                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: res.locals.session });
                         if (result.modifiedCount > 0) {
                             daoresolve(dao);
                         }
@@ -371,7 +387,7 @@ class TicketDAO extends dao_1.BaseDAO {
                     reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
                     return;
                 }
-                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) });
+                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
                 if (result.deletedCount > 0) {
                     resolve(this);
                 }
@@ -381,15 +397,15 @@ class TicketDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static batchDelete(daos) {
+    static batchDelete(res, daos) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
-                database_1.Database.session.startTransaction();
+                res.locals.session.startTransaction();
                 Promise.all(daos.filter(dao => dao.id != undefined).map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                     if (dao.occupantId != null) {
                         daoreject(new database_1.RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed as it has occupant.`));
                     }
-                    var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true));
+                    var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session });
                     if (result.deletedCount > 0) {
                         daoresolve(dao);
                     }

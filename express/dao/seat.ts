@@ -3,7 +3,7 @@ import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { VenueDAO } from "./venue";
 import { TicketDAO } from "./ticket";
-
+import { Response } from "express";
 
 export type coordType = { orderInRow: number, sectX: number, sectY: number }
 export function coordTypeCheck(c: coordType): c is coordType {
@@ -34,13 +34,14 @@ export class SeatDAO extends BaseDAO {
     public set venueId(value: ObjectId | string | undefined) {
         this._venueId = new ObjectId(value);
     }
-    constructor(params: {
-        row?: string,
-        no?: number,
-        coord?: coordType
-    } & { doc?: WithId<Document> }
+    constructor(
+        res: Response, params: {
+            row?: string,
+            no?: number,
+            coord?: coordType
+        } & { doc?: WithId<Document> }
     ) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._row = params.doc.row
             this._no = params.doc.no
@@ -55,33 +56,36 @@ export class SeatDAO extends BaseDAO {
         if (params.coord)
             this.coord = params.coord
     }
-    static async listByVenueId(venueId: string) {
+    static async listByVenueId(
+        res: Response, venueId: string) {
         return new Promise<SeatDAO[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(SeatDAO.collection_name).find({ venueId: new ObjectId(venueId) })
-            resolve((await cursor.toArray()).map(doc => new SeatDAO({ doc: doc })));
+            resolve((await cursor.toArray()).map(doc => new SeatDAO(res, { doc: doc })));
         })
     }
-    static async getById(id: string) {
+    static async getById(
+        res: Response, id: string) {
 
         return new Promise<SeatDAO>(async (resolve, reject) => {
 
             var doc = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(id) })
             if (doc) {
-                resolve(new SeatDAO({ doc: doc }))
+                resolve(new SeatDAO(res, { doc: doc }))
             }
             reject(new RequestError(`${this.name} has no instance with id ${id}.`))
         })
     }
 
 
-    static async getByIds(ids: string[]): Promise<SeatDAO[]> {
+    static async getByIds(
+        res: Response, ids: string[]): Promise<SeatDAO[]> {
         return new Promise<SeatDAO[]>(async (resolve, reject) => {
             Promise.all(
                 ids.map(async id =>
                     new Promise<SeatDAO>(async (daoresolve, daoreject) => {
                         var doc = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new ObjectId(id) })
                         if (doc) {
-                            daoresolve(new SeatDAO({ doc: doc }))
+                            daoresolve(new SeatDAO(res, { doc: doc }))
                         }
                         daoreject(new RequestError(`${this.name} has no instance with id ${id}.`))
                     }))
@@ -93,22 +97,22 @@ export class SeatDAO extends BaseDAO {
     async checkReference() {
         await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
             if (instance == null) {
-                BaseDAO.RequestErrorList.push(new RequestError(`Venue with id ${this._venueId} doesn't exists.`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Venue with id ${this._venueId} doesn't exists.`))
             } else if (instance.sections.filter((s: any) => s.x == this.coord?.sectX && s.y == this.coord?.sectY).length == 0) {
-                BaseDAO.RequestErrorList.push(new RequestError(`Venue with id ${this._venueId} doesn't contain section ${this.coord?.sectX}-${this.coord?.sectY}.`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Venue with id ${this._venueId} doesn't contain section ${this.coord?.sectX}-${this.coord?.sectY}.`))
             }
         })
     }
     async duplicationChecking() {
         await Database.mongodb.collection(SeatDAO.collection_name).findOne({ venueId: this.venueId, no: this.no, row: this.row }).then(instance => {
             if (instance) {
-                BaseDAO.RequestErrorList.push(new RequestError(`Seat in the same venue with id ${this.venueId} at row ${this.row} with no ${this.no} already exists.`))
+                this.res.locals.RequestErrorList.push(new RequestError(`Seat in the same venue with id ${this.venueId} at row ${this.row} with no ${this.no} already exists.`))
             }
         })
     }
     async create(): Promise<SeatDAO> {
         return new Promise<SeatDAO>(async (resolve, reject) => {
-            Database.session.startTransaction()
+            this.res.locals.session.startTransaction()
             try {
                 await this.checkReference()
                 await this.duplicationChecking()
@@ -117,7 +121,7 @@ export class SeatDAO extends BaseDAO {
                 reject(error)
                 return
             }
-            var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true))
+            var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session })
             if (result.insertedId) {
                 resolve(this)
             }
@@ -128,9 +132,9 @@ export class SeatDAO extends BaseDAO {
         })
     }
 
-    static async batchCreate(daos: SeatDAO[]): Promise<SeatDAO[]> {
+    static async batchCreate(res: Response, daos: SeatDAO[]): Promise<SeatDAO[]> {
         return new Promise<SeatDAO[]>((resolve, reject) => {
-            Database.session.startTransaction()
+            res.locals.session.startTransaction()
             Promise.all(daos.map(dao =>
                 new Promise<SeatDAO>(async (daoresolve, daoreject) => {
                     try {
@@ -141,7 +145,7 @@ export class SeatDAO extends BaseDAO {
                         daoreject(err)
                         return
                     }
-                    var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true))
+                    var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session })
                     if (result.insertedId) {
                         daoresolve(dao)
                     }
@@ -166,7 +170,7 @@ export class SeatDAO extends BaseDAO {
                 reject(err)
                 return
             }
-            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
+            var result = await Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
             if (result.modifiedCount > 0) {
                 resolve(this)
             }
@@ -183,14 +187,14 @@ export class SeatDAO extends BaseDAO {
     }
     async delete(): Promise<SeatDAO> {
         return new Promise<SeatDAO>(async (resolve, reject) => {
-            Database.session.startTransaction()
+            this.res.locals.session.startTransaction()
             var dependency = await this.checkTicketDependency()
             if (dependency != null) {
                 reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
                     `as ticket with id ${dependency._id} depends on it.`)); return
             }
             if (this._id) {
-                var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) })
+                var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) }, { session: this.res.locals.session })
                 if (result.deletedCount > 0) {
 
                     resolve(this)
@@ -199,9 +203,9 @@ export class SeatDAO extends BaseDAO {
             else { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
         })
     }
-    static async batchDelete(daos: SeatDAO[]): Promise<SeatDAO[]> {
+    static async batchDelete(res: Response, daos: SeatDAO[]): Promise<SeatDAO[]> {
         return new Promise<SeatDAO[]>((resolve, reject) => {
-            Database.session.startTransaction()
+            res.locals.session.startTransaction()
             Promise.all(daos.filter(dao => dao.id != undefined).map(dao =>
                 new Promise<SeatDAO>(async (daoresolve, daoreject) => {
                     var dependency = await dao.checkTicketDependency()
@@ -209,7 +213,7 @@ export class SeatDAO extends BaseDAO {
                         reject(new RequestError(`Deletation of ${this.constructor.name} with id ${dao._id} failed ` +
                             `as ticket with id ${dependency._id} depends on it.`)); return
                     }
-                    var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true))
+                    var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session })
                     if (result.deletedCount > 0) {
                         daoresolve(dao)
                     }

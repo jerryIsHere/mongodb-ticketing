@@ -39,6 +39,32 @@
     </mat-form-field>
     <br>
     <mat-form-field>
+      <mat-label>Start selling ticket at</mat-label>
+      <input matInput type="datetime-local" formControlName="startSellDate" required>
+      @if (eventForm.controls['startSellDate'].hasError('required')) {
+      @if(eventForm.controls["startSellDate"].value == null){
+      <mat-error>This field is required</mat-error>
+      }
+      @else{
+      <mat-error>Invalid date / time</mat-error>
+      }
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>End selling at</mat-label>
+      <input matInput type="datetime-local" formControlName="endSellDate" required>
+      @if (eventForm.controls['endSellDate'].hasError('required')) {
+      @if(eventForm.controls["endSellDate"].value == null){
+      <mat-error>This field is required</mat-error>
+      }
+      @else{
+      <mat-error>Invalid date / time</mat-error>
+      }
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
       <mat-label>Venue</mat-label>
       <mat-select formControlName="venueId" required>
         @for (venue of data.venues; track venue) {

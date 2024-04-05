@@ -36,8 +36,8 @@ class SeatDAO extends dao_1.BaseDAO {
     set venueId(value) {
         this._venueId = new mongodb_1.ObjectId(value);
     }
-    constructor(params) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(res, params) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._row = params.doc.row;
             this._no = params.doc.no;
@@ -51,33 +51,33 @@ class SeatDAO extends dao_1.BaseDAO {
         if (params.coord)
             this.coord = params.coord;
     }
-    static listByVenueId(venueId) {
+    static listByVenueId(res, venueId) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(SeatDAO.collection_name).find({ venueId: new mongodb_1.ObjectId(venueId) });
-                resolve((yield cursor.toArray()).map(doc => new SeatDAO({ doc: doc })));
+                resolve((yield cursor.toArray()).map(doc => new SeatDAO(res, { doc: doc })));
             }));
         });
     }
-    static getById(id) {
+    static getById(res, id) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var doc = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
                 if (doc) {
-                    resolve(new SeatDAO({ doc: doc }));
+                    resolve(new SeatDAO(res, { doc: doc }));
                 }
                 reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
             }));
         });
     }
-    static getByIds(ids) {
+    static getByIds(res, ids) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 Promise.all(ids.map((id) => __awaiter(this, void 0, void 0, function* () {
                     return new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                         var doc = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
                         if (doc) {
-                            daoresolve(new SeatDAO({ doc: doc }));
+                            daoresolve(new SeatDAO(res, { doc: doc }));
                         }
                         daoreject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
                     }));
@@ -92,10 +92,10 @@ class SeatDAO extends dao_1.BaseDAO {
             yield database_1.Database.mongodb.collection(venue_1.VenueDAO.collection_name).findOne({ _id: this._venueId }).then(instance => {
                 var _a, _b;
                 if (instance == null) {
-                    dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Venue with id ${this._venueId} doesn't exists.`));
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Venue with id ${this._venueId} doesn't exists.`));
                 }
                 else if (instance.sections.filter((s) => { var _a, _b; return s.x == ((_a = this.coord) === null || _a === void 0 ? void 0 : _a.sectX) && s.y == ((_b = this.coord) === null || _b === void 0 ? void 0 : _b.sectY); }).length == 0) {
-                    dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Venue with id ${this._venueId} doesn't contain section ${(_a = this.coord) === null || _a === void 0 ? void 0 : _a.sectX}-${(_b = this.coord) === null || _b === void 0 ? void 0 : _b.sectY}.`));
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Venue with id ${this._venueId} doesn't contain section ${(_a = this.coord) === null || _a === void 0 ? void 0 : _a.sectX}-${(_b = this.coord) === null || _b === void 0 ? void 0 : _b.sectY}.`));
                 }
             });
         });
@@ -104,7 +104,7 @@ class SeatDAO extends dao_1.BaseDAO {
         return __awaiter(this, void 0, void 0, function* () {
             yield database_1.Database.mongodb.collection(SeatDAO.collection_name).findOne({ venueId: this.venueId, no: this.no, row: this.row }).then(instance => {
                 if (instance) {
-                    dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError(`Seat in the same venue with id ${this.venueId} at row ${this.row} with no ${this.no} already exists.`));
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError(`Seat in the same venue with id ${this.venueId} at row ${this.row} with no ${this.no} already exists.`));
                 }
             });
         });
@@ -112,7 +112,7 @@ class SeatDAO extends dao_1.BaseDAO {
     create() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                database_1.Database.session.startTransaction();
+                this.res.locals.session.startTransaction();
                 try {
                     yield this.checkReference();
                     yield this.duplicationChecking();
@@ -121,7 +121,7 @@ class SeatDAO extends dao_1.BaseDAO {
                     reject(error);
                     return;
                 }
-                var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true));
+                var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
                 if (result.insertedId) {
                     resolve(this);
                 }
@@ -132,10 +132,10 @@ class SeatDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static batchCreate(daos) {
+    static batchCreate(res, daos) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
-                database_1.Database.session.startTransaction();
+                res.locals.session.startTransaction();
                 Promise.all(daos.map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         yield dao.checkReference();
@@ -145,7 +145,7 @@ class SeatDAO extends dao_1.BaseDAO {
                         daoreject(err);
                         return;
                     }
-                    var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true));
+                    var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session });
                     if (result.insertedId) {
                         daoresolve(dao);
                     }
@@ -174,7 +174,7 @@ class SeatDAO extends dao_1.BaseDAO {
                     reject(err);
                     return;
                 }
-                var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+                var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
                 if (result.modifiedCount > 0) {
                     resolve(this);
                 }
@@ -193,7 +193,7 @@ class SeatDAO extends dao_1.BaseDAO {
     delete() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                database_1.Database.session.startTransaction();
+                this.res.locals.session.startTransaction();
                 var dependency = yield this.checkTicketDependency();
                 if (dependency != null) {
                     reject(new database_1.RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
@@ -201,7 +201,7 @@ class SeatDAO extends dao_1.BaseDAO {
                     return;
                 }
                 if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) });
+                    var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
                     if (result.deletedCount > 0) {
                         resolve(this);
                     }
@@ -213,10 +213,10 @@ class SeatDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    static batchDelete(daos) {
+    static batchDelete(res, daos) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
-                database_1.Database.session.startTransaction();
+                res.locals.session.startTransaction();
                 Promise.all(daos.filter(dao => dao.id != undefined).map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                     var dependency = yield dao.checkTicketDependency();
                     if (dependency != null) {
@@ -224,7 +224,7 @@ class SeatDAO extends dao_1.BaseDAO {
                             `as ticket with id ${dependency._id} depends on it.`));
                         return;
                     }
-                    var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true));
+                    var result = yield database_1.Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session });
                     if (result.deletedCount > 0) {
                         daoresolve(dao);
                     }

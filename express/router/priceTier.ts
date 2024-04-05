@@ -22,7 +22,7 @@ export namespace PriceTier {
 
         priceTier.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
-                PriceTierDAO.listAll().then(result => {
+                PriceTierDAO.listAll(res, ).then(result => {
                     next({ success: true, data: result.map(dao => dao.Hydrated())  })
                 }).catch((error) => next(error))
             }
@@ -34,7 +34,7 @@ export namespace PriceTier {
         priceTier.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.create != undefined) {
                 if (req.body.tierName && req.body.price) {
-                    var dao = new PriceTierDAO({
+                    var dao = new PriceTierDAO(res, {
                         tierName: req.body.tierName,
                         price: req.body.price,
                     })
@@ -47,7 +47,7 @@ export namespace PriceTier {
 
         priceTier.patch("/:priceTierId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.tierName && req.body.price) {
-                PriceTierDAO.getById(req.params.priceTierId).then(dao => {
+                PriceTierDAO.getById(res, req.params.priceTierId).then(dao => {
                     dao.tierName = req.body.tierName
                     dao.price = req.body.price
                     return dao.update()
@@ -58,7 +58,7 @@ export namespace PriceTier {
         })
 
         priceTier.delete("/:priceTierId", async (req: Request, res: Response, next): Promise<any> => {
-            PriceTierDAO.getById(req.params.priceTierId).then(dao => dao.delete().then((value) => {
+            PriceTierDAO.getById(res, req.params.priceTierId).then(dao => dao.delete().then((value) => {
                 next({ success: true })
             })).catch((error) => next(error))
         })

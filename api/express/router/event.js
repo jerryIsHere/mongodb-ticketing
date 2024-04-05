@@ -31,9 +31,14 @@ var Event;
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
+            else if (req.query.listSelling != undefined) {
+                event_1.EventDAO.listSelling().then((result) => {
+                    next({ success: true, data: result });
+                }).catch((error) => next(error));
+            }
         }));
         event.get("/:eventId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            event_1.EventDAO.getById(req.params.eventId).then(result => {
+            event_1.EventDAO.getById(res, req.params.eventId).then(result => {
                 if (result)
                     next({ success: true, data: result.Hydrated() });
             }).catch((error) => next(error));
@@ -42,7 +47,7 @@ var Event;
             if (req.query.create != undefined) {
                 if (req.body.venueId && typeof req.body.venueId == "string") {
                     let venueId = req.body.venueId;
-                    var dao = new event_1.EventDAO({
+                    var dao = new event_1.EventDAO(res, {
                         eventname: req.body.eventname,
                         datetime: req.body.datetime,
                         duration: req.body.duration,
@@ -56,9 +61,11 @@ var Event;
         }));
         event.patch("/:eventId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.params.eventId && typeof req.params.eventId == "string") {
-                event_1.EventDAO.getById(req.params.eventId).then((dao) => {
+                event_1.EventDAO.getById(res, req.params.eventId).then((dao) => {
                     dao.eventname = req.body.eventname;
                     dao.datetime = req.body.datetime;
+                    dao.startSellDate = req.body.startSellDate;
+                    dao.endSellDate = req.body.endSellDate;
                     dao.duration = req.body.duration;
                     dao.venueId = req.body.venueId;
                     return dao.update();
@@ -68,7 +75,7 @@ var Event;
             }
         }));
         event.delete("/:eventId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            event_1.EventDAO.getById(req.params.eventId).then(dao => dao.delete().then((value) => {
+            event_1.EventDAO.getById(res, req.params.eventId).then(dao => dao.delete().then((value) => {
                 next({ success: true });
             })).catch((error) => next(error));
         }));

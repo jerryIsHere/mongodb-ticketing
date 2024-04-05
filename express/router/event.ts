@@ -23,12 +23,17 @@ export namespace Event {
         event.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
                 EventDAO.listAll().then((result: Document[]) => {
-                    next({ success: true, data: result})
+                    next({ success: true, data: result })
+                }).catch((error) => next(error))
+            }
+            else if (req.query.listSelling != undefined) {
+                EventDAO.listSelling().then((result: Document[]) => {
+                    next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
         })
         event.get("/:eventId", async (req: Request, res: Response, next) => {
-            EventDAO.getById(req.params.eventId).then(result => {
+            EventDAO.getById(res, req.params.eventId).then(result => {
                 if (result) next({ success: true, data: result.Hydrated() });
             }).catch((error) => next(error))
         })
@@ -36,7 +41,7 @@ export namespace Event {
             if (req.query.create != undefined) {
                 if (req.body.venueId && typeof req.body.venueId == "string") {
                     let venueId = req.body.venueId
-                    var dao = new EventDAO({
+                    var dao = new EventDAO(res, {
                         eventname: req.body.eventname,
                         datetime: req.body.datetime,
                         duration: req.body.duration,
@@ -51,9 +56,11 @@ export namespace Event {
 
         event.patch("/:eventId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.params.eventId && typeof req.params.eventId == "string") {
-                EventDAO.getById(req.params.eventId).then((dao) => {
+                EventDAO.getById(res, req.params.eventId).then((dao) => {
                     dao.eventname = req.body.eventname
                     dao.datetime = req.body.datetime
+                    dao.startSellDate = req.body.startSellDate
+                    dao.endSellDate = req.body.endSellDate
                     dao.duration = req.body.duration
                     dao.venueId = req.body.venueId
                     return dao.update()
@@ -64,7 +71,7 @@ export namespace Event {
         })
 
         event.delete("/:eventId", async (req: Request, res: Response, next): Promise<any> => {
-            EventDAO.getById(req.params.eventId).then(dao => dao.delete().then((value) => {
+            EventDAO.getById(res, req.params.eventId).then(dao => dao.delete().then((value) => {
                 next({ success: true })
             })).catch((error) => next(error))
         })

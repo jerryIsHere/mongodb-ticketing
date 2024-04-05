@@ -25,8 +25,8 @@ class VenueDAO extends dao_1.BaseDAO {
     set sections(value) { this._sections = value; }
     get venuename() { return this._venuename; }
     set venuename(value) { this._venuename = value; }
-    constructor(params) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(res, params) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._venuename = params.doc.venuename;
             this._sections = params.doc.sections;
@@ -36,20 +36,20 @@ class VenueDAO extends dao_1.BaseDAO {
         if (params.sections)
             this.sections = params.sections;
     }
-    static listAll() {
+    static listAll(res) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(VenueDAO.collection_name).find();
-                resolve((yield cursor.toArray()).map(doc => new VenueDAO({ doc: doc })));
+                resolve((yield cursor.toArray()).map(doc => new VenueDAO(res, { doc: doc })));
             }));
         });
     }
-    static getById(id) {
+    static getById(res, id) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var doc = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
                 if (doc) {
-                    resolve(new VenueDAO({ doc: doc }));
+                    resolve(new VenueDAO(res, { doc: doc }));
                 }
                 reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
             }));
@@ -58,7 +58,7 @@ class VenueDAO extends dao_1.BaseDAO {
     create() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).insertOne(this.Serialize(true));
+                var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
                 if (result.insertedId) {
                     resolve(this);
                 }
@@ -92,7 +92,7 @@ class VenueDAO extends dao_1.BaseDAO {
                             `as seat  with id ${dependency._id} depends on section ${dependency.coord.sectX}-${dependency.coord.sectY}.`));
                         return;
                     }
-                    var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+                    var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
                     if (result.modifiedCount > 0) {
                         resolve(this);
                     }
@@ -117,7 +117,7 @@ class VenueDAO extends dao_1.BaseDAO {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var _a;
-                database_1.Database.session.startTransaction();
+                this.res.locals.session.startTransaction();
                 var dependency = yield this.checkDependency();
                 if (dependency.event != null || dependency.seat != null) {
                     var dependencyType = dependency.event != null ? "event" : "seat";
@@ -127,7 +127,7 @@ class VenueDAO extends dao_1.BaseDAO {
                     return;
                 }
                 if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) });
+                    var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
                     if (result.deletedCount > 0) {
                         resolve(this);
                     }

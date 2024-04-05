@@ -6,6 +6,16 @@ var MongoDBStore = require('connect-mongodb-session')(session);
 
 const port = process.env.PORT || 3000;
 const app: Express = express();
+import { ClientSession } from "mongodb";
+declare global {
+  namespace Express {
+    interface Request {
+      locals: {
+        session: ClientSession
+      }
+    }
+  }
+}
 
 // sql session
 const options = {
@@ -33,6 +43,13 @@ app.use('/web/*', function (_, res: Response) {
   };
   const fileName = 'index.html';
   res.sendFile(fileName, options);
+});
+
+app.use('*', function (req, res: Response, next) {
+  res.locals.RequestErrorList = new Array<RequestError>();
+
+  res.locals.session = Database.mongo.startSession();
+  next()
 });
 app.use(express.json())
 
@@ -62,10 +79,11 @@ app.use('/*', function (_, res: Response) {
   res.redirect("/web/")
 });
 
-app.use((output: any, req: Request, res: Response, next: NextFunction) => {
-  if (output instanceof RequestError || BaseDAO.RequestErrorList.length != 0) {
-    if (Database.session.inTransaction()) {
-      Database.session.abortTransaction();
+app.use(async (output: any, req: Request, res: Response, next: NextFunction) => {
+  if (output instanceof RequestError || res.locals.RequestErrorList.length != 0) {
+    if (res.locals.session.inTransaction()) {
+      console.log("abort");
+      await res.locals.session.abortTransaction();
     }
     else {
     }
@@ -73,19 +91,19 @@ app.use((output: any, req: Request, res: Response, next: NextFunction) => {
       res.status(400).json({ success: false, reason: output.message })
     }
     else {
-      res.status(400).json({ success: false, reasons: BaseDAO.RequestErrorList.map(err => err.message) })
+      res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
     }
   }
   else {
-    if (Database.session.inTransaction()) {
-      Database.session.commitTransaction();
+    if (res.locals.session.inTransaction()) {
+      await res.locals.session.commitTransaction();
       res.json(output)
     }
     else {
       res.json(output)
     }
   }
-  Database.session.endSession();
+  res.locals.session.endSession();
 })
 Database.init().then(_ => {
   app.listen(port, async () => {

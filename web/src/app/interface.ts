@@ -6,6 +6,8 @@ export interface Show {
     venueId?: string;
     venue?: Venue;
     _id?: string;
+    startSellDate?: Date;
+    endSellDate?: Date
 }
 export interface Venue {
     venuename?: string;

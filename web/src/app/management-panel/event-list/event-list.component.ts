@@ -9,8 +9,11 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
+import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
 import { Show, Venue } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { EventFormComponent } from '../../forms/event-form/event-form.component';
@@ -19,15 +22,15 @@ import { EventFormComponent } from '../../forms/event-form/event-form.component'
 @Component({
   selector: 'app-event-list',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule,
-    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, DatePipe, DatetimeOffsetPipe],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, MatTooltipModule,
+    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe],
   templateUrl: './event-list.component.html',
   styleUrl: './event-list.component.sass'
 })
 export class EventListComponent {
   loaded = false
   showDataSource: MatTableDataSource<Show> = new MatTableDataSource<Show>()
-  showDataColumn = ['eventname', 'datetime', 'duration', 'venue.venuename', '_id']
+  showDataColumn = ['eventname', 'datetime', 'duration', 'isSelling', 'venue.venuename', '_id']
   @Output() dataChanged = new EventEmitter()
   @Input()
   get shows() { return this.showDataSource.data }
@@ -88,14 +91,21 @@ export class EventListComponent {
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      if(result)this.dataChanged.emit()
+      if (result) this.dataChanged.emit()
     })
+  }
+  isShowSelling(show: Show) {
+    return show.startSellDate && new Date(show.startSellDate) <= new Date() && show.endSellDate && new Date(show.endSellDate) >= new Date()
   }
   delete(id: string) {
     return this.api.request.delete(`/Event/${id}`).toPromise().then(_ => {
       this.dataChanged.emit()
     })
   }
-
+  showSellingString(show: Show): string {
+    if (show.startSellDate && show.endSellDate)
+      return new Date(show.startSellDate).toLocaleDateString() + '-' + new Date(show.endSellDate).toLocaleDateString()
+    return ''
+  }
 }
 

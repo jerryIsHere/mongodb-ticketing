@@ -27,7 +27,7 @@ var Seat;
         });
         seat.get("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.venueId && typeof req.query.venueId == "string") {
-                seat_1.SeatDAO.listByVenueId(req.query.venueId).then(result => {
+                seat_1.SeatDAO.listByVenueId(res, req.query.venueId).then(result => {
                     next({ success: true, data: result.map(dao => dao.Hydrated()) });
                 }).catch((error) => next(error));
             }
@@ -43,7 +43,7 @@ var Seat;
                             (0, seat_1.coordTypeCheck)(s.coord);
                     };
                     var daos = req.body.seats.filter((s) => SeatTypeCheck(s)).map((s) => {
-                        var dao = new seat_1.SeatDAO({
+                        var dao = new seat_1.SeatDAO(res, {
                             row: s.row,
                             no: Number(s.no),
                             coord: s.coord
@@ -51,7 +51,7 @@ var Seat;
                         dao.venueId = venueId;
                         return dao;
                     });
-                    seat_1.SeatDAO.batchCreate(daos).then((seats) => {
+                    seat_1.SeatDAO.batchCreate(res, daos).then((seats) => {
                         next({ success: true, data: seats.map(seat => seat.Hydrated()) });
                     }).catch((error) => next(error));
                 }
@@ -59,7 +59,7 @@ var Seat;
         }));
         seat.patch("/:seatId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.body.coord) {
-                var dao = yield seat_1.SeatDAO.getById(req.params.seatId);
+                var dao = yield seat_1.SeatDAO.getById(res, req.params.seatId);
                 dao.coord = req.body.coord;
                 dao.update().then((seat) => {
                     next({ success: true, data: seat.Hydrated() });
@@ -68,13 +68,13 @@ var Seat;
         }));
         seat.delete("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.batch != undefined && req.body.seatIds && Array.isArray(req.body.seatIds)) {
-                seat_1.SeatDAO.getByIds(req.body.seatIds).then(daos => seat_1.SeatDAO.batchDelete(daos)).then((seats) => {
+                seat_1.SeatDAO.getByIds(res, req.body.seatIds).then(daos => seat_1.SeatDAO.batchDelete(res, daos)).then((seats) => {
                     next({ success: true, data: seats.map(seat => seat.Hydrated()) });
                 }).catch((error) => next(error));
             }
         }));
         seat.delete("/:seatId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            seat_1.SeatDAO.getById(req.params.seatId).then(dao => dao.delete().then((value) => {
+            seat_1.SeatDAO.getById(res, req.params.seatId).then(dao => dao.delete().then((value) => {
                 next({ success: true });
             })).catch((error) => { next(error); });
         }));

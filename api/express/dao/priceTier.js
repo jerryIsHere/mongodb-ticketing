@@ -20,14 +20,14 @@ class PriceTierDAO extends dao_1.BaseDAO {
     get price() { return this._price; }
     set price(value) {
         if (value && value < 0) {
-            dao_1.BaseDAO.RequestErrorList.push(new database_1.RequestError('Price must be greater then 0.'));
+            this.res.locals.RequestErrorList.push(new database_1.RequestError('Price must be greater then 0.'));
         }
         else {
             this._price = value;
         }
     }
-    constructor(params) {
-        super(params.doc && params.doc._id ? params.doc._id : undefined);
+    constructor(res, params) {
+        super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
             this._tierName = params.doc.tierName;
             this._price = params.doc.price;
@@ -37,20 +37,20 @@ class PriceTierDAO extends dao_1.BaseDAO {
         if (params.price)
             this.price = params.price;
     }
-    static listAll() {
+    static listAll(res) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(PriceTierDAO.collection_name).find();
-                resolve((yield cursor.toArray()).map(doc => new PriceTierDAO({ doc: doc })));
+                resolve((yield cursor.toArray()).map(doc => new PriceTierDAO(res, { doc: doc })));
             }));
         });
     }
-    static getById(id) {
+    static getById(res, id) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var doc = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
                 if (doc) {
-                    resolve(new PriceTierDAO({ doc: doc }));
+                    resolve(new PriceTierDAO(res, { doc: doc }));
                 }
                 reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
             }));
@@ -59,7 +59,7 @@ class PriceTierDAO extends dao_1.BaseDAO {
     create() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var result = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).insertOne(this.Serialize(true));
+                var result = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
                 if (result.insertedId) {
                     resolve(this);
                 }
@@ -73,7 +73,7 @@ class PriceTierDAO extends dao_1.BaseDAO {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+                    var result = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
                     if (result.modifiedCount > 0) {
                         resolve(this);
                     }
@@ -103,7 +103,7 @@ class PriceTierDAO extends dao_1.BaseDAO {
                     return;
                 }
                 if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) });
+                    var result = yield database_1.Database.mongodb.collection(PriceTierDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
                     if (result.deletedCount > 0) {
                         resolve(this);
                     }

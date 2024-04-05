@@ -13,6 +13,11 @@ import {
   MatDialogModule
 } from '@angular/material/dialog';
 
+var tolocaltimezone = (d: Date) => {
+  d.setTime(d.getTime() - d.getTimezoneOffset() * 60000)
+  return d
+}
+
 @Component({
   selector: 'app-event-form',
   standalone: true,
@@ -23,7 +28,9 @@ import {
 export class EventFormComponent {
   eventForm: FormGroup = this._formBuilder.group({
     eventname: new FormControl(this.data.event.eventname, [Validators.required]),
-    datetime: new FormControl(this.data.event.datetime ? new Date(this.data.event.datetime).toISOString().split('Z')[0] : '', [Validators.required,]),
+    datetime: new FormControl(this.data.event.datetime ?tolocaltimezone( new Date(this.data.event.datetime)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    startSellDate: new FormControl(this.data.event.startSellDate ? tolocaltimezone(new Date(this.data.event.startSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    endSellDate: new FormControl(this.data.event.endSellDate ? tolocaltimezone(new Date(this.data.event.endSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
     duration: new FormControl(this.data.event.duration, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
     venueId: new FormControl(this.data.event.venueId, [Validators.required,]),
   });
@@ -38,9 +45,12 @@ export class EventFormComponent {
   submit() {
     console.log(this.eventForm.controls["eventname"].value)
     if (this.eventForm.valid) {
+      let timezone = (new Date()).getTimezoneOffset() * 60000
       this.data.event.eventname = this.eventForm.controls["eventname"].value;
-      this.data.event.datetime = this.eventForm.controls["datetime"].value;
+      this.data.event.datetime = new Date(this.eventForm.controls["datetime"].value);
       this.data.event.duration = this.eventForm.controls["duration"].value;
+      this.data.event.startSellDate = new Date(this.eventForm.controls["startSellDate"].value);
+      this.data.event.endSellDate = new Date(this.eventForm.controls["endSellDate"].value);
       this.data.event.venueId = this.eventForm.controls["venueId"].value;
       if (this.data && this.data.event && this.data.event._id) {
         this.api.request.patch(`/event/${this.data.event._id}`, this.data.event).toPromise().then((result: any) => {

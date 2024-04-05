@@ -69,14 +69,14 @@ export namespace Ticket {
             if (req.query.create != undefined) {
                 if (req.query.batch != undefined && req.body.tickets && Array.isArray(req.body.tickets)) {
                     var daos: TicketDAO[] = req.body.tickets.map((t: any) => {
-                        var dao = new TicketDAO({})
+                        var dao = new TicketDAO(res, {})
                         dao.eventId = t.eventId
                         dao.seatId = t.seatId
                         dao.priceTierId = t.priceTierId
                         dao.paid = false
                         return dao;
                     })
-                    TicketDAO.batchCreate(daos).then((tickets: TicketDAO[]) => {
+                    TicketDAO.batchCreate(res, daos).then((tickets: TicketDAO[]) => {
                         next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
                     }).catch((error) => next(error))
                 }
@@ -85,7 +85,7 @@ export namespace Ticket {
                     req.body.seatId && typeof req.body.seatId == "string" &&
                     req.body.priceTierId && typeof req.body.priceTierId == "string"
                 ) {
-                    var dao = new TicketDAO({});
+                    var dao = new TicketDAO(res, {});
                     dao.paid = false
                     var promises: Promise<any>[] = []
                     dao.eventId = req.body.eventId
@@ -102,16 +102,16 @@ export namespace Ticket {
             if (req.query.batch != undefined && req.body.ticketIds && Array.isArray(req.body.ticketIds)) {
                 if (req.query.buy != undefined) {
                     if (req.session['user'] && (req.session['user'] as any)._id) {
-                        TicketDAO.getByIds(req.body.ticketIds).then(daos => TicketDAO.batchClaim(daos, (req.session['user'] as any)._id)).then((tickets: TicketDAO[]) => {
+                        TicketDAO.getByIds(res, req.body.ticketIds).then(daos => TicketDAO.batchClaim(res, daos, (req.session['user'] as any)._id)).then((tickets: TicketDAO[]) => {
                             next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
                         }).catch((error) => next(error))
                     }
                     else { next(new RequestError("Buying ticket requires a user login")) }
                 }
                 else if (typeof req.query.priceTier === "string") {
-                    TicketDAO.getByIds(req.body.ticketIds).then(daos => {
+                    TicketDAO.getByIds(res, req.body.ticketIds).then(daos => {
                         if (typeof req.query.priceTier === "string") {
-                            return TicketDAO.batchUdatePriceTier(daos, req.query.priceTier)
+                            return TicketDAO.batchUdatePriceTier(res, daos, req.query.priceTier)
                         }
                         else {
                             next(new RequestError(`${req.query.priceTier} is not of type string`))
@@ -127,7 +127,7 @@ export namespace Ticket {
         ticket.patch("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.buy != undefined) {
                 if (req.session['user'] && (req.session['user'] as any)._id) {
-                    TicketDAO.getById(req.params.ticketId).then(dao => dao.claim((req.session['user'] as any)._id)).then((value: TicketDAO) => {
+                    TicketDAO.getById(res, req.params.ticketId).then(dao => dao.claim((req.session['user'] as any)._id)).then((value: TicketDAO) => {
                         next({ success: true })
                     }).catch((error) => next(error))
                 }
@@ -137,7 +137,7 @@ export namespace Ticket {
                 (req.body.paid != undefined || req.body.paid == null || typeof req.body.paid == "boolean") &&
                 (req.body.paymentRemark == undefined || req.body.paymentRemark == null || typeof req.body.paymentRemark == "string") &&
                 req.session['user'] && (req.session['user'] as any)._isAdmin) {
-                TicketDAO.getById(req.params.ticketId).then(dao => {
+                TicketDAO.getById(res, req.params.ticketId).then(dao => {
                     dao.paid = req.body.paid;
                     dao.paymentRemark = req.body.paymentRemark;
                     return dao.update()
@@ -146,7 +146,7 @@ export namespace Ticket {
                 }).catch((error) => next(error))
             }
             else if (req.query.void != undefined) {
-                TicketDAO.getById(req.params.ticketId).then(dao => dao.void()
+                TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void()
                 ).then((value: TicketDAO) => {
                     next({ success: true })
                 }).catch((error) => next(error))
@@ -156,14 +156,14 @@ export namespace Ticket {
 
         ticket.delete("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.batch != undefined && req.body.ticketIds && Array.isArray(req.body.ticketIds)) {
-                TicketDAO.getByIds(req.body.ticketIds).then(daos => TicketDAO.batchDelete(daos)).then((tickets: TicketDAO[]) => {
+                TicketDAO.getByIds(res, req.body.ticketIds).then(daos => TicketDAO.batchDelete(res, daos)).then((tickets: TicketDAO[]) => {
                     next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
                 }).catch((error) => next(error))
             }
         })
 
         ticket.delete("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
-            TicketDAO.getById(req.params.ticketId).then(dao => dao.delete()).then((value) => {
+            TicketDAO.getById(res, req.params.ticketId).then(dao => dao.delete()).then((value) => {
                 next({ success: true })
             }).catch((error) => { next(error) })
         })

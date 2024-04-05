@@ -6,6 +6,7 @@ import { Show, Venue, Ticket, Seat, PriceTier } from '../interface';
 import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
+import { DatePipe } from '@angular/common';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { UserSessionService } from '../service/user-session.service';
 import { TicketSelectedComponent } from '../snackbar/ticket-selected/ticket-selected.component';
@@ -13,7 +14,7 @@ import { TicketSelectedComponent } from '../snackbar/ticket-selected/ticket-sele
 @Component({
   selector: 'app-buy-ticket',
   standalone: true,
-  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe],
   templateUrl: './buy-ticket.component.html',
   styleUrl: './buy-ticket.component.sass'
 })
@@ -113,6 +114,16 @@ export class BuyTicketComponent {
         }
       })
     }
+  }
+    
+  isShowSelling(show: Show) {
+    return show.startSellDate && new Date(show.startSellDate) <= new Date() && show.endSellDate && new Date(show.endSellDate) >= new Date()
+  }
+  isShowSellingStarted(show: Show) {
+    return show.startSellDate && new Date(show.startSellDate) <= new Date()
+  }
+  isShowSellingEnded(show: Show) {
+    return show.endSellDate && new Date(show.endSellDate) >= new Date()
   }
 }
 

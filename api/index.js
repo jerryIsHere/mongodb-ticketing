@@ -43,6 +43,11 @@ app.use('/web/*', function (_, res) {
     const fileName = 'index.html';
     res.sendFile(fileName, options);
 });
+app.use('*', function (req, res, next) {
+    res.locals.RequestErrorList = new Array();
+    res.locals.session = database_1.Database.mongo.startSession();
+    next();
+});
 app.use(express_1.default.json());
 const user_1 = require("./express/router/user");
 app.use('/user', user_1.User.RouterFactory());
@@ -57,15 +62,15 @@ app.use('/priceTier', priceTier_1.PriceTier.RouterFactory());
 const ticket_1 = require("./express/router/ticket");
 app.use('/ticket', ticket_1.Ticket.RouterFactory());
 const admin_1 = require("./express/router/admin");
-const dao_1 = require("./express/dao/dao");
 app.use('/admin', admin_1.Admin.RouterFactory());
 app.use('/*', function (_, res) {
     res.redirect("/web/");
 });
-app.use((output, req, res, next) => {
-    if (output instanceof database_1.RequestError || dao_1.BaseDAO.RequestErrorList.length != 0) {
-        if (database_1.Database.session.inTransaction()) {
-            database_1.Database.session.abortTransaction();
+app.use((output, req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    if (output instanceof database_1.RequestError || res.locals.RequestErrorList.length != 0) {
+        if (res.locals.session.inTransaction()) {
+            console.log("abort");
+            yield res.locals.session.abortTransaction();
         }
         else {
         }
@@ -73,20 +78,20 @@ app.use((output, req, res, next) => {
             res.status(400).json({ success: false, reason: output.message });
         }
         else {
-            res.status(400).json({ success: false, reasons: dao_1.BaseDAO.RequestErrorList.map(err => err.message) });
+            res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
         }
     }
     else {
-        if (database_1.Database.session.inTransaction()) {
-            database_1.Database.session.commitTransaction();
+        if (res.locals.session.inTransaction()) {
+            yield res.locals.session.commitTransaction();
             res.json(output);
         }
         else {
             res.json(output);
         }
     }
-    database_1.Database.session.endSession();
-});
+    res.locals.session.endSession();
+}));
 database_1.Database.init().then(_ => {
     app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
         try {

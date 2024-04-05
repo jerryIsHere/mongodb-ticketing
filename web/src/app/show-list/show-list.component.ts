@@ -9,13 +9,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
+import { DatetimeTimezonePipe } from '../pipes/datetime-timezone.pipe';
 import { Show } from '../interface'
 import { ApiService } from '../service/api.service';
 @Component({
   selector: 'app-show-list',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule,
-    RouterModule, MatButtonModule, DatePipe, DatetimeOffsetPipe],
+    RouterModule, MatButtonModule, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe],
   templateUrl: './show-list.component.html',
   styleUrl: './show-list.component.sass'
 })
@@ -68,7 +69,7 @@ export class ShowListComponent {
     }
   }
   loadData() {
-    return this.api.request.get("/event?list").toPromise().then((result: any) => {
+    return this.api.request.get("/event?listSelling").toPromise().then((result: any) => {
       if (result && result.data) {
         this.loaded = true
         this.eventDataSource.data = result.data

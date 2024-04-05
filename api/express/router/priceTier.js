@@ -27,7 +27,7 @@ var PriceTier;
         });
         priceTier.get("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.list != undefined) {
-                priceTier_1.PriceTierDAO.listAll().then(result => {
+                priceTier_1.PriceTierDAO.listAll(res).then(result => {
                     next({ success: true, data: result.map(dao => dao.Hydrated()) });
                 }).catch((error) => next(error));
             }
@@ -37,7 +37,7 @@ var PriceTier;
         priceTier.post("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.query.create != undefined) {
                 if (req.body.tierName && req.body.price) {
-                    var dao = new priceTier_1.PriceTierDAO({
+                    var dao = new priceTier_1.PriceTierDAO(res, {
                         tierName: req.body.tierName,
                         price: req.body.price,
                     });
@@ -49,7 +49,7 @@ var PriceTier;
         }));
         priceTier.patch("/:priceTierId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.body.tierName && req.body.price) {
-                priceTier_1.PriceTierDAO.getById(req.params.priceTierId).then(dao => {
+                priceTier_1.PriceTierDAO.getById(res, req.params.priceTierId).then(dao => {
                     dao.tierName = req.body.tierName;
                     dao.price = req.body.price;
                     return dao.update();
@@ -59,7 +59,7 @@ var PriceTier;
             }
         }));
         priceTier.delete("/:priceTierId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            priceTier_1.PriceTierDAO.getById(req.params.priceTierId).then(dao => dao.delete().then((value) => {
+            priceTier_1.PriceTierDAO.getById(res, req.params.priceTierId).then(dao => dao.delete().then((value) => {
                 next({ success: true });
             })).catch((error) => next(error));
         }));
