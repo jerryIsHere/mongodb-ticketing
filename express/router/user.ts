@@ -18,18 +18,17 @@ export namespace User {
     user.post(
       "/forget-password",
       async (req: Request, res: Response, next): Promise<any> => {
-        if (!req.body.type) res.status(400).send("Missing type.");
-        if (["email", "username"].includes(req.body.type)) res.status(400).send("Invalid type.");
-        if (!req.body.email && !req.body.username) res.status(400).send("Email Address / Username are Required.");
+        if (req.body.email === undefined && req.body.username === undefined) res.status(400).send("Email Address / Username are Required.");
 
         // Generate a password reset token and save it in the user in the database
         const validUser =
-          req.body.type === "email" ?
+          req.body.email != undefined ?
             await UserDAO.findByEmail(res, req.body.email) :
             await UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
-        if (!validUser) return next(new RequestError("User not found."));
-        // Send the password reset email containing the reset token
-        await validUser.sendResetPasswordEmail();
+        if (!validUser) {
+          next(new RequestError("User not found."));
+          // Send the password reset email containing the reset token
+        } else { await validUser.sendResetPasswordEmail(); }
         next({ success: true, message: "Password reset email sent." });
       }
     );
@@ -42,10 +41,14 @@ export namespace User {
         const validUser = await UserDAO.findByResetToken(res, resetToken);
         if (!validUser) return next(new RequestError("Invalid or expired reset token."));
         // Reset the user's password and clear the reset token
-        await validUser.setPassword(newPassword);
-        validUser.resetToken = null;
-        await validUser.update();
-
+        try {
+          await validUser.setPassword(newPassword);
+          validUser.resetToken = null;
+          await validUser.update();
+        }
+        catch (err) {
+          next(err)
+        }
         res.status(200).json({ success: true, message: "Password reset successful." });
       } else {
         next(new RequestError("Reset token and new password are required."));
@@ -72,12 +75,11 @@ export namespace User {
           }).catch((error) => next(error))
         }
         else if (req.query.password != undefined) {
-          UserDAO.fetchByUsernameAndDeserialize(res, req.params.username).then((dao) => {
-            dao.setPassword(req.body.password)
-            return dao.update()
-          }).then((dao) => {
-            next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
-          }).catch((error) => next(error))
+          UserDAO.fetchByUsernameAndDeserialize(res, req.params.username)
+            .then((dao) => dao.setPassword(req.body.password)).then((dao) => dao.update())
+            .then((dao) => {
+              next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+            }).catch((error) => next(error))
         }
       }
     });

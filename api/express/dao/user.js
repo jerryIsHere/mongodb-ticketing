@@ -268,6 +268,7 @@ class UserDAO extends dao_1.BaseDAO {
                     reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
                     return;
                 }
+                console.log(this.Serialize(true));
                 var result = yield database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
                 if (result.modifiedCount > 0) {
                     resolve(this);

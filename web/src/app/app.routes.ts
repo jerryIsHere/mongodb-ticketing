@@ -10,6 +10,7 @@ import { UserSessionService } from './service/user-session.service';
 import { PaymentInfoComponent } from './payment-info/payment-info.component';
 import { ProfileComponent } from './user/profile/profile.component';
 import { VerifyComponent } from './user/verify/verify.component';
+import { ResetPasswordComponent } from './user/reset-password/reset-password.component';
 
 export const routes: Routes = [
     { path: '', component: ShowListComponent },
@@ -33,4 +34,5 @@ export const routes: Routes = [
     { path: 'payment-info', component: PaymentInfoComponent },
     { path: 'profile', component: ProfileComponent },
     { path: 'verify/:token', component: VerifyComponent },
+    { path: 'reset-password/:token', component: ResetPasswordComponent },
 ];

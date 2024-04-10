@@ -281,6 +281,7 @@ export class UserDAO extends BaseDAO {
     public async update() {
         return new Promise<UserDAO>(async (resolve, reject) => {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
+            console.log(this.Serialize(true))
             var result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
             if (result.modifiedCount > 0) {
                 resolve(this)

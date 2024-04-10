@@ -1,0 +1,20 @@
+<form [formGroup]="forgetForm">
+  <mat-form-field>
+    <mat-label>Username:</mat-label>
+    <input matInput formControlName="username">
+    @if (dirty && !valid()) {
+    <mat-error>Please provide at least one of these.</mat-error>
+    }
+  </mat-form-field>
+  <br>
+
+  <mat-form-field>
+    <mat-label>Email:</mat-label>
+    <input matInput formControlName="email">
+    @if (dirty && !valid()) {
+    <mat-error>Please provide at least one of these.</mat-error>
+    }
+  </mat-form-field>
+
+</form>
+<button mat-button (click)="sent?null:forget()">{{sent?'email sent':'send reset password email'}}</button>

@@ -26,20 +26,19 @@ var User;
             res.cookie("user", null);
         };
         user.post("/forget-password", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-            if (!req.body.type)
-                res.status(400).send("Missing type.");
-            if (["email", "username"].includes(req.body.type))
-                res.status(400).send("Invalid type.");
-            if (!req.body.email && !req.body.username)
+            if (req.body.email === undefined && req.body.username === undefined)
                 res.status(400).send("Email Address / Username are Required.");
             // Generate a password reset token and save it in the user in the database
-            const validUser = req.body.type === "email" ?
+            const validUser = req.body.email != undefined ?
                 yield user_1.UserDAO.findByEmail(res, req.body.email) :
                 yield user_1.UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
-            if (!validUser)
-                return next(new database_1.RequestError("User not found."));
-            // Send the password reset email containing the reset token
-            yield validUser.sendResetPasswordEmail();
+            if (!validUser) {
+                next(new database_1.RequestError("User not found."));
+                // Send the password reset email containing the reset token
+            }
+            else {
+                yield validUser.sendResetPasswordEmail();
+            }
             next({ success: true, message: "Password reset email sent." });
         }));
         user.patch("/reset-password/:resetToken", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
@@ -50,9 +49,14 @@ var User;
                 if (!validUser)
                     return next(new database_1.RequestError("Invalid or expired reset token."));
                 // Reset the user's password and clear the reset token
-                yield validUser.setPassword(newPassword);
-                validUser.resetToken = null;
-                yield validUser.update();
+                try {
+                    yield validUser.setPassword(newPassword);
+                    validUser.resetToken = null;
+                    yield validUser.update();
+                }
+                catch (err) {
+                    next(err);
+                }
                 res.status(200).json({ success: true, message: "Password reset successful." });
             }
             else {
@@ -80,10 +84,9 @@ var User;
                     }).catch((error) => next(error));
                 }
                 else if (req.query.password != undefined) {
-                    user_1.UserDAO.fetchByUsernameAndDeserialize(res, req.params.username).then((dao) => {
-                        dao.setPassword(req.body.password);
-                        return dao.update();
-                    }).then((dao) => {
+                    user_1.UserDAO.fetchByUsernameAndDeserialize(res, req.params.username)
+                        .then((dao) => dao.setPassword(req.body.password)).then((dao) => dao.update())
+                        .then((dao) => {
                         next({ success: true, data: dao.Hydrated({ withCredentials: false }) });
                     }).catch((error) => next(error));
                 }
