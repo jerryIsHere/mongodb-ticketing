@@ -27,13 +27,13 @@ export class TicketDAO extends BaseDAO {
     public set priceTierId(value: ObjectId | string | undefined) {
         this._priceTierId = new ObjectId(value);
     }
-    private _paid: Boolean | null | undefined
+    private _paid: Boolean | null | undefined = null
     public get paid() { return this._paid }
     public set paid(value: Boolean | null | undefined) {
         this._paid = value;
     }
 
-    private _paymentRemark: String | null | undefined
+    private _paymentRemark: String | null | undefined = null
     public get paymentRemark() { return this._paymentRemark }
     public set paymentRemark(value: String | null | undefined) {
         this._paymentRemark = value;
@@ -42,7 +42,7 @@ export class TicketDAO extends BaseDAO {
 
 
 
-    private _occupantId?: ObjectId | undefined | null
+    private _occupantId?: ObjectId | undefined | null = null
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
     public void() {
         return new Promise<TicketDAO>(async (resolve, reject) => {
@@ -124,15 +124,7 @@ export class TicketDAO extends BaseDAO {
         if (params.paymentRemark)
             this.paymentRemark = params.paymentRemark
     }
-    public Serialize(pushErrorWhenUndefined: boolean): Object {
-        var obj = this.PropertiesWithGetter()
-        if (pushErrorWhenUndefined) {
-            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId" && entry[0] != "paid" && entry[0] != "paymentRemark")
-            if (undefinedEntries.length > 0)
-                this.res.locals.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
-        }
-        return obj
-    }
+    
     static aggregateQuery = (condition: Document, showOccupant: boolean) => {
         return [
             ...[
@@ -398,7 +390,6 @@ export class TicketDAO extends BaseDAO {
             }
 
         })
-
     }
     static async batchClaim(res: Response, daos: TicketDAO[], userId: string): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {

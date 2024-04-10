@@ -4,6 +4,8 @@ import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
 import { REGEX } from "../../utils/regex";
 import { Response } from "express";
+import EmailService from "../../services/email";
+const emailService = new EmailService();
 
 export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
@@ -12,7 +14,14 @@ export class UserDAO extends BaseDAO {
     public hasAdminRight: () => boolean = () => { return this._isAdmin };
     private _username: string | undefined
     public get username() { return this._username }
-    public set username(value: string | undefined) { this._username = value; }
+    public set username(value: string | undefined) {
+        if (this._username == undefined) {
+            this._username = value;
+        }
+        else {
+            this.res.locals.RequestErrorList.push(new RequestError("username is immutable"))
+        }
+    }
 
     private _saltedpassword?: string
     public get saltedpassword() { return this._saltedpassword }
@@ -30,10 +39,15 @@ export class UserDAO extends BaseDAO {
     public get fullname() { return this._fullname }
     public set fullname(value: string | undefined) { this._fullname = value; }
 
+    private _emailModified: boolean = false;
     private _email: string | undefined
     public get email() { return this._email }
     public set email(value: string | undefined) {
         if (value && REGEX.EMAIL.test(value)) {
+            if (this._email != undefined && this.email != value) {
+                this._verified = false;
+                this._emailModified = true;
+            }
             this._email = value;
         }
         else {
@@ -47,13 +61,20 @@ export class UserDAO extends BaseDAO {
 
     private _verified: boolean = false;
     public get verified(): boolean { return this._verified }
-    public set verified(value: boolean) { this._verified = value; }
+    public set verified(value: boolean) {
+        if (this._verified == undefined) {
+            this._verified = value;
+        }
+        else {
+            this.res.locals.RequestErrorList.push(new RequestError("Verification has to be done explicitly"))
+        }
+    }
 
-    private _resetToken?: string | undefined | null
+    private _resetToken?: string | undefined | null = null
     public get resetToken(): string | undefined | null { return this._resetToken }
     public set resetToken(value: string | undefined | null) { this._resetToken = value; }
 
-    private _verificationToken?: string | undefined | null
+    private _verificationToken?: string | undefined | null = null
     public get verificationToken(): string | undefined | null { return this._verificationToken }
     public set verificationToken(value: string | undefined | null) { this._verificationToken = value; }
 
@@ -101,26 +122,35 @@ export class UserDAO extends BaseDAO {
     //     })
     // }
 
-    public Serialize(pushErrorWhenUndefined: boolean): Object {
-        var obj = this.PropertiesWithGetter()
-        if (pushErrorWhenUndefined) {
-            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "verified" && entry[0] != "verificationToken" && entry[0] != "resetToken")
-            if (undefinedEntries.length > 0)
-                this.res.locals.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`))
-        }
-        return obj
-    }
     static async fetchByUsernameAndDeserialize(
-        res: Response, username: string): Promise<UserDAO | null> {
+        res: Response, username: string): Promise<UserDAO> {
 
-        var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username })
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username })
 
-        if (doc == null) {
-            return null
-        }
-        return new UserDAO(res, { doc: doc })
+            if (doc == null) {
+                reject(new RequestError(`User with user name ${username} not found.`))
+            }
+            else {
+                resolve(new UserDAO(res, { doc: doc }))
+            }
+        })
+    }
+    static async getById(
+        res: Response, id: string) {
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: new ObjectId(id) }, { session: res.locals.session })
+            if (doc) {
+                resolve(new UserDAO(res, { doc: doc }))
+            }
+            reject(new RequestError(`${this.name} has no instance with id ${id}.`))
+        })
     }
 
+    public Hydrated(params: { withCredentials?: boolean } = {}): Object {
+        if (params.withCredentials == false) this.clearCredential()
+        return (this as BaseDAO).Hydrated()
+    }
     static async findByEmail(
         res: Response, email: string): Promise<UserDAO | null> {
 
@@ -142,14 +172,24 @@ export class UserDAO extends BaseDAO {
     }
 
     static async findByVerificationToken(
-        res: Response, verificationToken: string): Promise<UserDAO | null> {
+        res: Response, verificationToken: string): Promise<UserDAO> {
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken })
+            if (!doc) {
+                reject(new RequestError("User with specified verification token not found."));
+            } else {
+                resolve(new UserDAO(res, { doc: doc }));
+            }
+        })
+    }
 
-        var doc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken })
-
-        if (!doc)
-            return null;
-        return new UserDAO(
-            res, { doc: doc });
+    static VerifyWithToken(res: Response, verificationToken: string) {
+        return UserDAO.findByVerificationToken(res, verificationToken).then(dao => {
+            dao.verified =
+                dao.verified = true;
+            dao.verificationToken = null;
+            return dao.update()
+        })
     }
 
     static async login(
@@ -169,12 +209,39 @@ export class UserDAO extends BaseDAO {
         })
     }
 
-    public withoutCredential() {
-        this._saltedpassword = undefined
-        return this
+    public async sendActivationEmail(): Promise<UserDAO> {
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            if (this.email && this.verificationToken) {
+                await emailService.emailVerification(this.email, this.verificationToken);
+                resolve(this)
+            }
+            else {
+                if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
+                if (this.verificationToken == undefined) reject(`Verification Token of user ${this.username} is not initialized`)
+            }
+        })
     }
 
+    public async sendResetPasswordEmail(): Promise<UserDAO> {
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            if (this.email && this.resetToken) {
+                emailService.resetPasswordEmail(this.email, this.resetToken);
+                resolve(this)
+            }
+            else {
+                if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
+                if (this.verificationToken == undefined) reject(`Verification Token of user ${this.username} is not initialized`)
+            }
+        })
+    }
 
+    static credentialsProperty = ["_saltedpassword", "_resetToken", "_verificationToken"]
+    public clearCredential() {
+        this._saltedpassword = undefined
+        this._resetToken = undefined
+        this._verificationToken = undefined
+        return this
+    }
 
     public async create(): Promise<UserDAO> {
         return new Promise<UserDAO>((resolve, reject) => {
@@ -195,24 +262,27 @@ export class UserDAO extends BaseDAO {
                 else {
                     reject(new RequestError(`User with username ${this.username} already exists.`))
                 }
+            }).then((_) => {
+                this.sendActivationEmail()
+                return this
             })
         })
     }
 
-    public async update(userData: UserDAO) {
-        try {
-            const result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: userData.id! }, {
-                ...userData
-            });
-            if (!result.acknowledged || result.matchedCount === 0 || result.upsertedCount === 0) throw new RequestError(`Update User Data (${this.username}) fail!`)
-            return {
-                success: true,
-                data: userData
-            };
-        } catch (error) {
-            console.error(error);
-            throw new RequestError(`Update User Data (${this.username}) fail!`)
-        }
+    public async update() {
+        return new Promise<UserDAO>(async (resolve, reject) => {
+            if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
+            var result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
+            if (result.modifiedCount > 0) {
+                resolve(this)
+            }
+            else {
+                reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
+            }
+        }).then((_) => {
+            if (this._emailModified) this.sendActivationEmail()
+            return this
+        })
     }
 }
 

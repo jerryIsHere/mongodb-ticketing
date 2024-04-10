@@ -2,13 +2,11 @@ import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
-import EmailService from "../../services/email";
 import { generateResetToken } from "../../utils/token";
 
 export namespace User {
   export function RouterFactory(): Express.Router {
     var user = Router();
-    const emailService = new EmailService();
 
     user.post(
       "/forget-password",
@@ -25,10 +23,10 @@ export namespace User {
         if (!validUser) return next(new RequestError("User not found."));
         const resetToken = await generateResetToken();
         validUser.resetToken = resetToken;
-        await validUser.update(validUser);
+        await validUser.update();
         // Send the password reset email containing the reset token
-        emailService.resetPasswordEmail(validUser.email!, resetToken);
-        res.json({ success: true, message: "Password reset email sent." });
+        await validUser.sendResetPasswordEmail();
+        next({ success: true, message: "Password reset email sent." });
       }
     );
 
@@ -42,7 +40,7 @@ export namespace User {
         // Reset the user's password and clear the reset token
         await validUser.setPassword(newPassword);
         validUser.resetToken = null;
-        await validUser.update(validUser);
+        await validUser.update();
 
         res.status(200).json({ success: true, message: "Password reset successful." });
       } else {
@@ -56,29 +54,36 @@ export namespace User {
       else { next() }
     })
 
-    user.patch("/:userId", async (req: Request, res: Response, next) => { });
+    user.patch("/:username", async (req: Request, res: Response, next) => {
+      if (req.params.username && typeof req.params.username == "string") {
+        UserDAO.fetchByUsernameAndDeserialize(res, req.params.userId).then((dao) => {
+          dao.email = req.body.email
+          dao.fullname = req.body.fullname
+          dao.singingPart = req.body.singingPart
+          return dao.update()
+        }).then((value) => {
+          next({ success: true, data: value.Hydrated({withCredentials: false}) })
+        }).catch((error) => next(error))
+      }
+    });
 
     user.put("/:userId", async (req: Request, res: Response, next) => { });
 
     user.post("/verify/:verificationToken", async (req: Request, res: Response, next: NextFunction) => {
       if (!req.params.verificationToken) next(new RequestError("Verification token is required."));
 
-      const user = await UserDAO.findByVerificationToken(res, req.params.verificationToken);
-      if (!user) return next(new RequestError("User not found."));
-      user.verified = true;
-      user.verificationToken = null;
-      await user.update(user);
-
-      res.json({ success: true, message: "Email verification successful." });
+      UserDAO.VerifyWithToken(res, req.params.verificationToken).then((value) => {
+        next({ success: true, data: value.Hydrated({withCredentials: false}) })
+      }).catch((error) => next(error))
     })
 
     user.post("/", async (req: Request, res: Response, next): Promise<any> => {
       if (req.query.login != undefined) {
         if (req.body.password) {
           UserDAO.login(res, req.body.username, req.body.password).then(user => {
-            req.session['user'] = user.withoutCredential()
-            res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
-            next({ success: true, message: user.withoutCredential().Hydrated() })
+            req.session['user'] = user.clearCredential()
+            res.cookie("user", JSON.stringify({ ...user.Hydrated({withCredentials: false}), hasAdminRight: user.hasAdminRight() }))
+            next({ success: true, message: user.Hydrated({withCredentials: false}) })
           }).catch((error) => next(error))
         } else {
           next(new RequestError("A login must be done with a password."));
@@ -86,7 +91,7 @@ export namespace User {
       } else if (req.query.logout != undefined) {
         req.session["user"] = null;
         res.clearCookie("user");
-        res.json({ success: true });
+        next({ success: true });
       } else if (req.query.register != undefined) {
         if (
           req.body.username &&
@@ -94,30 +99,46 @@ export namespace User {
           req.body.email &&
           req.body.password
         ) {
+          var token = await generateResetToken()
           var dao = new UserDAO(res, {
             username: req.body.username,
             fullname: req.body.fullname,
             email: req.body.email,
             singingPart: req.body.singingPart,
             verified: false,
+            verificationToken: token,
           });
 
           dao
             .setPassword(req.body.password)
             .then((dao) => dao.create())
             .then(async (dao) => {
-              await emailService.emailVerification(req.body.email, await generateResetToken());
               if (dao.id) {
-                req.session["user"] = dao.withoutCredential();
+                req.session["user"] = dao.clearCredential();
                 res.cookie(
                   "user",
-                  JSON.stringify(dao.withoutCredential().Hydrated())
+                  JSON.stringify(dao.Hydrated({withCredentials: false}))
                 );
-                res.json({
+                next({
                   success: true,
-                  user: dao.withoutCredential().Hydrated(),
+                  user: dao.Hydrated({withCredentials: false}),
                 });
               }
+              return dao
+            })
+            .then(async (dao) => {
+            })
+            .catch((error) => next(error));
+        }
+      } else if (req.query.resendVerification != undefined) {
+        if (req.session['user'] && (req.session['user'] as any)._id) {
+          UserDAO.getById(res, (req.session['user'] as any)._id)
+            .then(dao => dao.sendActivationEmail())
+            .then(async (dao) => {
+              next({
+                success: true,
+                user: dao.Hydrated({withCredentials: false}),
+              });
             })
             .catch((error) => next(error));
         }
