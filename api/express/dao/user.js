@@ -8,15 +8,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserDAO = void 0;
+const mongodb_1 = require("mongodb");
 const database_1 = require("./database");
 const dao_1 = require("./dao");
 const bcrypt_1 = require("bcrypt");
 const regex_1 = require("../../utils/regex");
+const token_1 = require("../../utils/token");
+const email_1 = __importDefault(require("../../services/email"));
 class UserDAO extends dao_1.BaseDAO {
     get username() { return this._username; }
-    set username(value) { this._username = value; }
+    set username(value) {
+        if (this._username == undefined) {
+            this._username = value;
+        }
+        else {
+            this.res.locals.RequestErrorList.push(new database_1.RequestError("username is immutable"));
+        }
+    }
     get saltedpassword() { return this._saltedpassword; }
     setPassword(value) {
         return new Promise((resolve, reject) => {
@@ -31,6 +44,10 @@ class UserDAO extends dao_1.BaseDAO {
     get email() { return this._email; }
     set email(value) {
         if (value && regex_1.REGEX.EMAIL.test(value)) {
+            if (this._email != undefined && this.email != value) {
+                this._verified = false;
+                this._emailModified = true;
+            }
             this._email = value;
         }
         else {
@@ -40,7 +57,6 @@ class UserDAO extends dao_1.BaseDAO {
     get singingPart() { return this._singingPart; }
     set singingPart(value) { this._singingPart = value; }
     get verified() { return this._verified; }
-    set verified(value) { this._verified = value; }
     get resetToken() { return this._resetToken; }
     set resetToken(value) { this._resetToken = value; }
     get verificationToken() { return this._verificationToken; }
@@ -49,27 +65,31 @@ class UserDAO extends dao_1.BaseDAO {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         this._isAdmin = false;
         this.hasAdminRight = () => { return this._isAdmin; };
+        this._emailModified = false;
         this._verified = false;
+        this._resetToken = null;
+        this._verificationToken = null;
         if (params.doc && params.doc._id) {
             this._username = params.doc.username;
             this._fullname = params.doc.fullname;
             this._email = params.doc.email;
             this._saltedpassword = params.doc.saltedpassword;
             this._singingPart = params.doc.singingPart;
-            this._verified = params.doc.verified;
+            this._verified = params.doc.verified ? true : false;
             this._verificationToken = params.doc.verificationToken;
             this._resetToken = params.doc.resetToken;
             if (params.doc.isAdmin)
                 this._isAdmin = true;
         }
         else {
-            this.username = params.username;
-            this.fullname = params.fullname;
-            this.email = params.email;
-            this.singingPart = params.singingPart;
-            this.verified = false;
-            this.verificationToken = params.verificationToken;
-            this.resetToken = params.resetToken;
+            if (params.username)
+                this.username = params.username;
+            if (params.fullname)
+                this.fullname = params.fullname;
+            if (params.email)
+                this.email = params.email;
+            if (params.singingPart)
+                this.singingPart = params.singingPart;
         }
     }
     // static fetchAndDeserialize(id: string) {
@@ -79,23 +99,36 @@ class UserDAO extends dao_1.BaseDAO {
     //             return new UserDAO({ username: doc.username, fullname: doc.fullname, email: doc.email })
     //     })
     // }
-    Serialize(pushErrorWhenUndefined) {
-        var obj = this.PropertiesWithGetter();
-        if (pushErrorWhenUndefined) {
-            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "verified" && entry[0] != "verificationToken" && entry[0] != "resetToken");
-            if (undefinedEntries.length > 0)
-                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
-        }
-        return obj;
-    }
     static fetchByUsernameAndDeserialize(res, username) {
         return __awaiter(this, void 0, void 0, function* () {
-            var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username });
-            if (doc == null) {
-                return null;
-            }
-            return new UserDAO(res, { doc: doc });
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: username });
+                if (doc == null) {
+                    reject(new database_1.RequestError(`User with user name ${username} not found.`));
+                }
+                else {
+                    resolve(new UserDAO(res, { doc: doc }));
+                }
+            }));
         });
+    }
+    static getById(res, id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) }, { session: res.locals.session });
+                if (doc) {
+                    resolve(new UserDAO(res, { doc: doc }));
+                }
+                reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
+            }));
+        });
+    }
+    Hydrated(params = {}) {
+        if (params.withCredentials == false)
+            this.clearCredential();
+        var obj = this.PropertiesWithGetter();
+        obj = Object.assign({ _id: this._id }, obj);
+        return obj;
     }
     static findByEmail(res, email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -115,10 +148,22 @@ class UserDAO extends dao_1.BaseDAO {
     }
     static findByVerificationToken(res, verificationToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken });
-            if (!doc)
-                return null;
-            return new UserDAO(res, { doc: doc });
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ verificationToken: verificationToken });
+                if (!doc) {
+                    reject(new database_1.RequestError("User with specified verification token not found."));
+                }
+                else {
+                    resolve(new UserDAO(res, { doc: doc }));
+                }
+            }));
+        });
+    }
+    static VerifyWithToken(res, verificationToken) {
+        return UserDAO.findByVerificationToken(res, verificationToken).then(dao => {
+            dao._verified = true;
+            dao.verificationToken = null;
+            return dao.update();
         });
     }
     static login(res, username, password) {
@@ -137,8 +182,58 @@ class UserDAO extends dao_1.BaseDAO {
             }));
         });
     }
-    withoutCredential() {
+    sendActivationEmail() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                if (this.email) {
+                    try {
+                        if (this.verificationToken == null || this.verificationToken == undefined) {
+                            const token = yield (0, token_1.generateResetToken)();
+                            this.verificationToken = token;
+                            yield this.update();
+                        }
+                        yield email_1.default.singleton.emailVerification(this.email, this.verificationToken);
+                    }
+                    catch (err) {
+                        reject(err);
+                    }
+                    resolve(this);
+                }
+                else {
+                    if (this.email == undefined)
+                        reject(`Email of user ${this.username} is not initialized`);
+                }
+            }));
+        });
+    }
+    sendResetPasswordEmail() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                if (this.email) {
+                    try {
+                        if (this.resetToken == null || this.resetToken == undefined) {
+                            const token = yield (0, token_1.generateResetToken)();
+                            this.resetToken = token;
+                            yield this.update();
+                        }
+                        email_1.default.singleton.resetPasswordEmail(this.email, this.resetToken);
+                    }
+                    catch (err) {
+                        reject(err);
+                    }
+                    resolve(this);
+                }
+                else {
+                    if (this.email == undefined)
+                        reject(`Email of user ${this.username} is not initialized`);
+                }
+            }));
+        });
+    }
+    clearCredential() {
         this._saltedpassword = undefined;
+        this._resetToken = undefined;
+        this._verificationToken = undefined;
         return this;
     }
     create() {
@@ -159,28 +254,39 @@ class UserDAO extends dao_1.BaseDAO {
                     else {
                         reject(new database_1.RequestError(`User with username ${this.username} already exists.`));
                     }
+                }).then((_) => {
+                    this.sendActivationEmail();
+                    return this;
                 });
             });
         });
     }
-    update(userData) {
+    update() {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const result = yield database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: userData.id }, Object.assign({}, userData));
-                if (!result.acknowledged || result.matchedCount === 0 || result.upsertedCount === 0)
-                    throw new database_1.RequestError(`Update User Data (${this.username}) fail!`);
-                return {
-                    success: true,
-                    data: userData
-                };
-            }
-            catch (error) {
-                console.error(error);
-                throw new database_1.RequestError(`Update User Data (${this.username}) fail!`);
-            }
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                if (this._id == undefined) {
+                    reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
+                    return;
+                }
+                var result = yield database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+                if (result.modifiedCount > 0) {
+                    resolve(this);
+                }
+                else {
+                    reject(new database_1.RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`));
+                }
+            })).then((_) => __awaiter(this, void 0, void 0, function* () {
+                if (this._emailModified) {
+                    const token = yield (0, token_1.generateResetToken)();
+                    this.verificationToken = token;
+                    this.sendActivationEmail();
+                }
+                return this;
+            }));
         });
     }
 }
 exports.UserDAO = UserDAO;
 UserDAO.collection_name = "users";
 UserDAO.saltRounds = 10;
+UserDAO.credentialsProperty = ["_saltedpassword", "_resetToken", "_verificationToken"];

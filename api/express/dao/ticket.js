@@ -97,6 +97,9 @@ class TicketDAO extends dao_1.BaseDAO {
     }
     constructor(res, params) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
+        this._paid = null;
+        this._paymentRemark = null;
+        this._occupantId = null;
         if (params.doc && params.doc._id) {
             this._eventId = params.doc.eventId;
             this._seatId = params.doc.seatId;
@@ -109,15 +112,6 @@ class TicketDAO extends dao_1.BaseDAO {
             this.paid = params.paid;
         if (params.paymentRemark)
             this.paymentRemark = params.paymentRemark;
-    }
-    Serialize(pushErrorWhenUndefined) {
-        var obj = this.PropertiesWithGetter();
-        if (pushErrorWhenUndefined) {
-            var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined).filter(entry => entry[0] != "occupantId" && entry[0] != "paid" && entry[0] != "paymentRemark");
-            if (undefinedEntries.length > 0)
-                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
-        }
-        return obj;
     }
     static listByEventId(evnetId, showOccupant) {
         return __awaiter(this, void 0, void 0, function* () {

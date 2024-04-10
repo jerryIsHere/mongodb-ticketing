@@ -1,0 +1,12 @@
+@if(verified != undefined ){
+@if(verified){
+verification success
+}
+@else{
+verification failed
+}
+<button mat-button [routerLink]="['/profile']">Profile</button>
+}
+@else{
+loading
+}

@@ -3,11 +3,6 @@ import * as Express from "express-serve-static-core"
 import { ObjectId, WithId, Document, } from "mongodb";
 import { EventDAO } from "../dao/event";
 import { UserDAO } from "../dao/user";
-declare module "express-session" {
-    interface SessionData {
-        user: UserDAO | null;
-    }
-}
 
 export namespace Event {
     export function RouterFactory(): Express.Router {

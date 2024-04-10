@@ -2,12 +2,19 @@ import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
-import { generateResetToken } from "../../utils/token";
 
 export namespace User {
   export function RouterFactory(): Express.Router {
     var user = Router();
 
+    var updateSession = (req: Request, res: Response, dao: UserDAO) => {
+      req.session["user"] = dao.Hydrated({ withCredentials: false })
+      res.cookie("user", JSON.stringify({ ...dao.Hydrated({ withCredentials: false }), hasAdminRight: dao.hasAdminRight() }))
+    }
+    var clearSession = (req: Request, res: Response) => {
+      req.session["user"] = null
+      res.cookie("user", null)
+    }
     user.post(
       "/forget-password",
       async (req: Request, res: Response, next): Promise<any> => {
@@ -21,9 +28,6 @@ export namespace User {
             await UserDAO.findByEmail(res, req.body.email) :
             await UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
         if (!validUser) return next(new RequestError("User not found."));
-        const resetToken = await generateResetToken();
-        validUser.resetToken = resetToken;
-        await validUser.update();
         // Send the password reset email containing the reset token
         await validUser.sendResetPasswordEmail();
         next({ success: true, message: "Password reset email sent." });
@@ -56,14 +60,25 @@ export namespace User {
 
     user.patch("/:username", async (req: Request, res: Response, next) => {
       if (req.params.username && typeof req.params.username == "string") {
-        UserDAO.fetchByUsernameAndDeserialize(res, req.params.userId).then((dao) => {
-          dao.email = req.body.email
-          dao.fullname = req.body.fullname
-          dao.singingPart = req.body.singingPart
-          return dao.update()
-        }).then((value) => {
-          next({ success: true, data: value.Hydrated({withCredentials: false}) })
-        }).catch((error) => next(error))
+        if (req.query.profile != undefined) {
+          UserDAO.fetchByUsernameAndDeserialize(res, req.params.username).then((dao) => {
+            dao.email = req.body.email
+            dao.fullname = req.body.fullname
+            dao.singingPart = req.body.singingPart
+            return dao.update()
+          }).then((dao) => {
+            updateSession(req, res, dao)
+            next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+          }).catch((error) => next(error))
+        }
+        else if (req.query.password != undefined) {
+          UserDAO.fetchByUsernameAndDeserialize(res, req.params.username).then((dao) => {
+            dao.setPassword(req.body.password)
+            return dao.update()
+          }).then((dao) => {
+            next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+          }).catch((error) => next(error))
+        }
       }
     });
 
@@ -72,24 +87,24 @@ export namespace User {
     user.post("/verify/:verificationToken", async (req: Request, res: Response, next: NextFunction) => {
       if (!req.params.verificationToken) next(new RequestError("Verification token is required."));
 
-      UserDAO.VerifyWithToken(res, req.params.verificationToken).then((value) => {
-        next({ success: true, data: value.Hydrated({withCredentials: false}) })
+      UserDAO.VerifyWithToken(res, req.params.verificationToken).then((dao) => {
+        updateSession(req, res, dao)
+        next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
       }).catch((error) => next(error))
     })
 
     user.post("/", async (req: Request, res: Response, next): Promise<any> => {
       if (req.query.login != undefined) {
         if (req.body.password) {
-          UserDAO.login(res, req.body.username, req.body.password).then(user => {
-            req.session['user'] = user.clearCredential()
-            res.cookie("user", JSON.stringify({ ...user.Hydrated({withCredentials: false}), hasAdminRight: user.hasAdminRight() }))
-            next({ success: true, message: user.Hydrated({withCredentials: false}) })
+          UserDAO.login(res, req.body.username, req.body.password).then(dao => {
+            updateSession(req, res, dao)
+            next({ success: true, message: dao.Hydrated({ withCredentials: false }) })
           }).catch((error) => next(error))
         } else {
           next(new RequestError("A login must be done with a password."));
         }
       } else if (req.query.logout != undefined) {
-        req.session["user"] = null;
+        clearSession(req, res)
         res.clearCookie("user");
         next({ success: true });
       } else if (req.query.register != undefined) {
@@ -99,14 +114,11 @@ export namespace User {
           req.body.email &&
           req.body.password
         ) {
-          var token = await generateResetToken()
           var dao = new UserDAO(res, {
             username: req.body.username,
             fullname: req.body.fullname,
             email: req.body.email,
             singingPart: req.body.singingPart,
-            verified: false,
-            verificationToken: token,
           });
 
           dao
@@ -114,14 +126,10 @@ export namespace User {
             .then((dao) => dao.create())
             .then(async (dao) => {
               if (dao.id) {
-                req.session["user"] = dao.clearCredential();
-                res.cookie(
-                  "user",
-                  JSON.stringify(dao.Hydrated({withCredentials: false}))
-                );
+                updateSession(req, res, dao)
                 next({
                   success: true,
-                  user: dao.Hydrated({withCredentials: false}),
+                  user: dao.Hydrated({ withCredentials: false }),
                 });
               }
               return dao
@@ -137,7 +145,7 @@ export namespace User {
             .then(async (dao) => {
               next({
                 success: true,
-                user: dao.Hydrated({withCredentials: false}),
+                user: dao.Hydrated({ withCredentials: false }),
               });
             })
             .catch((error) => next(error));

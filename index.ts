@@ -14,13 +14,13 @@ declare global {
       RequestErrorList: RequestError[]
       session: ClientSession
     }
-
-    interface SessionData {
-      user: UserDAO | null;
+    namespace session {
+      interface SessionData {
+        user: Object | null;
+      }
     }
   }
 }
-
 // sql session
 const options = {
   uri: Database.uri,

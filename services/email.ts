@@ -4,6 +4,7 @@ import { REGEX } from "../utils/regex";
 import Mail from "nodemailer/lib/mailer";
 
 export default class EmailService {
+  static singleton = new EmailService()
   transporter: nodemailer.Transporter;
   option: SMTPTransport.Options;
   constructor() {

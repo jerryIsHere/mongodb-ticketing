@@ -40,7 +40,6 @@ export class EventFormComponent {
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) {
-    console.log(this.data.event.datetime ? new Date(this.data.event.datetime).toISOString().split('Z')[0] : '')
   }
   submit() {
     console.log(this.eventForm.controls["eventname"].value)

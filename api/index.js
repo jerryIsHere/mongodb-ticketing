@@ -75,11 +75,9 @@ app.use((output, req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         else {
         }
         if (output instanceof database_1.RequestError) {
-            res.status(400).json({ success: false, reason: output.message });
+            res.locals.RequestErrorList.push(output);
         }
-        else {
-            res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
-        }
+        res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
     }
     else {
         if (res.locals.session.inTransaction()) {

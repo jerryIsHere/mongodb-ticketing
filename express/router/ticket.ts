@@ -4,11 +4,6 @@ import * as Express from "express-serve-static-core"
 import { TicketDAO } from '../dao/ticket'
 import { RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
-declare module "express-session" {
-    interface SessionData {
-        user: UserDAO | null;
-    }
-}
 
 export namespace Ticket {
     export function RouterFactory(): Express.Router {

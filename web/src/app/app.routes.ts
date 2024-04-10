@@ -8,6 +8,8 @@ import { MyticketComponent } from './myticket/myticket.component';
 import { inject } from '@angular/core';
 import { UserSessionService } from './service/user-session.service';
 import { PaymentInfoComponent } from './payment-info/payment-info.component';
+import { ProfileComponent } from './user/profile/profile.component';
+import { VerifyComponent } from './user/verify/verify.component';
 
 export const routes: Routes = [
     { path: '', component: ShowListComponent },
@@ -29,4 +31,6 @@ export const routes: Routes = [
     { path: 'event-seats', component: EventseatComponent },
     { path: 'buy-ticket', component: BuyTicketComponent },
     { path: 'payment-info', component: PaymentInfoComponent },
+    { path: 'profile', component: ProfileComponent },
+    { path: 'verify/:token', component: VerifyComponent },
 ];

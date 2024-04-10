@@ -3,11 +3,6 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { SeatDAO, coordType, coordTypeCheck } from "../dao/seat";
 import { UserDAO } from "../dao/user";
-declare module "express-session" {
-    interface SessionData {
-        user: UserDAO | null;
-    }
-}
 
 export namespace Seat {
     export function RouterFactory(): Express.Router {

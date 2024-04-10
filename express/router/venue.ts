@@ -3,11 +3,6 @@ import * as Express from "express-serve-static-core"
 import { Database, RequestError } from "../dao/database";
 import { VenueDAO, sectionType, sectionTypeCheck } from "../dao/venue";
 import { UserDAO } from "../dao/user";
-declare module "express-session" {
-    interface SessionData {
-        user: UserDAO | null;
-    }
-}
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()

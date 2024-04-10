@@ -12,6 +12,6 @@
 </mat-toolbar>
 <mat-menu #userMenu="matMenu">
   <button mat-menu-item (click)="api.user.logout()">Logout</button>
-  <button mat-menu-item>Profile</button>
+  <button mat-menu-item [routerLink]="['/profile']">Profile</button>
 </mat-menu>
 <router-outlet></router-outlet>

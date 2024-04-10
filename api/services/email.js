@@ -83,3 +83,4 @@ class EmailService {
     }
 }
 exports.default = EmailService;
+EmailService.singleton = new EmailService();

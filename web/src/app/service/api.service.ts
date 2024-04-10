@@ -226,4 +226,26 @@ class UserApi {
       }
     });
   }
+  updateProfile(user: {
+    fullname: string;
+    email: string;
+    singingPart: string;
+  }) {
+    return this.httpClient.patch(`/user/${this.userSession.user.username}?profile`, user).toPromise().then((result: any) => {
+      if (result && result.success) {
+        this.userSession.checkUserSession();
+        return result
+      }
+    });
+  }
+  updatePassword(cred: {
+    password: string;
+  }) {
+    return this.httpClient.patch(`/user/${this.userSession.user.username}?password`, cred).toPromise().then((result: any) => {
+      if (result && result.success) {
+        this.userSession.checkUserSession();
+        return result
+      }
+    });
+  }
 }

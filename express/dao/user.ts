@@ -4,8 +4,8 @@ import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
 import { REGEX } from "../../utils/regex";
 import { Response } from "express";
+import { generateResetToken } from "../../utils/token";
 import EmailService from "../../services/email";
-const emailService = new EmailService();
 
 export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
@@ -61,14 +61,6 @@ export class UserDAO extends BaseDAO {
 
     private _verified: boolean = false;
     public get verified(): boolean { return this._verified }
-    public set verified(value: boolean) {
-        if (this._verified == undefined) {
-            this._verified = value;
-        }
-        else {
-            this.res.locals.RequestErrorList.push(new RequestError("Verification has to be done explicitly"))
-        }
-    }
 
     private _resetToken?: string | undefined | null = null
     public get resetToken(): string | undefined | null { return this._resetToken }
@@ -85,9 +77,6 @@ export class UserDAO extends BaseDAO {
                 fullname?: string;
                 email?: string;
                 singingPart?: string | null;
-                verified?: boolean;
-                resetToken?: string | null;
-                verificationToken?: string | null;
             } & {
                 doc?: WithId<Document>
             }
@@ -99,19 +88,20 @@ export class UserDAO extends BaseDAO {
             this._email = params.doc.email
             this._saltedpassword = params.doc.saltedpassword
             this._singingPart = params.doc.singingPart
-            this._verified = params.doc.verified
+            this._verified = params.doc.verified ? true : false
             this._verificationToken = params.doc.verificationToken
             this._resetToken = params.doc.resetToken
             if (params.doc.isAdmin) this._isAdmin = true;
         }
         else {
-            this.username = params.username
-            this.fullname = params.fullname
-            this.email = params.email
-            this.singingPart = params.singingPart
-            this.verified = false;
-            this.verificationToken = params.verificationToken
-            this.resetToken = params.resetToken
+            if (params.username)
+                this.username = params.username
+            if (params.fullname)
+                this.fullname = params.fullname
+            if (params.email)
+                this.email = params.email
+            if (params.singingPart)
+                this.singingPart = params.singingPart
         }
     }
     // static fetchAndDeserialize(id: string) {
@@ -149,7 +139,9 @@ export class UserDAO extends BaseDAO {
 
     public Hydrated(params: { withCredentials?: boolean } = {}): Object {
         if (params.withCredentials == false) this.clearCredential()
-        return (this as BaseDAO).Hydrated()
+        var obj = this.PropertiesWithGetter()
+        obj = { _id: this._id, ...obj }
+        return obj
     }
     static async findByEmail(
         res: Response, email: string): Promise<UserDAO | null> {
@@ -185,8 +177,7 @@ export class UserDAO extends BaseDAO {
 
     static VerifyWithToken(res: Response, verificationToken: string) {
         return UserDAO.findByVerificationToken(res, verificationToken).then(dao => {
-            dao.verified =
-                dao.verified = true;
+            dao._verified = true;
             dao.verificationToken = null;
             return dao.update()
         })
@@ -211,26 +202,44 @@ export class UserDAO extends BaseDAO {
 
     public async sendActivationEmail(): Promise<UserDAO> {
         return new Promise<UserDAO>(async (resolve, reject) => {
-            if (this.email && this.verificationToken) {
-                await emailService.emailVerification(this.email, this.verificationToken);
+            if (this.email) {
+                try {
+                    if (this.verificationToken == null || this.verificationToken == undefined) {
+                        const token = await generateResetToken();
+                        this.verificationToken = token;
+                        await this.update()
+                    }
+                    await EmailService.singleton.emailVerification(this.email, this.verificationToken);
+                }
+                catch (err) {
+                    reject(err)
+                }
                 resolve(this)
             }
             else {
                 if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
-                if (this.verificationToken == undefined) reject(`Verification Token of user ${this.username} is not initialized`)
             }
         })
     }
 
     public async sendResetPasswordEmail(): Promise<UserDAO> {
         return new Promise<UserDAO>(async (resolve, reject) => {
-            if (this.email && this.resetToken) {
-                emailService.resetPasswordEmail(this.email, this.resetToken);
+            if (this.email) {
+                try {
+                    if (this.resetToken == null || this.resetToken == undefined) {
+                        const token = await generateResetToken();
+                        this.resetToken = token;
+                        await this.update()
+                    }
+                    EmailService.singleton.resetPasswordEmail(this.email, this.resetToken);
+                }
+                catch (err) {
+                    reject(err)
+                }
                 resolve(this)
             }
             else {
                 if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
-                if (this.verificationToken == undefined) reject(`Verification Token of user ${this.username} is not initialized`)
             }
         })
     }
@@ -272,15 +281,19 @@ export class UserDAO extends BaseDAO {
     public async update() {
         return new Promise<UserDAO>(async (resolve, reject) => {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
-            var result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
+            var result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) })
             if (result.modifiedCount > 0) {
                 resolve(this)
             }
             else {
                 reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`))
             }
-        }).then((_) => {
-            if (this._emailModified) this.sendActivationEmail()
+        }).then(async (_) => {
+            if (this._emailModified) {
+                const token = await generateResetToken();
+                this.verificationToken = token;
+                this.sendActivationEmail()
+            }
             return this
         })
     }

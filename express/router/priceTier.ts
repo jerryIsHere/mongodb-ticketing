@@ -3,11 +3,6 @@ import * as Express from "express-serve-static-core"
 
 import { PriceTierDAO } from "../dao/priceTier"
 import { UserDAO } from "../dao/user";
-declare module "express-session" {
-    interface SessionData {
-        user: UserDAO | null;
-    }
-}
 
 export namespace PriceTier {
     export function RouterFactory(): Express.Router {
