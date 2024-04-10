@@ -7,12 +7,16 @@ var MongoDBStore = require('connect-mongodb-session')(session);
 const port = process.env.PORT || 3000;
 const app: Express = express();
 import { ClientSession } from "mongodb";
+import { UserDAO } from './express/dao/user';
 declare global {
   namespace Express {
-    interface Request {
-      locals: {
-        session: ClientSession
-      }
+    interface Locals {
+      RequestErrorList: RequestError[]
+      session: ClientSession
+    }
+
+    interface SessionData {
+      user: UserDAO | null;
     }
   }
 }
@@ -88,11 +92,9 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
     else {
     }
     if (output instanceof RequestError) {
-      res.status(400).json({ success: false, reason: output.message })
+      res.locals.RequestErrorList.push(output)
     }
-    else {
-      res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
-    }
+    res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
   }
   else {
     if (res.locals.session.inTransaction()) {

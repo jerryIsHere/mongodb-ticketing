@@ -4,11 +4,7 @@ import { Database, RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
 import EmailService from "../../services/email";
 import { generateResetToken } from "../../utils/token";
-declare module "express-session" {
-  interface SessionData {
-    user: UserDAO | null;
-  }
-}
+
 export namespace User {
   export function RouterFactory(): Express.Router {
     var user = Router();
@@ -20,11 +16,11 @@ export namespace User {
         if (!req.body.type) res.status(400).send("Missing type.");
         if (["email", "username"].includes(req.body.type)) res.status(400).send("Invalid type.");
         if (!req.body.email && !req.body.username) res.status(400).send("Email Address / Username are Required.");
-        
+
         // Generate a password reset token and save it in the user in the database
-        const validUser = 
-            req.body.type === "email" ? 
-            await UserDAO.findByEmail(res, req.body.email): 
+        const validUser =
+          req.body.type === "email" ?
+            await UserDAO.findByEmail(res, req.body.email) :
             await UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
         if (!validUser) return next(new RequestError("User not found."));
         const resetToken = await generateResetToken();
@@ -37,34 +33,34 @@ export namespace User {
     );
 
     user.patch("/reset-password/:resetToken", async (req: Request, res: Response, next): Promise<any> => {
-        const resetToken = req.params.resetToken;
-        const newPassword = req.body.newPassword;
-      
-        if (resetToken && newPassword) {
-          const validUser = await UserDAO.findByResetToken(res, resetToken);
-          if (!validUser) return next(new RequestError("Invalid or expired reset token."));
-            // Reset the user's password and clear the reset token
-            await validUser.setPassword(newPassword);
-            validUser.resetToken = null;
-            await validUser.update(validUser);
-        
-            res.status(200).json({ success: true, message: "Password reset successful." });
-        } else {
-          next(new RequestError("Reset token and new password are required."));
-        }
-      });
+      const resetToken = req.params.resetToken;
+      const newPassword = req.body.newPassword;
+
+      if (resetToken && newPassword) {
+        const validUser = await UserDAO.findByResetToken(res, resetToken);
+        if (!validUser) return next(new RequestError("Invalid or expired reset token."));
+        // Reset the user's password and clear the reset token
+        await validUser.setPassword(newPassword);
+        validUser.resetToken = null;
+        await validUser.update(validUser);
+
+        res.status(200).json({ success: true, message: "Password reset successful." });
+      } else {
+        next(new RequestError("Reset token and new password are required."));
+      }
+    });
 
     user.use((req: Request, res: Response, next) => {
-        if (false) {
-        }
-        else { next() }
+      if (false) {
+      }
+      else { next() }
     })
 
-    user.patch("/:userId", async (req: Request, res: Response, next) => {});
+    user.patch("/:userId", async (req: Request, res: Response, next) => { });
 
-    user.put("/:userId", async (req: Request, res: Response, next) => {});
+    user.put("/:userId", async (req: Request, res: Response, next) => { });
 
-    user.post("/verify/:verificationToken", async(req: Request, res: Response, next: NextFunction) => {
+    user.post("/verify/:verificationToken", async (req: Request, res: Response, next: NextFunction) => {
       if (!req.params.verificationToken) next(new RequestError("Verification token is required."));
 
       const user = await UserDAO.findByVerificationToken(res, req.params.verificationToken);
@@ -75,7 +71,7 @@ export namespace User {
 
       res.json({ success: true, message: "Email verification successful." });
     })
-    
+
     user.post("/", async (req: Request, res: Response, next): Promise<any> => {
       if (req.query.login != undefined) {
         if (req.body.password) {
@@ -83,7 +79,7 @@ export namespace User {
             req.session['user'] = user.withoutCredential()
             res.cookie("user", JSON.stringify({ ...user.withoutCredential().Hydrated(), hasAdminRight: user.hasAdminRight() }))
             next({ success: true, message: user.withoutCredential().Hydrated() })
-        }).catch((error) => next(error))
+          }).catch((error) => next(error))
         } else {
           next(new RequestError("A login must be done with a password."));
         }
@@ -109,7 +105,7 @@ export namespace User {
           dao
             .setPassword(req.body.password)
             .then((dao) => dao.create())
-            .then(async(dao) => {
+            .then(async (dao) => {
               await emailService.emailVerification(req.body.email, await generateResetToken());
               if (dao.id) {
                 req.session["user"] = dao.withoutCredential();
