@@ -88,56 +88,66 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             })
                     }
                     else {
-                        if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
-                            reject(new RequestError(`Ticket with id ${this.id} has an occupant without email information.`))
-                        }
-                        if (originalOccupant)
-                            reject(new RequestError(`Ticket with id ${this.id} has an invalid occupant.`))
-                        return
+                        reject(new RequestError(`${this.constructor.name}'s id is not initialized.`))
                     }
                 }
                 else {
-                    reject(new RequestError(`Ticket with id ${this.id} is already avaliable.`))
+                    if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
+                        reject(new RequestError(`Ticket with id ${this.id} has an occupant without email information.`))
+                    }
+                    if (originalOccupant)
+                        reject(new RequestError(`Ticket with id ${this.id} has an invalid occupant.`))
                     return
                 }
+
+            } else {
+                reject(new RequestError(`Ticket with id ${this.id} is already avaliable.`))
+                return
             }
         })
     }
     public claim(userId: string): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             this.res.locals.session.startTransaction()
+            let originalOccupant = await UserDAO.getById(this.res, userId).catch(err => reject(err))
+            if (originalOccupant && originalOccupant.email) {
+                if (this.id) {
+                    Database.mongodb.collection(TicketDAO.collection_name)
+                        .updateOne(
+                            { _id: this.id, occupantId: null },
+                            { $set: { "occupantId": userId } }, { session: this.res.locals.session }
+                        ).then(async (value) => {
+                            if (value.modifiedCount > 0) {
+                                if (originalOccupant && originalOccupant.email) {
+                                    let notificationDao = new NotificationDAO(this.res, {
+                                        email: originalOccupant.email,
+                                        title: "Ticket Purchased",
+                                        message: `1 ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?ids=${this.id}`,
+                                        recipientId: userId
+                                    })
+                                    await notificationDao.create().catch(err => reject(err))
+                                    notificationDao.send().catch(err => console.log(err))
+                                }
+                                resolve(this)
+                            }
+                            else {
+                                reject(new RequestError(`Ticket with id ${this.id} is not avaliable.`))
+                                return
+                            }
+                        })
+                }
+                else {
+                    reject(new RequestError(`${this.constructor.name}'s id is not initialized.`))
+                    return
+                }
+            }
+
             this._occupantId = new ObjectId(userId)
             try {
                 await this.checkReference(true)
             }
             catch (err) {
                 reject(err)
-                return
-            }
-            if (this.id) {
-                Database.mongodb.collection(TicketDAO.collection_name)
-                    .updateOne(
-                        { _id: this.id, occupantId: null },
-                        { $set: { "occupantId": userId } }, { session: this.res.locals.session }
-                    ).then(async (value) => {
-                        if (value.modifiedCount > 0) {
-                            let notificationDao = new NotificationDAO(this.res, {
-                                title: "Ticket Purchased",
-                                message: `1 ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?ids=${this.id}`,
-                                recipientId: userId
-                            })
-                            await notificationDao.create().catch(err => reject(err))
-                            notificationDao.send().catch(err => console.log(err))
-                            resolve(this)
-                        }
-                        else {
-                            reject(new RequestError(`Ticket with id ${this.id} is not avaliable.`))
-                            return
-                        }
-                    })
-            }
-            else {
-                reject(new RequestError(`${this.constructor.name} with id ${userId} doesn't exists.`))
                 return
             }
         })
@@ -428,42 +438,56 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
         })
     }
     static async batchClaim(res: Response, daos: TicketDAO[], userId: string): Promise<TicketDAO[]> {
-        return new Promise<TicketDAO[]>((resolve, reject) => {
+        return new Promise<TicketDAO[]>(async (resolve, reject) => {
             res.locals.session.startTransaction()
-            Promise.all(daos.map(dao =>
-                new Promise<TicketDAO>(async (daoresolve, daoreject) => {
-                    dao._occupantId = new ObjectId(userId)
-                    try {
-                        await dao.checkReference(true)
-                    }
-                    catch (err) {
-                        daoreject(err)
-                        return
-                    }
-                    if (dao.id) {
-                        var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne(
-                            { _id: dao.id, occupantId: null },
-                            { $set: { "occupantId": userId } }, { session: res.locals.session })
-                        if (result.modifiedCount > 0) {
-                            daoresolve(dao)
+            let originalOccupant = await UserDAO.getById(res, userId).catch(err => reject(err))
+            if (originalOccupant && originalOccupant.email) {
+                Promise.all(daos.map(dao =>
+                    new Promise<TicketDAO>(async (daoresolve, daoreject) => {
+                        dao._occupantId = new ObjectId(userId)
+                        try {
+                            await dao.checkReference(true)
                         }
-                        else {
-                            daoreject(new RequestError(`Ticket with id ${dao.id} is not avaliable.`))
+                        catch (err) {
+                            daoreject(err)
+                            return
                         }
+                        if (dao.id) {
+                            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne(
+                                { _id: dao.id, occupantId: null },
+                                { $set: { "occupantId": userId } }, { session: res.locals.session })
+                            if (result.modifiedCount > 0) {
+                                daoresolve(dao)
+                            }
+                            else {
+                                daoreject(new RequestError(`Ticket with id ${dao.id} is not avaliable.`))
+                            }
+                        }
+                    })
+                )).then(async (daos) => {
+                    if (originalOccupant && originalOccupant.email) {
+                        let notificationDao = new NotificationDAO(res, {
+                            title: "Ticket Purchased",
+                            email: originalOccupant.email,
+                            message:
+                                `${daos.length} ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
+                                + daos.map(dao => 'ids=' + dao._id?.toString()).join('&'),
+                            recipientId: userId
+                        })
+                        await notificationDao.create().catch(err => reject(err))
+                        notificationDao.send().catch(err => console.log(err))
                     }
+                    resolve(daos)
                 })
-            )).then(async (daos) => {
-                let notificationDao = new NotificationDAO(res, {
-                    title: "Ticket Purchased",
-                    message:
-                        `${daos.length} ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
-                        + daos.map(dao => 'ids=' + dao._id?.toString()).join(),
-                    recipientId: userId
-                })
-                await notificationDao.create().catch(err => reject(err))
-                notificationDao.send().catch(err => console.log(err))
-                resolve(daos)
-            })
+            }
+            else {
+                if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
+                    reject(new RequestError(`User with id ${userId} has an occupant without email information.`))
+                }
+                if (originalOccupant)
+                    reject(new RequestError(`User id ${userId} not found.`))
+                return
+            }
         })
     }
     async delete(): Promise<TicketDAO> {
