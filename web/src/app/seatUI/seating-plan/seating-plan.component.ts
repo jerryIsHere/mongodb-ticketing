@@ -38,7 +38,7 @@ export class SeatingPlanComponent {
   toggleSelect(seat: Seat | null) {
     if (seat) {
       let buyer = this.getBuyer(seat._id)
-      if (buyer === null || buyer === false) {
+      if (buyer === null || buyer === false || buyer == undefined) {
         this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this.addSelect(seat._id)
         this.selectedSeatIdsChange.emit(this._selectedSeatIds)
       }
