@@ -36,9 +36,13 @@ export class SeatingPlanComponent {
 
   @Output() selectedSeatIdsChange = new EventEmitter<Set<string>>();
   toggleSelect(seat: Seat | null) {
-    if (seat && this.getBuyer(seat._id) == null)
-      this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this.addSelect(seat._id)
-    this.selectedSeatIdsChange.emit(this._selectedSeatIds)
+    if (seat) {
+      let buyer = this.getBuyer(seat._id)
+      if (buyer === null || buyer === false) {
+        this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this.addSelect(seat._id)
+        this.selectedSeatIdsChange.emit(this._selectedSeatIds)
+      }
+    }
   }
   addSelect(id: string) {
     if (this.limit != undefined) {
