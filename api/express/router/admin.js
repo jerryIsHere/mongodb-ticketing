@@ -24,7 +24,7 @@ var Admin;
         var admin = (0, express_1.Router)();
         admin.use((req, res, next) => {
             var _a;
-            if (((_a = req.session["user"]) === null || _a === void 0 ? void 0 : _a._isAdmin) != true) {
+            if (((_a = req.session["user"]) === null || _a === void 0 ? void 0 : _a.hasAdminRight) != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" });
             }
             else {

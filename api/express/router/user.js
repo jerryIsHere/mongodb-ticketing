@@ -18,7 +18,7 @@ var User;
     function RouterFactory() {
         var user = (0, express_1.Router)();
         var updateSession = (req, res, dao) => {
-            req.session["user"] = dao.Hydrated({ withCredentials: false });
+            req.session["user"] = Object.assign(Object.assign({}, dao.Hydrated({ withCredentials: false })), { hasAdminRight: dao.hasAdminRight() });
             res.cookie("user", JSON.stringify(Object.assign(Object.assign({}, dao.Hydrated({ withCredentials: false })), { hasAdminRight: dao.hasAdminRight() })));
         };
         var clearSession = (req, res) => {

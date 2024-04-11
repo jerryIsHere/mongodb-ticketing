@@ -9,7 +9,7 @@ export namespace Seat {
         var seat = Router()
 
         seat.use((req: Request, res: Response, next) => {
-            if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
+            if (req.method != 'GET' && (req.session["user"] as any)?.hasAdminRight != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" })
             }
             else { next() }

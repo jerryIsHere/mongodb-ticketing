@@ -229,7 +229,6 @@ export class EventDAO extends BaseDAO {
                 reject(new RequestError(`${this.constructor.name}'s id is not initialized.`))
             }
         })
-
     }
     async checkTicketDependency() {
         if (this._id) {

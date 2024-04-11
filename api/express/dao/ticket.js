@@ -17,6 +17,7 @@ const event_1 = require("./event");
 const priceTier_1 = require("./priceTier");
 const seat_1 = require("./seat");
 const user_1 = require("./user");
+const notification_1 = require("./notification");
 class TicketDAO extends dao_1.BaseDAO {
     get eventId() { return this._eventId; }
     set eventId(value) {
@@ -41,28 +42,55 @@ class TicketDAO extends dao_1.BaseDAO {
     get occupantId() { return this._occupantId; }
     void() {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            this.res.locals.session.startTransaction();
-            this._occupantId = null;
-            try {
-                yield this.checkReference();
-            }
-            catch (err) {
-                reject(err);
-                return;
-            }
-            if (this.res.locals.RequestErrorList.length > 0)
-                reject(null);
-            if (this.id) {
-                database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                    .updateOne({ _id: this.id }, { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }).then((value) => {
-                    if (value.modifiedCount > 0) {
-                        resolve(this);
+            if (this.occupantId) {
+                this.res.locals.session.startTransaction();
+                let originalOccupant = yield user_1.UserDAO.getById(this.res, this.occupantId.toString()).catch(err => reject(err));
+                if (originalOccupant && originalOccupant.email) {
+                    this._occupantId = null;
+                    try {
+                        yield this.checkReference();
                     }
-                    else {
-                        reject(new database_1.RequestError(`Ticket with id ${this.id} is already avaliable.`));
+                    catch (err) {
+                        reject(err);
                         return;
                     }
-                });
+                    if (this.res.locals.RequestErrorList.length > 0)
+                        reject(null);
+                    if (this.id) {
+                        database_1.Database.mongodb.collection(TicketDAO.collection_name)
+                            .updateOne({ _id: this.id }, { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }).then((value) => __awaiter(this, void 0, void 0, function* () {
+                            if (value.modifiedCount > 0) {
+                                if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
+                                    let seatDao = yield seat_1.SeatDAO.getById(this.res, this.seatId.toString()).catch(err => console.log(err));
+                                    let eventDao = yield event_1.EventDAO.getById(this.res, this.eventId.toString()).catch(err => console.log(err));
+                                    let notificationDao = new notification_1.NotificationDAO(this.res, {
+                                        email: originalOccupant.email,
+                                        title: "Ticket Voided",
+                                        message: `1 ticket that you had purchased is voided. Information of that ticket:
+Event: ${eventDao ? eventDao.eventname : ''}
+Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
+                                        recipientId: originalOccupant.id
+                                    });
+                                    yield notificationDao.create().catch(err => reject(err));
+                                    notificationDao.send().catch(err => console.log(err));
+                                }
+                                resolve(this);
+                            }
+                        }));
+                    }
+                    else {
+                        if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
+                            reject(new database_1.RequestError(`Ticket with id ${this.id} has an occupant without email information.`));
+                        }
+                        if (originalOccupant)
+                            reject(new database_1.RequestError(`Ticket with id ${this.id} has an invalid occupant.`));
+                        return;
+                    }
+                }
+                else {
+                    reject(new database_1.RequestError(`Ticket with id ${this.id} is already avaliable.`));
+                    return;
+                }
             }
         }));
     }
@@ -79,15 +107,22 @@ class TicketDAO extends dao_1.BaseDAO {
             }
             if (this.id) {
                 database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                    .updateOne({ _id: this.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: this.res.locals.session }).then((value) => {
+                    .updateOne({ _id: this.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: this.res.locals.session }).then((value) => __awaiter(this, void 0, void 0, function* () {
                     if (value.modifiedCount > 0) {
+                        let notificationDao = new notification_1.NotificationDAO(this.res, {
+                            title: "Ticket Purchased",
+                            message: `1 ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?ids=${this.id}`,
+                            recipientId: userId
+                        });
+                        yield notificationDao.create().catch(err => reject(err));
+                        notificationDao.send().catch(err => console.log(err));
                         resolve(this);
                     }
                     else {
                         reject(new database_1.RequestError(`Ticket with id ${this.id} is not avaliable.`));
                         return;
                     }
-                });
+                }));
             }
             else {
                 reject(new database_1.RequestError(`${this.constructor.name} with id ${userId} doesn't exists.`));
@@ -194,6 +229,7 @@ class TicketDAO extends dao_1.BaseDAO {
     }
     checkReference(checkIsSelling = false) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log("start checkReference for " + this._id);
             if (this._eventId == undefined) {
                 this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket with id ${this._id} has no associate event.`));
                 return null;
@@ -232,6 +268,7 @@ class TicketDAO extends dao_1.BaseDAO {
                     this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket selling of event with id ${this._eventId} was ended.`));
                 return null;
             }
+            console.log("done checkReference for " + this._id);
         });
     }
     duplicationChecking() {
@@ -368,9 +405,17 @@ class TicketDAO extends dao_1.BaseDAO {
                             daoreject(new database_1.RequestError(`Ticket with id ${dao.id} is not avaliable.`));
                         }
                     }
-                })))).then(daos => {
+                })))).then((daos) => __awaiter(this, void 0, void 0, function* () {
+                    let notificationDao = new notification_1.NotificationDAO(res, {
+                        title: "Ticket Purchased",
+                        message: `${daos.length} ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
+                            + daos.map(dao => { var _a; return 'ids=' + ((_a = dao._id) === null || _a === void 0 ? void 0 : _a.toString()); }).join(),
+                        recipientId: userId
+                    });
+                    yield notificationDao.create().catch(err => reject(err));
+                    notificationDao.send().catch(err => console.log(err));
                     resolve(daos);
-                });
+                }));
             });
         });
     }

@@ -13,7 +13,7 @@ export namespace Ticket {
             if (req.method != 'PATH' && req.query.buy != undefined) {
                 next()
             }
-            else if (req.method != 'GET' && (req.session["user"] as any)?._isAdmin != true) {
+            else if (req.method != 'GET' && (req.session["user"] as any)?.hasAdminRight != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" })
             }
             else { next() }
@@ -21,17 +21,17 @@ export namespace Ticket {
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                TicketDAO.listByEventId(req.query.eventId, (req.session["user"] as any)?._isAdmin).then(result => {
+                TicketDAO.listByEventId(req.query.eventId, (req.session["user"] as any)?.hasAdminRight).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
-                TicketDAO.ofUser((req.session['user'] as any)._id, (req.session["user"] as any)?._isAdmin).then(result => {
+                TicketDAO.ofUser((req.session['user'] as any)._id, (req.session["user"] as any)?.hasAdminRight).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
             else if (req.query.sold != undefined) {
-                TicketDAO.listSold((req.session["user"] as any)?._isAdmin).then(result => {
+                TicketDAO.listSold((req.session["user"] as any)?.hasAdminRight).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
@@ -56,7 +56,7 @@ export namespace Ticket {
         })
 
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {
-            TicketDAO.getWithDetailsById(req.params.ticketId, (req.session["user"] as any)?._isAdmin).then(result => {
+            TicketDAO.getWithDetailsById(req.params.ticketId, (req.session["user"] as any)?.hasAdminRight).then(result => {
                 next({ success: true, data: result })
             }).catch((error) => { next(error) })
         })

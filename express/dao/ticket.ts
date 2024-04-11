@@ -6,6 +6,7 @@ import { EventDAO } from './event';
 import { PriceTierDAO } from "./priceTier";
 import { SeatDAO } from "./seat";
 import { UserDAO } from "./user";
+import { NotificationDAO } from "./notification";
 import { Response } from "express";
 
 export class TicketDAO extends BaseDAO {
@@ -46,31 +47,59 @@ export class TicketDAO extends BaseDAO {
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
     public void() {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
-            this._occupantId = null
-            try {
-                await this.checkReference()
-            }
-            catch (err) {
-                reject(err)
-                return
-            }
-            if (this.res.locals.RequestErrorList.length > 0)
-                reject(null)
-            if (this.id) {
-                Database.mongodb.collection(TicketDAO.collection_name)
-                    .updateOne(
-                        { _id: this.id },
-                        { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }
-                    ).then((value) => {
-                        if (value.modifiedCount > 0) {
-                            resolve(this)
+            if (this.occupantId) {
+                this.res.locals.session.startTransaction()
+                let originalOccupant = await UserDAO.getById(this.res, this.occupantId.toString()).catch(err => reject(err))
+                if (originalOccupant && originalOccupant.email) {
+                    this._occupantId = null
+                    try {
+                        await this.checkReference()
+                    }
+                    catch (err) {
+                        reject(err)
+                        return
+                    }
+                    if (this.res.locals.RequestErrorList.length > 0)
+                        reject(null)
+                    if (this.id) {
+                        Database.mongodb.collection(TicketDAO.collection_name)
+                            .updateOne(
+                                { _id: this.id },
+                                { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }
+                            ).then(async (value) => {
+                                if (value.modifiedCount > 0) {
+                                    if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
+                                        let seatDao = await SeatDAO.getById(this.res, this.seatId.toString()).catch(err => console.log(err));
+                                        let eventDao = await EventDAO.getById(this.res, this.eventId.toString()).catch(err => console.log(err));
+                                        let notificationDao = new NotificationDAO(this.res, {
+                                            email: originalOccupant.email,
+                                            title: "Ticket Voided",
+                                            message:
+                                                `1 ticket that you had purchased is voided. Information of that ticket:
+Event: ${eventDao ? eventDao.eventname : ''}
+Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
+                                            recipientId: originalOccupant.id
+                                        })
+                                        await notificationDao.create().catch(err => reject(err))
+                                        notificationDao.send().catch(err => console.log(err))
+                                    }
+                                    resolve(this)
+                                }
+                            })
+                    }
+                    else {
+                        if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
+                            reject(new RequestError(`Ticket with id ${this.id} has an occupant without email information.`))
                         }
-                        else {
-                            reject(new RequestError(`Ticket with id ${this.id} is already avaliable.`))
-                            return
-                        }
-                    })
+                        if (originalOccupant)
+                            reject(new RequestError(`Ticket with id ${this.id} has an invalid occupant.`))
+                        return
+                    }
+                }
+                else {
+                    reject(new RequestError(`Ticket with id ${this.id} is already avaliable.`))
+                    return
+                }
             }
         })
     }
@@ -90,8 +119,15 @@ export class TicketDAO extends BaseDAO {
                     .updateOne(
                         { _id: this.id, occupantId: null },
                         { $set: { "occupantId": userId } }, { session: this.res.locals.session }
-                    ).then((value) => {
+                    ).then(async (value) => {
                         if (value.modifiedCount > 0) {
+                            let notificationDao = new NotificationDAO(this.res, {
+                                title: "Ticket Purchased",
+                                message: `1 ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?ids=${this.id}`,
+                                recipientId: userId
+                            })
+                            await notificationDao.create().catch(err => reject(err))
+                            notificationDao.send().catch(err => console.log(err))
                             resolve(this)
                         }
                         else {
@@ -124,7 +160,7 @@ export class TicketDAO extends BaseDAO {
         if (params.paymentRemark)
             this.paymentRemark = params.paymentRemark
     }
-    
+
     static aggregateQuery = (condition: Document, showOccupant: boolean) => {
         return [
             ...[
@@ -416,7 +452,16 @@ export class TicketDAO extends BaseDAO {
                         }
                     }
                 })
-            )).then(daos => {
+            )).then(async (daos) => {
+                let notificationDao = new NotificationDAO(res, {
+                    title: "Ticket Purchased",
+                    message:
+                        `${daos.length} ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
+                        + daos.map(dao => 'ids=' + dao._id?.toString()).join(),
+                    recipientId: userId
+                })
+                await notificationDao.create().catch(err => reject(err))
+                notificationDao.send().catch(err => console.log(err))
                 resolve(daos)
             })
         })
