@@ -16,7 +16,7 @@ declare global {
     }
     namespace session {
       interface SessionData {
-        user: Object | null;
+        user: {hasAdminRight: boolean, } | null;
       }
     }
   }

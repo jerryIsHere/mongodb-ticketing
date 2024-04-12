@@ -140,7 +140,8 @@ var Ticket;
             if (req.query.payment != undefined &&
                 (req.body.paid != undefined || req.body.paid == null || typeof req.body.paid == "boolean") &&
                 (req.body.paymentRemark == undefined || req.body.paymentRemark == null || typeof req.body.paymentRemark == "string") &&
-                req.session['user'] && req.session['user']._isAdmin) {
+                req.session['user'] && req.session['user'].hasAdminRight) {
+                console.log(req.body, req.session);
                 ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => {
                     dao.paid = req.body.paid;
                     dao.paymentRemark = req.body.paymentRemark;
