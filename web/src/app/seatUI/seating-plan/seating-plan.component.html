@@ -10,7 +10,7 @@
   <mat-list>
     @for(row of rows; track row){
     <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
-      <span>{{row}}</span>
+      <div class="row-head">{{row}}</div>
       @for(col of cols; track col){
       @if (getSeat(row,col)) {
       <button (click)="toggleSelect(getSeat(row,col))" mat-stroked-button
