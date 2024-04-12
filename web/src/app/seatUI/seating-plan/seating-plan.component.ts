@@ -9,6 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select'
 import { FormsModule } from '@angular/forms';
 import { PriceTier, Venue, Ticket, Seat } from '../../interface';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors for pricetiers
 type Section = { x: number, y: number }
 @Component({
@@ -100,8 +101,8 @@ export class SeatingPlanComponent {
     this.init()
   }
   init() {
-    if (this.venue && this.venue.sections && this.venue.sections.length > 0) {
-      this.selectedSection = this.venue?.sections[0]
+    if (this.venue && this.venue.sections && this.venue.sections.length > 0 && this.selectedSection== undefined) {
+      this.selectedSection = this.venue.sections[0]
     }
     if (this.seats) {
       this.render()
@@ -150,5 +151,28 @@ export class SeatingPlanComponent {
   selectedSectionSeat() {
     let filtered = this.seats?.filter(s => s.coord.sectX == this.selectedSection?.x && s.coord.sectY == this.selectedSection?.y)
     return filtered ? filtered : []
+  }
+  constructor(private router: Router, private activatedRoute: ActivatedRoute) {
+    this.activatedRoute.queryParamMap.subscribe((params: ParamMap) => {
+      let sectionParam = params.get('section')
+      console.log(sectionParam)
+      let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
+      console.log(section)
+      if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
+        this.selectedSection = section
+        this.render()
+      }
+    })
+  }
+  setRoute() {
+    if (this.selectedSection && Number.isInteger(this.selectedSection.x) && Number.isInteger(this.selectedSection.y))
+      this.router.navigate(
+        [],
+        {
+          relativeTo: this.activatedRoute,
+          queryParams: { section: this.selectedSection.x + '-' + this.selectedSection.y },
+          queryParamsHandling: 'merge', // remove to replace all query params by provided
+        }
+      );
   }
 }

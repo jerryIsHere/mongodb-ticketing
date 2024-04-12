@@ -1,6 +1,6 @@
   <mat-form-field>
     <mat-label>Venue section</mat-label>
-    <mat-select [(ngModel)]="selectedSection" (selectionChange)="selectedSection = $event.value;render()"
+    <mat-select [(ngModel)]="selectedSection" (selectionChange)="selectedSection = $event.value;render();setRoute()"
       [compareWith]="compareSection">
       @for(section of venue.sections; track section){
       <mat-option [value]="section">{{section.x}}-{{section.y}}</mat-option>
