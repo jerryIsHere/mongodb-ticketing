@@ -1,0 +1,16 @@
+tr.strikethrough ::before {
+  /* Create a new element that       */
+  content: "";
+  position: absolute;
+  display: block;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  /* …with the top across the middle */
+  border-bottom: 1px solid #000;
+  /* …and with a border on the top   */
+}
+
+td {
+  position: relative;
+}

@@ -32,17 +32,17 @@ var Ticket;
         ticket.get("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                ticket_1.TicketDAO.listByEventId(req.query.eventId, (_a = req.session["user"]) === null || _a === void 0 ? void 0 : _a.hasAdminRight).then(result => {
+                ticket_1.TicketDAO.listByEventId(req.query.eventId, { showOccupant: (_a = req.session["user"]) === null || _a === void 0 ? void 0 : _a.hasAdminRight }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
-                ticket_1.TicketDAO.ofUser(req.session['user']._id, (_b = req.session["user"]) === null || _b === void 0 ? void 0 : _b.hasAdminRight).then(result => {
+                ticket_1.TicketDAO.ofUser(req.session['user']._id, { showOccupant: (_b = req.session["user"]) === null || _b === void 0 ? void 0 : _b.hasAdminRight }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
             else if (req.query.sold != undefined) {
-                ticket_1.TicketDAO.listSold((_c = req.session["user"]) === null || _c === void 0 ? void 0 : _c.hasAdminRight).then(result => {
+                ticket_1.TicketDAO.listSold({ showOccupant: (_c = req.session["user"]) === null || _c === void 0 ? void 0 : _c.hasAdminRight }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
@@ -54,7 +54,7 @@ var Ticket;
                 catch (e) {
                 }
                 if (ids) {
-                    ticket_1.TicketDAO.listByIds(ids, false).then(result => {
+                    ticket_1.TicketDAO.listByIds(ids, Object.assign({ showOccupant: false }, req.session["user"] != null && req.session["user"]._id ? { checkIfBelongsToUser: req.session["user"]._id } : {})).then(result => {
                         next({ success: true, data: result });
                     }).catch((error) => next(error));
                 }
@@ -65,7 +65,7 @@ var Ticket;
         }));
         ticket.get("/:ticketId", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             var _d;
-            ticket_1.TicketDAO.getWithDetailsById(req.params.ticketId, (_d = req.session["user"]) === null || _d === void 0 ? void 0 : _d.hasAdminRight).then(result => {
+            ticket_1.TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: (_d = req.session["user"]) === null || _d === void 0 ? void 0 : _d.hasAdminRight }).then(result => {
                 next({ success: true, data: result });
             }).catch((error) => { next(error); });
         }));

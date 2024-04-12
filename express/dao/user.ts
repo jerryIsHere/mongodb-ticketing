@@ -12,6 +12,7 @@ export class UserDAO extends BaseDAO {
     public static readonly saltRounds = 10;
     private _isAdmin: boolean = false;
     public hasAdminRight: () => boolean = () => { return this._isAdmin };
+    
     private _username: string | undefined
     public get username() { return this._username }
     public set username(value: string | undefined) {

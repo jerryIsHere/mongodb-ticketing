@@ -21,17 +21,17 @@ export namespace Ticket {
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                TicketDAO.listByEventId(req.query.eventId, (req.session["user"] as any)?.hasAdminRight).then(result => {
+                TicketDAO.listByEventId(req.query.eventId, { showOccupant: (req.session["user"] as any)?.hasAdminRight }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
-                TicketDAO.ofUser((req.session['user'] as any)._id, (req.session["user"] as any)?.hasAdminRight).then(result => {
+                TicketDAO.ofUser((req.session['user'] as any)._id, { showOccupant: (req.session["user"] as any)?.hasAdminRight }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
             else if (req.query.sold != undefined) {
-                TicketDAO.listSold((req.session["user"] as any)?.hasAdminRight).then(result => {
+                TicketDAO.listSold({ showOccupant: req.session["user"]?.hasAdminRight }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
@@ -45,7 +45,10 @@ export namespace Ticket {
 
                 }
                 if (ids) {
-                    TicketDAO.listByIds(ids, false).then(result => {
+                    TicketDAO.listByIds(ids, {
+                        showOccupant: false,
+                        ...req.session["user"] != null && req.session["user"]._id ? { checkIfBelongsToUser: req.session["user"]._id } : {}
+                    }).then(result => {
                         next({ success: true, data: result })
                     }).catch((error) => next(error))
                 }
@@ -56,7 +59,7 @@ export namespace Ticket {
         })
 
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {
-            TicketDAO.getWithDetailsById(req.params.ticketId, (req.session["user"] as any)?.hasAdminRight).then(result => {
+            TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: (req.session["user"] as any)?.hasAdminRight }).then(result => {
                 next({ success: true, data: result })
             }).catch((error) => { next(error) })
         })

@@ -171,7 +171,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             this.paymentRemark = params.paymentRemark
     }
 
-    static aggregateQuery = (condition: Document, showOccupant: boolean) => {
+    static lookupQuery = (condition: Document, param: { showOccupant: boolean, checkIfBelongsToUser?: string }) => {
         return [
             ...[
                 condition,
@@ -202,7 +202,11 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         as: "priceTier",
                     }
                 },
-            ], ...showOccupant ? [
+            ],
+            ...param.checkIfBelongsToUser ? [
+                { $set: { 'belongsToUser': { $cond: { if: { $eq: ["$occupantId", new ObjectId(param.checkIfBelongsToUser)] }, then: true, else: false } } } },
+            ] : [],
+            ...param.showOccupant ? [
                 {
                     $lookup:
                     {
@@ -227,38 +231,38 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
         ]
 
     }
-    static async listByEventId(evnetId: string, showOccupant: boolean) {
+    static async listByEventId(evnetId: string, param: { showOccupant: boolean }) {
         return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-                aggregate(this.aggregateQuery({ $match: { eventId: new ObjectId(evnetId) } }, showOccupant))
+                aggregate(this.lookupQuery({ $match: { eventId: new ObjectId(evnetId) } }, param))
             resolve((await cursor.toArray()));
         })
     }
-    static async listSold(showOccupant: boolean) {
+    static async listSold(param: { showOccupant: boolean }) {
         return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-                aggregate(this.aggregateQuery({ $match: { occupantId: { $ne: null } } }, showOccupant))
+                aggregate(this.lookupQuery({ $match: { occupantId: { $ne: null } } }, param))
             resolve((await cursor.toArray()));
         })
     }
-    static async listByIds(ids: string[], showOccupant: boolean) {
+    static async listByIds(ids: string[], param: { showOccupant: boolean, checkIfBelongsToUser?: string }) {
         return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-                aggregate(this.aggregateQuery({ $match: { _id: { $in: ids.map(id => new ObjectId(id)) } } }, showOccupant))
+                aggregate(this.lookupQuery({ $match: { _id: { $in: ids.map(id => new ObjectId(id)) } } }, param))
             resolve((await cursor.toArray()));
         })
     }
-    static async ofUser(userId: string, showOccupant: boolean) {
+    static async ofUser(userId: string, param: { showOccupant: boolean }) {
         return new Promise<Document[]>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-                aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(userId) } }, showOccupant))
+                aggregate(this.lookupQuery({ $match: { occupantId: new ObjectId(userId) } }, param))
             resolve((await cursor.toArray()));
         })
     }
-    static async getWithDetailsById(id: string, showOccupant: boolean) {
+    static async getWithDetailsById(id: string, param: { showOccupant: boolean }) {
         return new Promise<Document>(async (resolve, reject) => {
             var cursor = Database.mongodb.collection(TicketDAO.collection_name).
-                aggregate(this.aggregateQuery({ $match: { occupantId: new ObjectId(id) } }, showOccupant))
+                aggregate(this.lookupQuery({ $match: { occupantId: new ObjectId(id) } }, param))
             var docs = await cursor.toArray()
             if (docs.length > 0) {
                 resolve(docs[0])

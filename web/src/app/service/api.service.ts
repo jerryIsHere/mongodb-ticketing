@@ -221,7 +221,7 @@ class UserApi {
     return this.httpClient.post(`/user?logout`, {}).toPromise().then((result: any) => {
       if (result && result.success) {
         this.userSession.checkUserSession();
-        location.reload()
+        location.href = '/web'
         return
       }
     });

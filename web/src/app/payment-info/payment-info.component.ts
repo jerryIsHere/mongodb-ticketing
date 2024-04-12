@@ -15,7 +15,7 @@ import { ApiService } from '../service/api.service';
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, MatTabsModule],
   templateUrl: './payment-info.component.html',
-  styleUrl: './payment-info.component.sass'
+  styleUrl: './payment-info.component.scss'
 })
 export class PaymentInfoComponent {
   loaded = false

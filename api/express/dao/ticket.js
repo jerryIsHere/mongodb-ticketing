@@ -157,47 +157,47 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
         if (params.paymentRemark)
             this.paymentRemark = params.paymentRemark;
     }
-    static listByEventId(evnetId, showOccupant) {
+    static listByEventId(evnetId, param) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(TicketDAO.collection_name).
-                    aggregate(this.aggregateQuery({ $match: { eventId: new mongodb_1.ObjectId(evnetId) } }, showOccupant));
+                    aggregate(this.lookupQuery({ $match: { eventId: new mongodb_1.ObjectId(evnetId) } }, param));
                 resolve((yield cursor.toArray()));
             }));
         });
     }
-    static listSold(showOccupant) {
+    static listSold(param) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(TicketDAO.collection_name).
-                    aggregate(this.aggregateQuery({ $match: { occupantId: { $ne: null } } }, showOccupant));
+                    aggregate(this.lookupQuery({ $match: { occupantId: { $ne: null } } }, param));
                 resolve((yield cursor.toArray()));
             }));
         });
     }
-    static listByIds(ids, showOccupant) {
+    static listByIds(ids, param) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(TicketDAO.collection_name).
-                    aggregate(this.aggregateQuery({ $match: { _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } } }, showOccupant));
+                    aggregate(this.lookupQuery({ $match: { _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } } }, param));
                 resolve((yield cursor.toArray()));
             }));
         });
     }
-    static ofUser(userId, showOccupant) {
+    static ofUser(userId, param) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(TicketDAO.collection_name).
-                    aggregate(this.aggregateQuery({ $match: { occupantId: new mongodb_1.ObjectId(userId) } }, showOccupant));
+                    aggregate(this.lookupQuery({ $match: { occupantId: new mongodb_1.ObjectId(userId) } }, param));
                 resolve((yield cursor.toArray()));
             }));
         });
     }
-    static getWithDetailsById(id, showOccupant) {
+    static getWithDetailsById(id, param) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 var cursor = database_1.Database.mongodb.collection(TicketDAO.collection_name).
-                    aggregate(this.aggregateQuery({ $match: { occupantId: new mongodb_1.ObjectId(id) } }, showOccupant));
+                    aggregate(this.lookupQuery({ $match: { occupantId: new mongodb_1.ObjectId(id) } }, param));
                 var docs = yield cursor.toArray();
                 if (docs.length > 0) {
                     resolve(docs[0]);
@@ -481,7 +481,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
 }
 exports.TicketDAO = TicketDAO;
 TicketDAO.collection_name = "tickets";
-TicketDAO.aggregateQuery = (condition, showOccupant) => {
+TicketDAO.lookupQuery = (condition, param) => {
     return [
         ...[
             condition,
@@ -509,7 +509,11 @@ TicketDAO.aggregateQuery = (condition, showOccupant) => {
                     as: "priceTier",
                 }
             },
-        ], ...showOccupant ? [
+        ],
+        ...param.checkIfBelongsToUser ? [
+            { $set: { 'belongsToUser': { $cond: { if: { $eq: ["$occupantId", new mongodb_1.ObjectId(param.checkIfBelongsToUser)] }, then: true, else: false } } } },
+        ] : [],
+        ...param.showOccupant ? [
             {
                 $lookup: {
                     from: user_1.UserDAO.collection_name,
