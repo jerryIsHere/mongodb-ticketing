@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select'
 import { FormsModule } from '@angular/forms';
 import { PriceTier, Venue, Ticket, Seat } from '../../interface';
@@ -13,7 +14,7 @@ type Section = { x: number, y: number }
 @Component({
   selector: 'app-seating-plan',
   standalone: true,
-  imports: [DragDropModule, MatTooltipModule, MatButtonModule, MatListModule, MatIconModule, MatChipsModule, MatSelectModule, FormsModule],
+  imports: [DragDropModule, MatTooltipModule, MatButtonModule, MatListModule, MatIconModule, MatChipsModule, MatSelectModule, FormsModule, MatCardModule],
   templateUrl: './seating-plan.component.html',
   styleUrl: './seating-plan.component.scss'
 })

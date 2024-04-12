@@ -10,7 +10,7 @@
   <mat-list>
     @for(row of rows; track row){
     <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
-      <div class="row-head">{{row}}</div>
+      <button mat-button style="pointer-events: none;">{{row}}</button>
       @for(col of cols; track col){
       @if (getSeat(row,col)) {
       <button (click)="toggleSelect(getSeat(row,col))" mat-stroked-button
@@ -18,14 +18,16 @@
         [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
         @if (getTiceket(row,col)){
         @if(getBuyer(row,col)){
-        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'airline_seat_recline_normal'"></mat-icon>
+        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'airline_seat_recline_normal'">
+        </mat-icon>
         }
         @else{
         <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'event_seat'"></mat-icon>
         }
         }
         @else{
-        <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':isTicketPlanning?'block':'event_seat'">
+        <mat-icon
+          [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':isTicketPlanning?'block':'event_seat'">
         </mat-icon>
         }
       </button>
