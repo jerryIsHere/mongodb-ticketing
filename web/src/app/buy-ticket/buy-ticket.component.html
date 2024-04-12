@@ -2,7 +2,7 @@
 {{event.eventname}}
 @if(isShowSelling(event)){
 <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-  isTicketPlanning (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="limit">
+  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="limit">
 </app-seating-plan>
 <button mat-button (click)="openForm()">Select seats</button>
 }

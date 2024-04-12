@@ -33,12 +33,21 @@ export class SeatingPlanComponent {
     })
   }
 
+  @Input({ transform: booleanAttribute }) soldTicketDisabled: boolean = false;
+
+  @Input({ transform: booleanAttribute }) reservedSeatDisabled: boolean = false;
 
   @Output() selectedSeatIdsChange = new EventEmitter<Set<string>>();
   toggleSelect(seat: Seat | null) {
     if (seat) {
+      let ticket = this.getTiceket(seat._id)
       let buyer = this.getBuyer(seat._id)
-      if (buyer === null || buyer === false || buyer == undefined) {
+      let isTicketAvaliable = buyer === null || buyer === false || buyer == undefined
+      let isSeatSelling = ticket != null
+      if (
+        !(this.soldTicketDisabled && !isTicketAvaliable) &&
+        !(this.reservedSeatDisabled && !isSeatSelling)
+      ) {
         this._selectedSeatIds.has(seat._id) ? this._selectedSeatIds.delete(seat._id) : this.addSelect(seat._id)
         this.selectedSeatIdsChange.emit(this._selectedSeatIds)
       }
