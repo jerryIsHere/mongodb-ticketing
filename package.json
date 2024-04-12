@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && npm run build --prefix web && node vercel.js",
+    "build-angular": "npm run build --prefix web && node vercel.js",
+    "build-express": "tsc",
+    "build": "npm run build-express && npm run build-angular",
     "dev": "node --env-file ./credential/.env ./api/index.js",
     "start": "npm run build && npm run dev"
   },
