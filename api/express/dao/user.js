@@ -66,6 +66,7 @@ class UserDAO extends dao_1.BaseDAO {
         this._isAdmin = false;
         this.hasAdminRight = () => { return this._isAdmin; };
         this._emailModified = false;
+        this._singingPart = "";
         this._verified = false;
         this._resetToken = null;
         this._verificationToken = null;

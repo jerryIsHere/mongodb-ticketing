@@ -56,9 +56,9 @@ export class UserDAO extends BaseDAO {
         }
     }
 
-    private _singingPart?: string | undefined | null
-    public get singingPart(): string | undefined | null { return this._singingPart }
-    public set singingPart(value: string | undefined | null) { this._singingPart = value; }
+    private _singingPart?: string | undefined = ""
+    public get singingPart(): string | undefined { return this._singingPart }
+    public set singingPart(value: string | undefined) { this._singingPart = value; }
 
     private _verified: boolean = false;
     public get verified(): boolean { return this._verified }
