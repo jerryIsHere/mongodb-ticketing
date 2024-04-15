@@ -10,6 +10,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { Seat } from '../../interface';
+import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,
@@ -30,15 +31,22 @@ export class VenueSeatComponent {
   @ViewChild('seatingPlan') set seatingPlan(content: SeatingPlanComponent) {
     if (content) {
       this._seatingPlan = content;
-      console.log("_seatingPlan", this._seatingPlan, this.seatingPlan)
+      let selectedSection: any;
       if (this.seatingPlan && this.seatingPlan.selectedSection) {
-        console.log("seatingPlan")
-        let selectedSection = this.seatingPlan.selectedSection
-        selectedSection = (this.venue.sections as Array<any>).find(s => s.x == selectedSection.x && s.y == selectedSection.y)
-        if (selectedSection && selectedSection.options) {
-          this.optionForm.controls["horizontalOrder"].setValue(selectedSection.options.horizontalOrder)
-          this.optionForm.controls["verticleOrder"].setValue(selectedSection.options.verticleOrder)
+        selectedSection = this.seatingPlan.selectedSection
+       
+      }
+      else {
+        let sectionParam = this.activatedRoute.snapshot.queryParamMap.get('section')
+        let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
+        if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
+          selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
+          content.selectedSection = selectedSection
         }
+      }
+      if (selectedSection && selectedSection.options) {
+        this.optionForm.controls["horizontalOrder"].setValue(selectedSection.options.horizontalOrder)
+        this.optionForm.controls["verticleOrder"].setValue(selectedSection.options.verticleOrder)
       }
     }
   }
@@ -52,20 +60,22 @@ export class VenueSeatComponent {
     horizontalOrder: new FormControl("", [Validators.required]),
     verticleOrder: new FormControl("", [Validators.required]),
   });
-  constructor(private api: ApiService, public dialog: MatDialog, private _formBuilder: FormBuilder) {
+  constructor(private api: ApiService, public dialog: MatDialog, private _formBuilder: FormBuilder, private activatedRoute: ActivatedRoute) {
 
   }
   loadData(id: string) {
-    this.api.request.get(`/seat?venueId=${this._id}`).toPromise().then((result: any) => {
+    let seatsPromise = this.api.request.get(`/seat?venueId=${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
-        this.seats = result.data
-        this.seatingPlan?.render()
+        return result.data
       }
     })
-    this.api.request.get(`/venue/${this._id}`).toPromise().then((result: any) => {
+    let venuePromise = this.api.request.get(`/venue/${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
-        this.venue = result.data
+        return result.data
       }
+    })
+    Promise.all([seatsPromise, venuePromise]).then((value) => {
+      [this.seats, this.venue] = value
     })
   }
   openCreationForm() {
@@ -121,14 +131,15 @@ export class VenueSeatComponent {
   onSelectedSectionChange(value: { x: number, y: number }) {
     let section = (this.venue.sections as Array<any>).find(s => s.x == value.x && s.y == value.y)
     if (section && section.options) {
-      this.optionForm.controls["order"].setValue(section.options.order)
+      this.optionForm.controls["horizontalOrder"].setValue(section.options.horizontalOrder)
+      this.optionForm.controls["verticleOrder"].setValue(section.options.verticleOrder)
     }
     else {
-      this.optionForm.controls["order"].setValue("LTR")
+      this.optionForm.controls["horizontalOrder"].setValue("LTR")
+      this.optionForm.controls["verticleOrder"].setValue("TTB")
     }
   }
   submitSectionOption() {
-    console.log(this.optionForm.valid, this._id, this.seatingPlan, this.seatingPlan?.selectedSection)
     if (this.optionForm.valid && this._id && this.seatingPlan && this.seatingPlan.selectedSection) {
       let selectedSection = this.seatingPlan.selectedSection
       selectedSection = (this.venue.sections as Array<any>).find(s => s.x == selectedSection.x && s.y == selectedSection.y)

@@ -94,21 +94,26 @@ export class SeatingPlanComponent {
   cols: number[] = []
   rows: string[] = []
   slots: (Seat | undefined)[] = []
-  seatSorting: Map<string, Function> = new Map<string, Function>(
+  seatColumnSorting: Map<string, Function> = new Map<string, Function>(
     [
       ["RTL", (a: number, b: number) => b - a],
       ["LTR", (a: number, b: number) => a - b],
+    ]
+  )
+  seatRowSorting: Map<string, Function> = new Map<string, Function>(
+    [
       ["BTT", function (a: string, b: string) { return b.localeCompare(a) }],
       ["TTB", function (a: string, b: string) { return a.localeCompare(b) }]
     ]
   )
   render() {
+    console.log(this.selectedSection)
     let horizontalOrder = this.selectedSection?.options?.horizontalOrder
-    horizontalOrder = this.seatSorting.has(horizontalOrder) ? horizontalOrder : "LTR"
-    horizontalOrder = this.seatSorting.get(horizontalOrder)
+    horizontalOrder = this.seatColumnSorting.has(horizontalOrder) ? horizontalOrder : "LTR"
+    horizontalOrder = this.seatColumnSorting.get(horizontalOrder)
     let verticleOrder = this.selectedSection?.options?.verticleOrder
-    verticleOrder = this.seatSorting.has(verticleOrder) ? verticleOrder : "LTR"
-    verticleOrder = this.seatSorting.get(verticleOrder)
+    verticleOrder = this.seatRowSorting.has(verticleOrder) ? verticleOrder : "TTB"
+    verticleOrder = this.seatRowSorting.get(verticleOrder)
     this.rows = Array.from(this.selectedSectionSeat().map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort(verticleOrder)
     this.cols = Array.from(this.selectedSectionSeat().map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<number>())).sort(horizontalOrder)
     this.slots = []
@@ -182,7 +187,7 @@ export class SeatingPlanComponent {
       let sectionParam = params.get('section')
       let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
       if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
-        this.selectedSection = section
+        this.selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
         this.render()
       }
     })
