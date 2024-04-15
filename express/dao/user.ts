@@ -1,4 +1,4 @@
-import { ObjectId, WithId, Document } from "mongodb";
+import { ObjectId, WithId, Document, InsertOneResult } from "mongodb";
 import { Database, RequestError } from "./database";
 import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
@@ -12,7 +12,7 @@ export class UserDAO extends BaseDAO {
     public static readonly saltRounds = 10;
     private _isAdmin: boolean = false;
     public hasAdminRight: () => boolean = () => { return this._isAdmin };
-    
+
     private _username: string | undefined
     public get username() { return this._username }
     public set username(value: string | undefined) {
@@ -203,23 +203,24 @@ export class UserDAO extends BaseDAO {
 
     public async sendActivationEmail(): Promise<UserDAO> {
         return new Promise<UserDAO>(async (resolve, reject) => {
-            if (this.email) {
-                try {
-                    if (this.verificationToken == null || this.verificationToken == undefined) {
-                        const token = await generateResetToken();
-                        this.verificationToken = token;
-                        await this.update()
-                    }
-                    await EmailService.singleton.emailVerification(this.email, this.verificationToken);
-                }
-                catch (err) {
-                    reject(err)
-                }
-                resolve(this)
-            }
-            else {
-                if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
-            }
+            return null;
+            // if (this.email) {
+            //     try {
+            //         if (this.verificationToken == null || this.verificationToken == undefined) {
+            //             const token = await generateResetToken();
+            //             this.verificationToken = token;
+            //             await this.update()
+            //         }
+            //         await EmailService.singleton.emailVerification(this.email, this.verificationToken);
+            //     }
+            //     catch (err) {
+            //         reject(err)
+            //     }
+            //     resolve(this)
+            // }
+            // else {
+            //     if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
+            // }
         })
     }
 
@@ -257,20 +258,20 @@ export class UserDAO extends BaseDAO {
         return new Promise<UserDAO>((resolve, reject) => {
             if (this.id)
                 reject(new RequestError(`Trying to create instantiated document ${this.id}`))
-            Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(instance => {
+            Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(async (instance) => {
                 if (instance == null) {
-                    Database.mongodb.collection(UserDAO.collection_name)
+                    return await Database.mongodb.collection(UserDAO.collection_name)
                         .insertOne(
                             this.Serialize(true)
-                        ).then((doc) => {
-                            if (doc) {
-                                this._id = doc.insertedId
-                                resolve(this)
-                            }
-                        })
+                        )
                 }
                 else {
                     reject(new RequestError(`User with username ${this.username} already exists.`))
+                }
+            }).then((doc: InsertOneResult<Document> | undefined) => {
+                if (doc) {
+                    this._id = doc.insertedId
+                    resolve(this)
                 }
             }).then((_) => {
                 this.sendActivationEmail()

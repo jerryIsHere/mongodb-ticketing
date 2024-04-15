@@ -241,18 +241,18 @@ class UserDAO extends dao_1.BaseDAO {
             return new Promise((resolve, reject) => {
                 if (this.id)
                     reject(new database_1.RequestError(`Trying to create instantiated document ${this.id}`));
-                database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(instance => {
+                database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then((instance) => __awaiter(this, void 0, void 0, function* () {
                     if (instance == null) {
-                        database_1.Database.mongodb.collection(UserDAO.collection_name)
-                            .insertOne(this.Serialize(true)).then((doc) => {
-                            if (doc) {
-                                this._id = doc.insertedId;
-                                resolve(this);
-                            }
-                        });
+                        return yield database_1.Database.mongodb.collection(UserDAO.collection_name)
+                            .insertOne(this.Serialize(true));
                     }
                     else {
                         reject(new database_1.RequestError(`User with username ${this.username} already exists.`));
+                    }
+                })).then((doc) => {
+                    if (doc) {
+                        this._id = doc.insertedId;
+                        resolve(this);
                     }
                 }).then((_) => {
                     this.sendActivationEmail();
