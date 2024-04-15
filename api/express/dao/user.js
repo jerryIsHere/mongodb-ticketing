@@ -185,24 +185,24 @@ class UserDAO extends dao_1.BaseDAO {
     sendActivationEmail() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                if (this.email) {
-                    try {
-                        if (this.verificationToken == null || this.verificationToken == undefined) {
-                            const token = yield (0, token_1.generateResetToken)();
-                            this.verificationToken = token;
-                            yield this.update();
-                        }
-                        yield email_1.default.singleton.emailVerification(this.email, this.verificationToken);
-                    }
-                    catch (err) {
-                        reject(err);
-                    }
-                    resolve(this);
-                }
-                else {
-                    if (this.email == undefined)
-                        reject(`Email of user ${this.username} is not initialized`);
-                }
+                return null;
+                // if (this.email) {
+                //     try {
+                //         if (this.verificationToken == null || this.verificationToken == undefined) {
+                //             const token = await generateResetToken();
+                //             this.verificationToken = token;
+                //             await this.update()
+                //         }
+                //         await EmailService.singleton.emailVerification(this.email, this.verificationToken);
+                //     }
+                //     catch (err) {
+                //         reject(err)
+                //     }
+                //     resolve(this)
+                // }
+                // else {
+                //     if (this.email == undefined) reject(`Email of user ${this.username} is not initialized`)
+                // }
             }));
         });
     }

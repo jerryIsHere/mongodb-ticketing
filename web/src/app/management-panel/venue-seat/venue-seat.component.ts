@@ -1,15 +1,19 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, FormControl, FormArray } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { Seat } from '../../interface';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,
-  imports: [SeatingPlanComponent, MatMenuModule, MatButtonModule,],
+  imports: [SeatingPlanComponent, MatMenuModule, MatButtonModule, MatSelectModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule],
   templateUrl: './venue-seat.component.html',
   styleUrl: './venue-seat.component.sass'
 })
@@ -20,13 +24,35 @@ export class VenueSeatComponent {
   seats: Seat[] | undefined
   _id: string | undefined
   venue: any | undefined
-  @ViewChild('seatingPlan') seatingPlan?: SeatingPlanComponent;
+
+  _seatingPlan?: SeatingPlanComponent
+  get seatingPlan(): SeatingPlanComponent | undefined { return this._seatingPlan }
+  @ViewChild('seatingPlan') set seatingPlan(content: SeatingPlanComponent) {
+    if (content) {
+      this._seatingPlan = content;
+      console.log("_seatingPlan", this._seatingPlan, this.seatingPlan)
+      if (this.seatingPlan && this.seatingPlan.selectedSection) {
+        console.log("seatingPlan")
+        let selectedSection = this.seatingPlan.selectedSection
+        selectedSection = (this.venue.sections as Array<any>).find(s => s.x == selectedSection.x && s.y == selectedSection.y)
+        if (selectedSection && selectedSection.options) {
+          this.optionForm.controls["horizontalOrder"].setValue(selectedSection.options.horizontalOrder)
+          this.optionForm.controls["verticleOrder"].setValue(selectedSection.options.verticleOrder)
+        }
+      }
+    }
+  }
   @Input()
   set id(_id: string) {
     this._id = _id
     this.loadData(this._id)
   }
-  constructor(private api: ApiService, public dialog: MatDialog) {
+
+  optionForm: FormGroup = this._formBuilder.group({
+    horizontalOrder: new FormControl("", [Validators.required]),
+    verticleOrder: new FormControl("", [Validators.required]),
+  });
+  constructor(private api: ApiService, public dialog: MatDialog, private _formBuilder: FormBuilder) {
 
   }
   loadData(id: string) {
@@ -90,6 +116,31 @@ export class VenueSeatComponent {
             }
           })
       })
+    }
+  }
+  onSelectedSectionChange(value: { x: number, y: number }) {
+    let section = (this.venue.sections as Array<any>).find(s => s.x == value.x && s.y == value.y)
+    if (section && section.options) {
+      this.optionForm.controls["order"].setValue(section.options.order)
+    }
+    else {
+      this.optionForm.controls["order"].setValue("LTR")
+    }
+  }
+  submitSectionOption() {
+    console.log(this.optionForm.valid, this._id, this.seatingPlan, this.seatingPlan?.selectedSection)
+    if (this.optionForm.valid && this._id && this.seatingPlan && this.seatingPlan.selectedSection) {
+      let selectedSection = this.seatingPlan.selectedSection
+      selectedSection = (this.venue.sections as Array<any>).find(s => s.x == selectedSection.x && s.y == selectedSection.y)
+      if (selectedSection) {
+        selectedSection.options = this.optionForm.getRawValue()
+        let venueId = this._id
+        this.api.request.patch(`/venue/${venueId}`, this.venue).toPromise().then((result: any) => {
+          if (result && result.success) {
+            this.loadData(venueId)
+          }
+        })
+      }
     }
   }
 }

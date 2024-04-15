@@ -1,5 +1,6 @@
-@if(seats){
-<app-seating-plan #seatingPlan [venue]="venue" [seats]="seats">
+@if(seats && venue){
+<app-seating-plan #seatingPlan (selectedSectionChange)="onSelectedSectionChange($event)" [venue]="venue"
+  [seats]="seats">
 </app-seating-plan>
 }
 @else{
@@ -7,3 +8,20 @@ loading
 }
 <button mat-button (click)="openCreationForm()">batch create</button>
 <button mat-button (click)="openDeletationForm()">batch delete</button>
+<form [formGroup]="optionForm">
+  <mat-form-field>
+    <mat-label>Order (ascending)</mat-label>
+    <mat-select formControlName="horizontalOrder" required>
+      <mat-option value="LTR">Left to right</mat-option>
+      <mat-option value="RTL">Right to left</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Verticle Order (ascending)</mat-label>
+    <mat-select formControlName="verticleOrder" required>
+      <mat-option value="TTB">Top to bottom</mat-option>
+      <mat-option value="BTT">Bottom to top</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-button (click)="submitSectionOption()">update</button>
+</form>

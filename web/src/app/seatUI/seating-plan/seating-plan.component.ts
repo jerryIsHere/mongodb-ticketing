@@ -21,7 +21,14 @@ type Section = { x: number, y: number }
 })
 export class SeatingPlanComponent {
   @Input() venue: Venue = { sections: [] }
-  selectedSection?: { x: number, y: number }
+  @Input()
+  _selectedSection?: { x: number, y: number, options?: any }
+  get selectedSection(): undefined | { x: number, y: number, options?: any } { return this._selectedSection }
+  set selectedSection(value: { x: number, y: number, options?: any }) {
+    this._selectedSection = value
+    this.selectedSectionChange.emit(value)
+  }
+  @Output() selectedSectionChange = new EventEmitter<{ x: number, y: number }>();
   private _selectedSeatIds: Set<string> = new Set<string>()
   clearSelectedSeat() {
     this._selectedSeatIds.clear()
@@ -69,7 +76,12 @@ export class SeatingPlanComponent {
     if (id) return this._selectedSeatIds.has(id)
     return
   }
-  @Input() seats: Seat[] = []
+  _seats: Seat[] = []
+  get seats(): Seat[]{ return this._seats}
+  @Input() set seats(value: Seat[]){
+    this._seats = value
+    this.render()
+  }
   @Input() tickets: Ticket[] = []
   @Input({ transform: booleanAttribute }) seatingPlanEditing: boolean = false;
   @Input({ transform: booleanAttribute }) isTicketPlanning: boolean = false;
@@ -82,9 +94,23 @@ export class SeatingPlanComponent {
   cols: number[] = []
   rows: string[] = []
   slots: (Seat | undefined)[] = []
+  seatSorting: Map<string, Function> = new Map<string, Function>(
+    [
+      ["RTL", (a: number, b: number) => b - a],
+      ["LTR", (a: number, b: number) => a - b],
+      ["BTT", function (a: string, b: string) { return b.localeCompare(a) }],
+      ["TTB", function (a: string, b: string) { return a.localeCompare(b) }]
+    ]
+  )
   render() {
-    this.rows = Array.from(this.selectedSectionSeat().map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort(function (a, b) { return b.localeCompare(a) })
-    this.cols = Array.from(this.selectedSectionSeat().map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<number>())).sort(function (a, b) { return b - a })
+    let horizontalOrder = this.selectedSection?.options?.horizontalOrder
+    horizontalOrder = this.seatSorting.has(horizontalOrder) ? horizontalOrder : "LTR"
+    horizontalOrder = this.seatSorting.get(horizontalOrder)
+    let verticleOrder = this.selectedSection?.options?.verticleOrder
+    verticleOrder = this.seatSorting.has(verticleOrder) ? verticleOrder : "LTR"
+    verticleOrder = this.seatSorting.get(verticleOrder)
+    this.rows = Array.from(this.selectedSectionSeat().map((seat) => seat.row).reduce((rows, r, i) => rows.add(r), new Set<string>())).sort(verticleOrder)
+    this.cols = Array.from(this.selectedSectionSeat().map((seat: Seat) => seat.no).reduce((rows, r, i) => rows.add(r), new Set<number>())).sort(horizontalOrder)
     this.slots = []
     for (let row of this.rows) {
       for (let col of this.cols) {
@@ -92,16 +118,15 @@ export class SeatingPlanComponent {
       }
     }
   }
-  ngOnChangnges(changes: SimpleChanges) {
-    console.log(changes)
-    this.init()
-    if (changes["selectedSeatIds"]) this.selectedSeatIdsChange.emit(this._selectedSeatIds)
-  }
+  // ngOnChangnges(changes: SimpleChanges) {
+  //   this.init()
+  //   if (changes["selectedSeatIds"]) this.selectedSeatIdsChange.emit(this._selectedSeatIds)
+  // }
   ngOnInit() {
     this.init()
   }
   init() {
-    if (this.venue && this.venue.sections && this.venue.sections.length > 0 && this.selectedSection== undefined) {
+    if (this.venue && this.venue.sections && this.venue.sections.length > 0 && this.selectedSection == undefined) {
       this.selectedSection = this.venue.sections[0]
     }
     if (this.seats) {
@@ -155,9 +180,7 @@ export class SeatingPlanComponent {
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {
     this.activatedRoute.queryParamMap.subscribe((params: ParamMap) => {
       let sectionParam = params.get('section')
-      console.log(sectionParam)
       let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
-      console.log(section)
       if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
         this.selectedSection = section
         this.render()

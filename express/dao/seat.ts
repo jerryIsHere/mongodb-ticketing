@@ -145,14 +145,17 @@ export class SeatDAO extends BaseDAO {
                         daoreject(err)
                         return
                     }
-                    var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session })
-                    if (result.insertedId) {
-                        daoresolve(dao)
-                    }
-                    else {
-                        daoreject(new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`))
-                        return
-                    }
+                    try {
+                        var result = await Database.mongodb.collection(SeatDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session })
+
+                        if (result && result.insertedId) {
+                            daoresolve(dao)
+                        }
+                        else {
+                            daoreject(new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`))
+                            return
+                        }
+                    } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
                 })
             )).then(daos => {
                 resolve(daos)
@@ -213,13 +216,15 @@ export class SeatDAO extends BaseDAO {
                         reject(new RequestError(`Deletation of ${this.constructor.name} with id ${dao._id} failed ` +
                             `as ticket with id ${dependency._id} depends on it.`)); return
                     }
-                    var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session })
-                    if (result.deletedCount > 0) {
-                        daoresolve(dao)
-                    }
-                    else {
-                        daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`))
-                    }
+                    try {
+                        var result = await Database.mongodb.collection(SeatDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session })
+                        if (result && result.deletedCount > 0) {
+                            daoresolve(dao)
+                        }
+                        else {
+                            daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`))
+                        }
+                    } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
                 })
             )).then(daos => {
                 resolve(daos)

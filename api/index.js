@@ -67,28 +67,33 @@ app.use('/*', function (_, res) {
     res.redirect("/web/");
 });
 app.use((output, req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    if (output instanceof database_1.RequestError || res.locals.RequestErrorList.length != 0) {
-        if (res.locals.session.inTransaction()) {
-            console.log("abort");
-            yield res.locals.session.abortTransaction();
+    try {
+        if (output instanceof database_1.RequestError || res.locals.RequestErrorList.length != 0) {
+            if (res.locals.session.inTransaction()) {
+                console.log("abort");
+                yield res.locals.session.abortTransaction();
+            }
+            else {
+            }
+            if (output instanceof database_1.RequestError) {
+                res.locals.RequestErrorList.push(output);
+            }
+            res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
         }
         else {
+            if (res.locals.session.inTransaction()) {
+                yield res.locals.session.commitTransaction();
+                res.json(output);
+            }
+            else {
+                res.json(output);
+            }
         }
-        if (output instanceof database_1.RequestError) {
-            res.locals.RequestErrorList.push(output);
-        }
-        res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
+        res.locals.session.endSession();
     }
-    else {
-        if (res.locals.session.inTransaction()) {
-            yield res.locals.session.commitTransaction();
-            res.json(output);
-        }
-        else {
-            res.json(output);
-        }
+    catch (err) {
+        console.log(err);
     }
-    res.locals.session.endSession();
 }));
 database_1.Database.init().then(_ => {
     app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {

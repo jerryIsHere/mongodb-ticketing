@@ -322,12 +322,18 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         daoreject(err);
                         return;
                     }
-                    var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session });
-                    if (result.insertedId) {
-                        daoresolve(dao);
+                    try {
+                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).insertOne(dao.Serialize(true), { session: res.locals.session });
+                        if (result && result.insertedId) {
+                            daoresolve(dao);
+                        }
+                        else {
+                            daoreject(new database_1.RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`));
+                        }
                     }
-                    else {
-                        daoreject(new database_1.RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`));
+                    catch (err) {
+                        console.log(err);
+                        reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
                     }
                 })))).then(daos => {
                     resolve(daos);
@@ -349,12 +355,19 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         return;
                     }
                     if (dao._id) {
-                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao._id }, { $set: dao.Serialize(true) }, { session: res.locals.session });
-                        if (result) {
-                            daoresolve(dao);
+                        try {
+                            var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name)
+                                .updateOne({ _id: dao._id }, { $set: dao.Serialize(true) }, { session: res.locals.session });
+                            if (result) {
+                                daoresolve(dao);
+                            }
+                            else {
+                                daoreject(new database_1.RequestError(`Update of ${dao.constructor.name} failed with unknown reason.`));
+                            }
                         }
-                        else {
-                            daoreject(new database_1.RequestError(`Update of ${dao.constructor.name} failed with unknown reason.`));
+                        catch (err) {
+                            console.log(err);
+                            reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
                         }
                     }
                     else {
@@ -406,12 +419,18 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             return;
                         }
                         if (dao.id) {
-                            var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: res.locals.session });
-                            if (result.modifiedCount > 0) {
-                                daoresolve(dao);
+                            try {
+                                var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: res.locals.session });
+                                if (result && result.modifiedCount > 0) {
+                                    daoresolve(dao);
+                                }
+                                else {
+                                    daoreject(new database_1.RequestError(`Ticket with id ${dao.id} is not avaliable.`));
+                                }
                             }
-                            else {
-                                daoreject(new database_1.RequestError(`Ticket with id ${dao.id} is not avaliable.`));
+                            catch (err) {
+                                console.log(err);
+                                reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
                             }
                         }
                     })))).then((daos) => __awaiter(this, void 0, void 0, function* () {
@@ -465,12 +484,18 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     if (dao.occupantId != null) {
                         daoreject(new database_1.RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed as it has occupant.`));
                     }
-                    var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session });
-                    if (result.deletedCount > 0) {
-                        daoresolve(dao);
+                    try {
+                        var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).deleteOne(dao.Serialize(true), { session: res.locals.session });
+                        if (result && result.deletedCount > 0) {
+                            daoresolve(dao);
+                        }
+                        else {
+                            daoreject(new database_1.RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`));
+                        }
                     }
-                    else {
-                        daoreject(new database_1.RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`));
+                    catch (err) {
+                        console.log(err);
+                        reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
                     }
                 })))).then(daos => {
                     resolve(daos);

@@ -8,6 +8,12 @@
     </mat-select>
   </mat-form-field>
   <mat-list>
+    <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
+      <button mat-button style="pointer-events: none;"></button>
+      @for(col of cols; track col){
+      <button mat-button style="pointer-events: none;">{{col}}</button>
+      }
+    </mat-list-item>
     @for(row of rows; track row){
     <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
       <button mat-button style="pointer-events: none;">{{row}}</button>

@@ -16,7 +16,7 @@ declare global {
     }
     namespace session {
       interface SessionData {
-        user: {hasAdminRight: boolean, } | null;
+        user: { hasAdminRight: boolean, } | null;
       }
     }
   }
@@ -84,28 +84,33 @@ app.use('/*', function (_, res: Response) {
 });
 
 app.use(async (output: any, req: Request, res: Response, next: NextFunction) => {
-  if (output instanceof RequestError || res.locals.RequestErrorList.length != 0) {
-    if (res.locals.session.inTransaction()) {
-      console.log("abort");
-      await res.locals.session.abortTransaction();
+  try {
+    if (output instanceof RequestError || res.locals.RequestErrorList.length != 0) {
+      if (res.locals.session.inTransaction()) {
+        console.log("abort");
+        await res.locals.session.abortTransaction();
+      }
+      else {
+      }
+      if (output instanceof RequestError) {
+        res.locals.RequestErrorList.push(output)
+      }
+      res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
     }
     else {
+      if (res.locals.session.inTransaction()) {
+        await res.locals.session.commitTransaction();
+        res.json(output)
+      }
+      else {
+        res.json(output)
+      }
     }
-    if (output instanceof RequestError) {
-      res.locals.RequestErrorList.push(output)
-    }
-    res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
+    res.locals.session.endSession();
   }
-  else {
-    if (res.locals.session.inTransaction()) {
-      await res.locals.session.commitTransaction();
-      res.json(output)
-    }
-    else {
-      res.json(output)
-    }
+  catch (err) {
+    console.log(err)
   }
-  res.locals.session.endSession();
 })
 Database.init().then(_ => {
   app.listen(port, async () => {

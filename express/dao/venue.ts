@@ -5,7 +5,7 @@ import { SeatDAO } from "./seat";
 import { EventDAO } from "./event";
 import { Response } from "express";
 
-export type sectionType = { x: number, y: number }
+export type sectionType = { x: number, y: number, options: any }
 export function sectionTypeCheck(s: sectionType): s is sectionType {
     return typeof s.x == "number" &&
         typeof s.y == "number"
