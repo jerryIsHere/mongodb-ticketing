@@ -128,8 +128,13 @@ export class ApiService {
         return this.httpClient.post(url, body, options).pipe(
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
-            if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason, "ok");
+            if (errResponse.error) {
+              if (errResponse.error.reason) {
+                this.snackBar.open(errResponse.error.reason, "ok")
+              }
+              else if (errResponse.error.reasons) {
+                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
+              }
             }
             return of([])
           })
@@ -152,8 +157,13 @@ export class ApiService {
         return this.httpClient.patch(url, body, options).pipe(
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
-            if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason, "ok");
+            if (errResponse.error) {
+              if (errResponse.error.reason) {
+                this.snackBar.open(errResponse.error.reason, "ok")
+              }
+              else if (errResponse.error.reasons) {
+                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
+              }
             }
             return of([])
           })
@@ -176,8 +186,13 @@ export class ApiService {
         return this.httpClient.delete(url, options).pipe(
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
-            if (errResponse.error && errResponse.error.reason) {
-              this.snackBar.open(errResponse.error.reason, "ok");
+            if (errResponse.error) {
+              if (errResponse.error.reason) {
+                this.snackBar.open(errResponse.error.reason, "ok")
+              }
+              else if (errResponse.error.reasons) {
+                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
+              }
             }
             return of([])
           })
