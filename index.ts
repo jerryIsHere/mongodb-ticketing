@@ -28,11 +28,12 @@ sessionStore.on('error', (error: any) => {
 });
 app.set("trust proxy", true);
 app.use(session({
+  name:'ticketing_sessionid',
   secret: 'sakdjfpaoisdfjpaosdijf',
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true, sameSite: "none", maxAge: 7 * 24 * 60 * 60 * 1000 },
+  cookie: { secure: true, sameSite: false, maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 
 

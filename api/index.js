@@ -30,11 +30,12 @@ sessionStore.on('error', (error) => {
 });
 app.set("trust proxy", true);
 app.use((0, express_session_1.default)({
+    name: 'ticketing_sessionid',
     secret: 'sakdjfpaoisdfjpaosdijf',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: true, sameSite: "none", maxAge: 7 * 24 * 60 * 60 * 1000 },
+    cookie: { secure: true, sameSite: false, maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 // angular front
 app.use('/web', express_1.default.static('web/dist/ticketing/browser'));
