@@ -39,10 +39,10 @@
     </mat-form-field>
     <br>
     <mat-form-field>
-      <mat-label>Start selling ticket at</mat-label>
-      <input matInput type="datetime-local" formControlName="startSellDate" required>
-      @if (eventForm.controls['startSellDate'].hasError('required')) {
-      @if(eventForm.controls["startSellDate"].value == null){
+      <mat-label>1st round start selling ticket at</mat-label>
+      <input matInput type="datetime-local" formControlName="startFirstRoundSellDate" required>
+      @if (eventForm.controls['startFirstRoundSellDate'].hasError('required')) {
+      @if(eventForm.controls["startFirstRoundSellDate"].value == null){
       <mat-error>This field is required</mat-error>
       }
       @else{
@@ -52,15 +52,74 @@
     </mat-form-field>
     <br>
     <mat-form-field>
-      <mat-label>End selling at</mat-label>
-      <input matInput type="datetime-local" formControlName="endSellDate" required>
-      @if (eventForm.controls['endSellDate'].hasError('required')) {
-      @if(eventForm.controls["endSellDate"].value == null){
+      <mat-label>1st round end selling at</mat-label>
+      <input matInput type="datetime-local" formControlName="endFirstRoundSellDate" required>
+      @if (eventForm.controls['endFirstRoundSellDate'].hasError('required')) {
+      @if(eventForm.controls["endFirstRoundSellDate"].value == null){
       <mat-error>This field is required</mat-error>
       }
       @else{
       <mat-error>Invalid date / time</mat-error>
       }
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>2nd round start selling ticket at</mat-label>
+      <input matInput type="datetime-local" formControlName="startSecondRoundSellDate" required>
+      @if (eventForm.controls['startSecondRoundSellDate'].hasError('required')) {
+      @if(eventForm.controls["startSecondRoundSellDate"].value == null){
+      <mat-error>This field is required</mat-error>
+      }
+      @else{
+      <mat-error>Invalid date / time</mat-error>
+      }
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>2nd round end selling at</mat-label>
+      <input matInput type="datetime-local" formControlName="endSecondRoundSellDate" required>
+      @if (eventForm.controls['endSecondRoundSellDate'].hasError('required')) {
+      @if(eventForm.controls["endSecondRoundSellDate"].value == null){
+      <mat-error>This field is required</mat-error>
+      }
+      @else{
+      <mat-error>Invalid date / time</mat-error>
+      }
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>Shopping cart size</mat-label>
+      <input matInput formControlName="shoppingCartSize" required>
+      @if (eventForm.controls['shoppingCartSize'].hasError('required')) {
+      <mat-error>Quota field is required</mat-error>
+      }
+      @if (eventForm.controls['shoppingCartSize'].hasError('pattern')) {
+      <mat-error>Quota should be a number</mat-error>
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>First round ticket quota</mat-label>
+      <input matInput formControlName="firstRoundTicketQuota" required>
+      @if (eventForm.controls['firstRoundTicketQuota'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+      @if (eventForm.controls['firstRoundTicketQuota'].hasError('pattern')) {
+      <mat-error>Quota should be a number</mat-error>
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>Second round ticket quota</mat-label>
+      <input matInput formControlName="secondRoundTicketQuota" required>
+      @if (eventForm.controls['secondRoundTicketQuota'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+      @if (eventForm.controls['secondRoundTicketQuota'].hasError('pattern')) {
+      <mat-error>Quota should be a number</mat-error>
       }
     </mat-form-field>
     <br>

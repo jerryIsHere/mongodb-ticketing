@@ -28,10 +28,15 @@ var tolocaltimezone = (d: Date) => {
 export class EventFormComponent {
   eventForm: FormGroup = this._formBuilder.group({
     eventname: new FormControl(this.data.event.eventname, [Validators.required]),
-    datetime: new FormControl(this.data.event.datetime ?tolocaltimezone( new Date(this.data.event.datetime)).toISOString().split('Z')[0] : '', [Validators.required,]),
-    startSellDate: new FormControl(this.data.event.startSellDate ? tolocaltimezone(new Date(this.data.event.startSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
-    endSellDate: new FormControl(this.data.event.endSellDate ? tolocaltimezone(new Date(this.data.event.endSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
-    duration: new FormControl(this.data.event.duration, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+    datetime: new FormControl(this.data.event.datetime ? tolocaltimezone(new Date(this.data.event.datetime)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    startFirstRoundSellDate: new FormControl(this.data.event.startFirstRoundSellDate ? tolocaltimezone(new Date(this.data.event.startFirstRoundSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    endFirstRoundSellDate: new FormControl(this.data.event.endFirstRoundSellDate ? tolocaltimezone(new Date(this.data.event.endFirstRoundSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    startSecondRoundSellDate: new FormControl(this.data.event.startSecondRoundSellDate ? tolocaltimezone(new Date(this.data.event.startSecondRoundSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    endSecondRoundSellDate: new FormControl(this.data.event.endSecondRoundSellDate ? tolocaltimezone(new Date(this.data.event.endSecondRoundSellDate)).toISOString().split('Z')[0] : '', [Validators.required,]),
+    duration: new FormControl(this.data.event.duration, [Validators.required, Validators.min(0), Validators.pattern("^[-0-9]*$"),]),
+    shoppingCartSize: new FormControl(this.data.event.shoppingCartSize, [Validators.required, Validators.pattern("^[-0-9]*$"),]),
+    firstRoundTicketQuota: new FormControl(this.data.event.firstRoundTicketQuota, [Validators.required, Validators.pattern("^[-0-9]*$"),]),
+    secondRoundTicketQuota: new FormControl(this.data.event.secondRoundTicketQuota, [Validators.required, Validators.pattern("^[-0-9]*$"),]),
     venueId: new FormControl(this.data.event.venueId, [Validators.required,]),
   });
   constructor(
@@ -45,23 +50,22 @@ export class EventFormComponent {
     console.log(this.eventForm.controls["eventname"].value)
     if (this.eventForm.valid) {
       let timezone = (new Date()).getTimezoneOffset() * 60000
-      this.data.event.eventname = this.eventForm.controls["eventname"].value;
-      this.data.event.datetime = new Date(this.eventForm.controls["datetime"].value);
-      this.data.event.duration = this.eventForm.controls["duration"].value;
-      this.data.event.startSellDate = new Date(this.eventForm.controls["startSellDate"].value);
-      this.data.event.endSellDate = new Date(this.eventForm.controls["endSellDate"].value);
-      this.data.event.venueId = this.eventForm.controls["venueId"].value;
+      let body = this.eventForm.getRawValue()
+      body.startFirstRoundSellDate = new Date(body.startFirstRoundSellDate);
+      body.endFirstRoundSellDate = new Date(body.endFirstRoundSellDate);
+      body.startSecondRoundSellDate = new Date(body.startSecondRoundSellDate);
+      body.endSecondRoundSellDate = new Date(body.endSecondRoundSellDate);
       if (this.data && this.data.event && this.data.event._id) {
-        this.api.request.patch(`/event/${this.data.event._id}`, this.data.event).toPromise().then((result: any) => {
+        this.api.request.patch(`/event/${this.data.event._id}`, body).toPromise().then((result: any) => {
           if (result && result.success) {
-            this.dialogRef.close(this.data)
+            this.dialogRef.close(body)
           }
         })
       }
       else {
-        this.api.request.post("/event?create", this.data.event).toPromise().then((result: any) => {
+        this.api.request.post("/event?create", body).toPromise().then((result: any) => {
           if (result && result.success) {
-            this.dialogRef.close(this.data.event)
+            this.dialogRef.close(body)
           }
         })
       }

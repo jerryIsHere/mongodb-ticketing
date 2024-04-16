@@ -30,34 +30,64 @@ export class EventDAO extends BaseDAO {
         }
     }
 
-    private _startSellDate: Date | undefined
-    public get startSellDate() { return this._startSellDate }
-    public set startSellDate(value: Date | string | undefined) {
+    private _startFirstRoundSellDate: Date | undefined
+    public get startFirstRoundSellDate() { return this._startFirstRoundSellDate }
+    public set startFirstRoundSellDate(value: Date | string | undefined) {
         if (typeof value == "string") {
             try {
-                this._startSellDate = new Date(value);
+                this._startFirstRoundSellDate = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse startSellDate parameter of event request"))
+                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse startFirstRoundSellDate parameter of event request"))
             }
         }
         else if (value instanceof Date) {
-            this._startSellDate = value;
+            this._startFirstRoundSellDate = value;
         }
     }
-    private _endSellDate: Date | undefined
-    public get endSellDate() { return this._endSellDate }
-    public set endSellDate(value: Date | string | undefined) {
+    private _endFirstRoundSellDate: Date | undefined
+    public get endFirstRoundSellDate() { return this._endFirstRoundSellDate }
+    public set endFirstRoundSellDate(value: Date | string | undefined) {
         if (typeof value == "string") {
             try {
-                this._endSellDate = new Date(value);
+                this._endFirstRoundSellDate = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse endSellDate parameter of event request"))
+                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse endFirstRoundSellDate parameter of event request"))
             }
         }
         else if (value instanceof Date) {
-            this._endSellDate = value;
+            this._endFirstRoundSellDate = value;
+        }
+    }
+    private _startSecondRoundSellDate: Date | undefined
+    public get startSecondRoundSellDate() { return this._startSecondRoundSellDate }
+    public set startSecondRoundSellDate(value: Date | string | undefined) {
+        if (typeof value == "string") {
+            try {
+                this._startSecondRoundSellDate = new Date(value);
+            }
+            catch (err) {
+                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse startSecondRoundSellDate parameter of event request"))
+            }
+        }
+        else if (value instanceof Date) {
+            this._startSecondRoundSellDate = value;
+        }
+    }
+    private _endSecondRoundSellDate: Date | undefined
+    public get endSecondRoundSellDate() { return this._endSecondRoundSellDate }
+    public set endSecondRoundSellDate(value: Date | string | undefined) {
+        if (typeof value == "string") {
+            try {
+                this._endSecondRoundSellDate = new Date(value);
+            }
+            catch (err) {
+                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse endSecondRoundSellDate parameter of event request"))
+            }
+        }
+        else if (value instanceof Date) {
+            this._endSecondRoundSellDate = value;
         }
     }
     private _duration: number | undefined
@@ -71,6 +101,22 @@ export class EventDAO extends BaseDAO {
         }
     }
 
+    private _shoppingCartSize: number | undefined
+    public get shoppingCartSize() { return this._shoppingCartSize }
+    public set shoppingCartSize(value: number | undefined) {
+        this._shoppingCartSize = value;
+    }
+    private _firstRoundTicketQuota: number | undefined
+    public get firstRoundTicketQuota() { return this._firstRoundTicketQuota }
+    public set firstRoundTicketQuota(value: number | undefined) {
+        this._firstRoundTicketQuota = value;
+    }
+    private _secondRoundTicketQuota: number | undefined
+    public get secondRoundTicketQuota() { return this._secondRoundTicketQuota }
+    public set secondRoundTicketQuota(value: number | undefined) {
+        this._secondRoundTicketQuota = value;
+    }
+
     private _venueId: ObjectId | undefined
     public get venueId() { return this._venueId }
     public set venueId(value: ObjectId | string | undefined) {
@@ -81,9 +127,15 @@ export class EventDAO extends BaseDAO {
         res: Response, params: {
             eventname?: string,
             datetime?: Date,
-            startSellDate?: Date,
-            endSellDate?: Date,
+            startFirstRoundSellDate?: Date,
+            endFirstRoundSellDate?: Date,
+            startSecondRoundSellDate?: Date,
+            endSecondRoundSellDate?: Date,
             duration?: number,
+            shoppingCartSize?: number,
+            firstRoundTicketQuota?: number,
+            secondRoundTicketQuota?: number,
+
         } & { doc?: WithId<Document> }
     ) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
@@ -92,8 +144,13 @@ export class EventDAO extends BaseDAO {
 
             this._eventname = params.doc.eventname
             this._datetime = params.doc.datetime
-            this._startSellDate = params.doc.startSellDate
-            this._endSellDate = params.doc.endSellDate
+            this._startFirstRoundSellDate = params.doc.startFirstRoundSellDate
+            this._endFirstRoundSellDate = params.doc.endFirstRoundSellDate
+            this._startSecondRoundSellDate = params.doc.startSecondRoundSellDate
+            this._endSecondRoundSellDate = params.doc.endSecondRoundSellDate
+            this._shoppingCartSize = params.doc.shoppingCartSize
+            this._firstRoundTicketQuota = params.doc.firstRoundTicketQuota
+            this._secondRoundTicketQuota = params.doc.secondRoundTicketQuota
             this._duration = params.doc.duration
             this._venueId = params.doc.venueId
         }
@@ -103,11 +160,21 @@ export class EventDAO extends BaseDAO {
         if (params.datetime)
             this.datetime = params.datetime
 
-        if (params.startSellDate)
-            this.startSellDate = params.startSellDate
 
-        if (params.endSellDate)
-            this.endSellDate = params.endSellDate
+        if (params.startFirstRoundSellDate)
+            this.startFirstRoundSellDate = params.startFirstRoundSellDate
+        if (params.endFirstRoundSellDate)
+            this.endFirstRoundSellDate = params.endFirstRoundSellDate
+        if (params.startSecondRoundSellDate)
+            this.startSecondRoundSellDate = params.startSecondRoundSellDate
+        if (params.endSecondRoundSellDate)
+            this.endSecondRoundSellDate = params.endSecondRoundSellDate
+        if (params.shoppingCartSize)
+            this.shoppingCartSize = params.shoppingCartSize
+        if (params.firstRoundTicketQuota)
+            this.firstRoundTicketQuota = params.firstRoundTicketQuota
+        if (params.secondRoundTicketQuota)
+            this.secondRoundTicketQuota = params.secondRoundTicketQuota
 
         if (params.duration)
             this.duration = params.duration
@@ -134,9 +201,19 @@ export class EventDAO extends BaseDAO {
             var cursor = Database.mongodb.collection(EventDAO.collection_name).aggregate([
                 {
                     $match: {
-                        $and: [
-                            { startSellDate: { $lte: new Date() } },
-                            { endSellDate: { $gte: new Date() } },
+                        $or: [
+                            {
+                                $and: [
+                                    { startFirstRoundSellDate: { $lte: new Date() } },
+                                    { endFirstRoundSellDate: { $gte: new Date() } },
+                                ]
+                            },
+                            {
+                                $and: [
+                                    { startSecondRoundSellDate: { $lte: new Date() } },
+                                    { endSecondRoundSellDate: { $gte: new Date() } },
+                                ]
+                            },
                         ]
                     }
                 },

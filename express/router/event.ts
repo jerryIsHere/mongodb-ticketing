@@ -40,6 +40,13 @@ export namespace Event {
                         eventname: req.body.eventname,
                         datetime: req.body.datetime,
                         duration: req.body.duration,
+                        startFirstRoundSellDate: req.body.startFirstRoundSellDate,
+                        endFirstRoundSellDate: req.body.endFirstRoundSellDate,
+                        startSecondRoundSellDate: req.body.startSecondRoundSellDate,
+                        endSecondRoundSellDate: req.body.endSecondRoundSellDate,
+                        shoppingCartSize: req.body.shoppingCartSize,
+                        firstRoundTicketQuota: req.body.firstRoundTicketQuota,
+                        secondRoundTicketQuota: req.body.secondRoundTicketQuota,
                     });
                     dao.venueId = req.body.venueId
                     dao.create().then((value) => {
@@ -54,8 +61,13 @@ export namespace Event {
                 EventDAO.getById(res, req.params.eventId).then((dao) => {
                     dao.eventname = req.body.eventname
                     dao.datetime = req.body.datetime
-                    dao.startSellDate = req.body.startSellDate
-                    dao.endSellDate = req.body.endSellDate
+                    dao.startFirstRoundSellDate = req.body.startFirstRoundSellDate
+                    dao.endFirstRoundSellDate = req.body.endFirstRoundSellDate
+                    dao.startSecondRoundSellDate = req.body.startSecondRoundSellDate
+                    dao.endSecondRoundSellDate = req.body.endSecondRoundSellDate
+                    dao.shoppingCartSize = req.body.shoppingCartSize
+                    dao.firstRoundTicketQuota = req.body.firstRoundTicketQuota
+                    dao.secondRoundTicketQuota = req.body.secondRoundTicketQuota
                     dao.duration = req.body.duration
                     dao.venueId = req.body.venueId
                     return dao.update()

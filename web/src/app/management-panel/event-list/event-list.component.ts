@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
-import { Show, Venue } from '../../interface'
+import { Show, Venue, isShowSelling, showSellingString } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { EventFormComponent } from '../../forms/event-form/event-form.component';
 
@@ -95,7 +95,7 @@ export class EventListComponent {
     })
   }
   isShowSelling(show: Show) {
-    return show.startSellDate && new Date(show.startSellDate) <= new Date() && show.endSellDate && new Date(show.endSellDate) >= new Date()
+    return isShowSelling(show)
   }
   delete(id: string) {
     return this.api.request.delete(`/Event/${id}`).toPromise().then(_ => {
@@ -103,9 +103,7 @@ export class EventListComponent {
     })
   }
   showSellingString(show: Show): string {
-    if (show.startSellDate && show.endSellDate)
-      return new Date(show.startSellDate).toLocaleDateString() + '-' + new Date(show.endSellDate).toLocaleDateString()
-    return ''
+    return showSellingString(show)
   }
 }
 

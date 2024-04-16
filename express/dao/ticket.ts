@@ -144,7 +144,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
 
             this._occupantId = new ObjectId(userId)
             try {
-                await this.checkReference(true)
+                await this.checkReference(true, new ObjectId(userId))
             }
             catch (err) {
                 reject(err)
@@ -298,16 +298,27 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             })
         })
     }
-    async checkReference(checkIsSelling: boolean = false) {
+    async checkReference(checkIsSelling: boolean = false, checkQuotaForUserId?: ObjectId, purchaseQuantity = 1) {
         if (this._eventId == undefined) {
             this.res.locals.RequestErrorList.push(new RequestError(`Ticket with id ${this._id} has no associate event.`))
             return null
         }
         var event = await EventDAO.getById(this.res, this._eventId.toString())
-        var condition = checkIsSelling ?
-            (event && event.startSellDate && event.endSellDate &&
-                event.startSellDate <= new Date() && event.endSellDate >= new Date()) : event
-        if (condition) {
+        if (event && event.startFirstRoundSellDate &&
+            event.endFirstRoundSellDate &&
+            event.startSecondRoundSellDate &&
+            event.endSecondRoundSellDate &&
+            event.shoppingCartSize != undefined && Number.isFinite(Number(event.shoppingCartSize)) &&
+            event.firstRoundTicketQuota != undefined && Number.isFinite(Number(event.firstRoundTicketQuota)) &&
+            event.secondRoundTicketQuota != undefined && Number.isFinite(Number(event.secondRoundTicketQuota))) {
+            if (checkIsSelling) {
+                var isSelling = (event.startFirstRoundSellDate <= new Date() && event.endFirstRoundSellDate >= new Date()) ||
+                    (event.startSecondRoundSellDate <= new Date() && event.endSecondRoundSellDate >= new Date())
+                if (!isSelling) {
+                    this.res.locals.RequestErrorList.push(new RequestError(`Ticket of event with id ${this._eventId} doesn't exists is not selling.`))
+                    return
+                }
+            }
             let venueId = event.venueId
             await Database.mongodb.collection(PriceTierDAO.collection_name).findOne({ _id: this._priceTierId }).then(instance => {
                 if (instance == null) {
@@ -319,6 +330,20 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     this.res.locals.RequestErrorList.push(new RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`))
                 }
             })
+            if (checkQuotaForUserId != undefined) {
+                var count = await Database.mongodb.collection(TicketDAO.collection_name).aggregate([
+                    { $match: { occupantId: checkQuotaForUserId, eventId: this.eventId } }, { $count: "baught" }]).tryNext()
+                if (count != null && Number.isInteger(count.baught)) {
+                    let quota =
+                        (event.startFirstRoundSellDate <= new Date() && event.endFirstRoundSellDate >= new Date()) ?
+                            event.firstRoundTicketQuota : (event.startSecondRoundSellDate <= new Date() && event.endSecondRoundSellDate >= new Date()) ?
+                                event.secondRoundTicketQuota :
+                                0
+                    if (quota > -1 && count.baught + purchaseQuantity > quota) {
+                        this.res.locals.RequestErrorList.push(new RequestError(`You have no more ticket quota for this show.`))
+                    }
+                }
+            }
             if (this._occupantId)
                 await Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
                     if (instance == null) {
@@ -330,10 +355,14 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             if (event == null)
                 this.res.locals.RequestErrorList.push(new RequestError(`Event with id ${this._eventId} doesn't exists.`))
             if (!checkIsSelling) return null
-            if (event.startSellDate == undefined || event.startSellDate > new Date())
-                this.res.locals.RequestErrorList.push(new RequestError(`Ticket selling of event with id ${this._eventId} is not started yet.`))
-            if (event.endSellDate == undefined || event.endSellDate < new Date())
-                this.res.locals.RequestErrorList.push(new RequestError(`Ticket selling of event with id ${this._eventId} was ended.`))
+            if (event.startFirstRoundSellDate == undefined || event.startFirstRoundSellDate > new Date())
+                this.res.locals.RequestErrorList.push(new RequestError(`The first round of ticket selling of event with id ${this._eventId} is not started yet.`))
+            if (event.endFirstRoundSellDate == undefined || event.endFirstRoundSellDate < new Date())
+                this.res.locals.RequestErrorList.push(new RequestError(`The first round of selling of event with id ${this._eventId} was ended.`))
+            if (event.startSecondRoundSellDate == undefined || event.startSecondRoundSellDate > new Date())
+                this.res.locals.RequestErrorList.push(new RequestError(`The second round of ticket selling of event with id ${this._eventId} is not started yet.`))
+            if (event.endSecondRoundSellDate == undefined || event.endSecondRoundSellDate < new Date())
+                this.res.locals.RequestErrorList.push(new RequestError(`The second round of selling of event with id ${this._eventId} was ended.`))
             return null
         }
     }
@@ -455,7 +484,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                         dao._occupantId = new ObjectId(userId)
                         try {
-                            await dao.checkReference(true)
+                            await dao.checkReference(true, new ObjectId(userId), daos.length)
                         }
                         catch (err) {
                             daoreject(err)

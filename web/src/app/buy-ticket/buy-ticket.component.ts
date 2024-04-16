@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { Show, Venue, Ticket, Seat, PriceTier } from '../interface';
+import { Show, Venue, Ticket, Seat, PriceTier, isShowSelling, isShowSellingAsFirstRound, isShowSellingAsSecondROund } from '../interface';
 import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { UserSessionService } from '../service/user-session.service';
 import { TicketSelectedComponent } from '../snackbar/ticket-selected/ticket-selected.component';
 
+const defaultShoppingCartSize = 6
 @Component({
   selector: 'app-buy-ticket',
   standalone: true,
@@ -44,6 +45,11 @@ export class BuyTicketComponent {
     this.api.request.get(`/event/${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.event = result.data
+        if (this.event && this.event.shoppingCartSize) {
+          let quota = isShowSellingAsFirstRound(this.event) ? this.event.firstRoundTicketQuota : isShowSellingAsSecondROund(this.event) ? this.event.secondRoundTicketQuota : undefined
+          this.shoppingCartSize = quota != undefined && Number(this.event.shoppingCartSize) > Number(quota) ? quota : this.event.shoppingCartSize != undefined ? this.event.shoppingCartSize : defaultShoppingCartSize
+          this.shoppingCartSize = this.shoppingCartSize < 0 ? defaultShoppingCartSize : this.shoppingCartSize
+        }
         return result.data
       }
     }).then((event) => {
@@ -68,7 +74,7 @@ export class BuyTicketComponent {
   }
   actionSnackbarRef?: MatSnackBarRef<TicketSelectedComponent>
   selectedSeatIds: Set<string> = new Set<string>()
-  limit: number = 6
+  shoppingCartSize: number = defaultShoppingCartSize
   checkAction($event: Set<string>) {
     let tickets: Ticket[] = []
     Array.from($event.values()).map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
@@ -79,7 +85,7 @@ export class BuyTicketComponent {
       this.actionSnackbarRef = this._snackBar.openFromComponent(TicketSelectedComponent, {
         data: {
           tickets: tickets,
-          limit: this.limit
+          limit: this.shoppingCartSize
         }
       });
       this.actionSnackbarRef.afterDismissed().subscribe(() => {
@@ -115,16 +121,10 @@ export class BuyTicketComponent {
       })
     }
   }
-    
   isShowSelling(show: Show) {
-    return show.startSellDate && new Date(show.startSellDate) <= new Date() && show.endSellDate && new Date(show.endSellDate) >= new Date()
+    return isShowSelling(show)
   }
-  isShowSellingStarted(show: Show) {
-    return show.startSellDate && new Date(show.startSellDate) <= new Date()
-  }
-  isShowSellingEnded(show: Show) {
-    return show.endSellDate && new Date(show.endSellDate) >= new Date()
-  }
+
 }
 
 

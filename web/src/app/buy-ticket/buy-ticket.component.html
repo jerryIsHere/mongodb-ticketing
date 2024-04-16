@@ -2,13 +2,16 @@
 {{event.eventname}}
 @if(isShowSelling(event)){
 <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="limit">
+  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="shoppingCartSize">
 </app-seating-plan>
 <button mat-button (click)="openForm()">Select seats</button>
 }
 @else {
-Ticket selling {{isShowSellingStarted(event)?'has already ended':'is not started'}}.
-{{event.startSellDate | date : 'short'}} - {{event.endSellDate | date : 'short'}}
+Ticket of this show is not purchasable right now. <br>
+Sale period:
+{{event.startFirstRoundSellDate | date : 'short'}} - {{event.endFirstRoundSellDate | date : 'short'}}
+<br>
+{{event.startSecondRoundSellDate | date : 'short'}} - {{event.endSecondRoundSellDate | date : 'short'}}
 }
 }
 @else{
