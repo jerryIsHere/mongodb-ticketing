@@ -19,7 +19,7 @@ var User;
         var user = (0, express_1.Router)();
         var updateSession = (req, res, dao) => {
             var _a;
-            var userObj = { _id: (_a = dao.id) === null || _a === void 0 ? void 0 : _a.toString(), hasAdminRight: dao.hasAdminRight() };
+            var userObj = Object.assign({ _id: (_a = dao.id) === null || _a === void 0 ? void 0 : _a.toString(), hasAdminRight: dao.hasAdminRight() }, dao.Hydrated({ withCredentials: false }));
             req.session["user"] = userObj;
             res.cookie("user", JSON.stringify(userObj));
         };
