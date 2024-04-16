@@ -97,6 +97,9 @@ app.use((output, req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     catch (err) {
         console.log(err);
     }
+    finally {
+        res.end();
+    }
 }));
 database_1.Database.init().then(_ => {
     app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {

@@ -109,6 +109,9 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
   catch (err) {
     console.log(err)
   }
+  finally{
+    res.end()
+  }
 })
 Database.init().then(_ => {
   app.listen(port, async () => {
