@@ -14,19 +14,13 @@ export namespace User {
 
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
       var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) }
-      if (req.session.test) {
-        req.session.test = req.session.test + 1
-      }
-      else {
-        req.session.test = 0
-      }
       req.session.user = userObj
-      res.cookie("user", JSON.stringify(userObj))
+      //res.cookie("user", JSON.stringify(userObj))
       req.session.save();
     }
     var clearSession = (req: Request, res: Response) => {
       req.session.user = null
-      res.cookie("user", null)
+     // res.cookie("user", null)
     }
     user.post(
       "/forget-password",
