@@ -32,7 +32,7 @@ app.use(session({
   secret: 'sakdjfpaoisdfjpaosdijf',
   store: sessionStore,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: { httpOnly: false, secure: false, sameSite: false, maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 
@@ -110,7 +110,7 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
     console.log(err)
   }
   finally{
-    res.end()
+    next()
   }
 })
 Database.init().then(_ => {
