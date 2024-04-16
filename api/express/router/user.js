@@ -19,11 +19,11 @@ var User;
         var user = (0, express_1.Router)();
         var updateSession = (req, res, dao) => {
             var userObj = Object.assign(Object.assign({}, dao.Hydrated({ withCredentials: false })), { hasAdminRight: dao.hasAdminRight() });
-            req.session.user = userObj;
+            req.session["user"] = userObj;
             res.cookie("user", JSON.stringify(userObj));
         };
         var clearSession = (req, res) => {
-            req.session.user = null;
+            req.session["user"] = null;
             res.cookie("user", null);
         };
         user.post("/forget-password", (req, res, next) => __awaiter(this, void 0, void 0, function* () {

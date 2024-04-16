@@ -28,6 +28,7 @@ var sessionStore = new MongoDBStore(options);
 sessionStore.on('error', (error) => {
     console.error(error);
 });
+app.enable('trust proxy');
 app.use((0, express_session_1.default)({
     secret: 'sakdjfpaoisdfjpaosdijf',
     store: sessionStore,
