@@ -15,12 +15,10 @@ export namespace User {
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
       var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) }
       req.session.user = userObj
-      //res.cookie("user", JSON.stringify(userObj))
       req.session.save();
     }
     var clearSession = (req: Request, res: Response) => {
       req.session.user = null
-     // res.cookie("user", null)
     }
     user.post(
       "/forget-password",
@@ -107,7 +105,7 @@ export namespace User {
         if (req.body.password) {
           UserDAO.login(res, req.body.username, req.body.password).then(dao => {
             updateSession(req, res, dao)
-            next({ success: true, message: dao.Hydrated({ withCredentials: false }) })
+            next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
           }).catch((error) => next(error))
         } else {
           next(new RequestError("A login must be done with a password."));

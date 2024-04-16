@@ -225,7 +225,8 @@ class UserApi {
     password: string
   }) {
     return this.httpClient.post(`/user?login`, credential).toPromise().then((result: any) => {
-      if (result && result.success) {
+      if (result && result.data) {
+        window.localStorage.setItem("user", JSON.stringify(result.data));
         this.userSession.checkUserSession();
         return result
       }
@@ -235,6 +236,7 @@ class UserApi {
   logout() {
     return this.httpClient.post(`/user?logout`, {}).toPromise().then((result: any) => {
       if (result && result.success) {
+        window.localStorage.removeItem("user");
         this.userSession.checkUserSession();
         location.href = '/web'
         return
@@ -247,7 +249,8 @@ class UserApi {
     singingPart: string;
   }) {
     return this.httpClient.patch(`/user/${this.userSession.user.username}?profile`, user).toPromise().then((result: any) => {
-      if (result && result.success) {
+      if (result && result.data) {
+        window.localStorage.setItem("user", JSON.stringify(result.data));
         this.userSession.checkUserSession();
         return result
       }
