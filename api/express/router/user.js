@@ -81,7 +81,7 @@ var User;
                         return dao.update();
                     }).then((dao) => {
                         updateSession(req, res, dao);
-                        next({ success: true, data: dao.Hydrated({ withCredentials: false }) });
+                        next({ success: true, data: req.session.user });
                     }).catch((error) => next(error));
                 }
                 else if (req.query.password != undefined) {
@@ -99,7 +99,7 @@ var User;
                 next(new database_1.RequestError("Verification token is required."));
             user_1.UserDAO.VerifyWithToken(res, req.params.verificationToken).then((dao) => {
                 updateSession(req, res, dao);
-                next({ success: true, data: dao.Hydrated({ withCredentials: false }) });
+                next({ success: true, data: req.session.user });
             }).catch((error) => next(error));
         }));
         user.post("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
@@ -107,7 +107,7 @@ var User;
                 if (req.body.password) {
                     user_1.UserDAO.login(res, req.body.username, req.body.password).then(dao => {
                         updateSession(req, res, dao);
-                        next({ success: true, data: dao.Hydrated({ withCredentials: false }) });
+                        next({ success: true, data: req.session.user });
                     }).catch((error) => next(error));
                 }
                 else {
@@ -138,7 +138,7 @@ var User;
                             updateSession(req, res, dao);
                             next({
                                 success: true,
-                                user: dao.Hydrated({ withCredentials: false }),
+                                user: req.session.user,
                             });
                         }
                         return dao;

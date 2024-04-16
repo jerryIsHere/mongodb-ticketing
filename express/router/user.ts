@@ -76,7 +76,7 @@ export namespace User {
             return dao.update()
           }).then((dao) => {
             updateSession(req, res, dao)
-            next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+            next({ success: true, data: req.session.user })
           }).catch((error) => next(error))
         }
         else if (req.query.password != undefined) {
@@ -96,7 +96,7 @@ export namespace User {
 
       UserDAO.VerifyWithToken(res, req.params.verificationToken).then((dao) => {
         updateSession(req, res, dao)
-        next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+        next({ success: true, data: req.session.user })
       }).catch((error) => next(error))
     })
 
@@ -105,7 +105,7 @@ export namespace User {
         if (req.body.password) {
           UserDAO.login(res, req.body.username, req.body.password).then(dao => {
             updateSession(req, res, dao)
-            next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+            next({ success: true, data: req.session.user })
           }).catch((error) => next(error))
         } else {
           next(new RequestError("A login must be done with a password."));
@@ -136,7 +136,7 @@ export namespace User {
                 updateSession(req, res, dao)
                 next({
                   success: true,
-                  user: dao.Hydrated({ withCredentials: false }),
+                  user: req.session.user,
                 });
               }
               return dao
