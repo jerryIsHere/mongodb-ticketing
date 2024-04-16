@@ -15,6 +15,7 @@ export namespace User {
       var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) }
       req.session.user = userObj
       res.cookie("user", JSON.stringify(userObj))
+      req.session.save();
     }
     var clearSession = (req: Request, res: Response) => {
       req.session.user = null
