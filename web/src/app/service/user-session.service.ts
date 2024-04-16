@@ -9,10 +9,17 @@ export class UserSessionService {
     this.checkUserSession()
   }
   checkUserSession() {
+
     try {
-      let userObjectJson = window.localStorage.getItem("user")
-      if(userObjectJson){
-        this.user = JSON.parse(decodeURIComponent(userObjectJson))
+      if (document.cookie) {
+        let userObjectJson = window.localStorage.getItem("user")
+        if (userObjectJson) {
+          this.user = JSON.parse(decodeURIComponent(userObjectJson))
+        }
+      }
+      else {
+        window.localStorage.removeItem("user")
+        this.user = null
       }
     }
     catch (err) {

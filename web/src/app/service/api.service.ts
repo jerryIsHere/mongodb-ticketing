@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { UserSessionService } from './user-session.service';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, of, map } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 
@@ -126,6 +126,12 @@ export class ApiService {
         } | boolean;
       }) => {
         return this.httpClient.post(url, body, options).pipe(
+          map((response: any) => {
+            if (response && response.success) {
+                this.snackBar.open("Request is successfully made.", "ok")
+            }
+            return response
+          }),
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error) {
@@ -155,6 +161,12 @@ export class ApiService {
         withCredentials?: boolean;
       }) => {
         return this.httpClient.patch(url, body, options).pipe(
+          map((response: any) => {
+            if (response && response.success) {
+                this.snackBar.open("Request is successfully made.", "ok")
+            }
+            return response
+          }),
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error) {
@@ -184,6 +196,12 @@ export class ApiService {
         body?: any | null;
       }) => {
         return this.httpClient.delete(url, options).pipe(
+          map((response: any) => {
+            if (response && response.success) {
+                this.snackBar.open("Request is successfully made.", "ok")
+            }
+            return response
+          }),
           catchError((errResponse: HttpErrorResponse) => {
             console.log(errResponse)
             if (errResponse.error) {

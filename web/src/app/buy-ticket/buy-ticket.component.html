@@ -1,8 +1,17 @@
 @if(seats && venue && event && priceTiers){
 {{event.eventname}}
 @if(isShowSelling(event)){
+@if(userSession.user){
+
+}
+@else{
+<br>
+You must login before you can start selecting seat for ticketing
+<br>
+}
 <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)" [(selectedSeatIds)]="selectedSeatIds" [limit]="shoppingCartSize">
+  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)"
+  [(selectedSeatIds)]="selectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
 </app-seating-plan>
 <button mat-button (click)="openForm()">Select multiple seats</button>
 }
