@@ -5,7 +5,7 @@
 <mat-spinner></mat-spinner>
 }
 @else{
-<span matSnackBarActions>
+<span matSnackBarActions style="color: white">
   @for( priceTier of data.priceTiers; track priceTier){
   <button mat-button matSnackBarAction
     [style.background-color]="priceTier._id?'#'+data.priceTiersColors?.get(priceTier._id):''"

@@ -61,14 +61,10 @@ export class SeatingPlanComponent {
       }
     }
   }
-  addSelect(id: string) {
-    if (this.limit != undefined) {
-      if (this._selectedSeatIds.size < this.limit) this._selectedSeatIds.add(id)
-    }
-    else {
-      this._selectedSeatIds.add(id)
-      this.selectedSeatIdsChange.emit(this._selectedSeatIds)
-    }
+  addSelect(id: string): void {
+    if (this.limit != undefined && this._selectedSeatIds.size >= this.limit) return;
+    this._selectedSeatIds.add(id)
+    this.selectedSeatIdsChange.emit(this._selectedSeatIds)
   }
   @Input()
   limit?: number

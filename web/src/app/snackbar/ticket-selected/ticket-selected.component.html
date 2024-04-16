@@ -2,7 +2,7 @@
 {{data.tickets.length }} ticket{{data.tickets.length >1? 's':''}} selected (up to {{limit}})
 (cost: {{totalCost()}})
 
-<span matSnackBarActions>
+<span matSnackBarActions style="color: white">
   <button matSnackBarAction mat-button (click)="buy()" [disabled]="doing">
 
     @if(doing){
