@@ -12,7 +12,7 @@
     (click)="sellAt(priceTier)" [disabled]="doing">
     {{priceTier.tierName}}:{{priceTier.price}}</button>
   }
-  <button mat-button matSnackBarAction (click)="removeTickets()" [disabled]="doing">
+  <button mat-button matSnackBarAction style="color: white" (click)="removeTickets()" [disabled]="doing">
     cancel selling
   </button>
 </span>

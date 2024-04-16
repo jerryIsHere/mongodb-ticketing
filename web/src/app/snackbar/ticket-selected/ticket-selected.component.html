@@ -3,7 +3,7 @@
 (cost: {{totalCost()}})
 
 <span matSnackBarActions style="color: white">
-  <button matSnackBarAction mat-button (click)="buy()" [disabled]="doing">
+  <button matSnackBarAction style="color: white" mat-button (click)="buy()" [disabled]="doing">
 
     @if(doing){
     <mat-spinner></mat-spinner>
