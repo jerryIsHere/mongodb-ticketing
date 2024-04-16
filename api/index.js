@@ -34,7 +34,7 @@ app.use((0, express_session_1.default)({
     secret: 'sakdjfpaoisdfjpaosdijf',
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: { httpOnly: false, secure: false, sameSite: false, maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 // angular front
