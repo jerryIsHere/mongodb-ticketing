@@ -13,11 +13,11 @@ export namespace User {
 
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
       var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) }
-      req.session["user"] = userObj
+      req.session.user = userObj
       res.cookie("user", JSON.stringify(userObj))
     }
     var clearSession = (req: Request, res: Response) => {
-      req.session["user"] = null
+      req.session.user = null
       res.cookie("user", null)
     }
     user.post(
