@@ -42,7 +42,7 @@ var Ticket;
                 }).catch((error) => next(error));
             }
             else if (req.query.sold != undefined) {
-                ticket_1.TicketDAO.listSold({ showOccupant: (_c = req.session["user"]) === null || _c === void 0 ? void 0 : _c.hasAdminRight }).then(result => {
+                ticket_1.TicketDAO.listSold({ showOccupant: ((_c = req.session["user"]) === null || _c === void 0 ? void 0 : _c.hasAdminRight) === true ? true : false }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }

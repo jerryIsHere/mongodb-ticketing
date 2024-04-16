@@ -31,7 +31,7 @@ export namespace Ticket {
                 }).catch((error) => next(error))
             }
             else if (req.query.sold != undefined) {
-                TicketDAO.listSold({ showOccupant: req.session["user"]?.hasAdminRight }).then(result => {
+                TicketDAO.listSold({ showOccupant: req.session["user"]?.hasAdminRight === true ? true : false }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }

@@ -2,13 +2,17 @@ import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
-
+declare module "express-session" {
+  interface SessionData {
+    user?: { hasAdminRight: boolean, _id?: string } | null;
+  }
+}
 export namespace User {
   export function RouterFactory(): Express.Router {
     var user = Router();
 
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
-      var userObj = { ...dao.Hydrated({ withCredentials: false }), hasAdminRight: dao.hasAdminRight() }
+      var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight() }
       req.session["user"] = userObj
       res.cookie("user", JSON.stringify(userObj))
     }
