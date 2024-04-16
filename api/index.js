@@ -32,7 +32,8 @@ app.use((0, express_session_1.default)({
     secret: 'sakdjfpaoisdfjpaosdijf',
     store: sessionStore,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { secure: true, sameSite: "none", maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 // angular front
 app.use('/web', express_1.default.static('web/dist/ticketing/browser'));

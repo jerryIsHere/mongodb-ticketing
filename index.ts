@@ -30,7 +30,8 @@ app.use(session({
   secret: 'sakdjfpaoisdfjpaosdijf',
   store: sessionStore,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { secure: true, sameSite: "none", maxAge: 7 * 24 * 60 * 60 * 1000 },
 }));
 
 
