@@ -12,7 +12,7 @@ export namespace User {
     var user = Router();
 
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
-      var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight() }
+      var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) }
       req.session["user"] = userObj
       res.cookie("user", JSON.stringify(userObj))
     }
