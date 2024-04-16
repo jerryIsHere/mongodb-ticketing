@@ -5,13 +5,14 @@
 <mat-spinner></mat-spinner>
 }
 @else{
-@for( priceTier of data.priceTiers; track priceTier){
-<button mat-button [style.background-color]="priceTier._id?'#'+data.priceTiersColors?.get(priceTier._id):''"
-  (click)="sellAt(priceTier)" [disabled]="doing">
-  {{priceTier.tierName}}:{{priceTier.price}}</button>
-}
-<span MatSnackBarAction>
-  <button mat-button (click)="removeTickets()" [disabled]="doing">
+<span matSnackBarActions>
+  @for( priceTier of data.priceTiers; track priceTier){
+  <button mat-button matSnackBarAction
+    [style.background-color]="priceTier._id?'#'+data.priceTiersColors?.get(priceTier._id):''"
+    (click)="sellAt(priceTier)" [disabled]="doing">
+    {{priceTier.tierName}}:{{priceTier.price}}</button>
+  }
+  <button mat-button matSnackBarAction (click)="removeTickets()" [disabled]="doing">
     cancel selling
   </button>
 </span>

@@ -23,7 +23,7 @@ import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.compone
 export class SoldTicketListComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'seat', 'occupant.fullname', 'priceTier.price', '_id'];
+  ticketDataColumn = ['event.eventname', 'seat', 'occupant.fullname', 'priceTier.price', '_id', 'paid'];
   @Output() dataChanged = new EventEmitter()
   @Input()
   get tickets() { return this.ticketDataSource.data }
@@ -80,7 +80,7 @@ export class SoldTicketListComponent {
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      if(result)this.dataChanged.emit()
+      if (result) this.dataChanged.emit()
     })
   }
 
