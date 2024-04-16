@@ -5,7 +5,7 @@
   <form [formGroup]="queryForm">
     <mat-form-field>
       <mat-label>Code for rows</mat-label>
-      <textarea matInput formControlName="query" placeholder="a1-za35,b1,c2,za1,bb" required></textarea>
+      <textarea matInput formControlName="query" placeholder="e.g.: a1-za35,b1,c2,za1,bb" required></textarea>
       @if (queryForm.controls['query'].hasError('required')) {
       <mat-error>This field is required</mat-error>
       }

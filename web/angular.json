@@ -94,6 +94,7 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/purple-green.css",
+              "node_modules/material-design-icons/iconfont/material-icons.css",
               "src/styles.sass"
             ],
             "scripts": []

@@ -1,12 +1,13 @@
-@if(seats && venue){
-<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets" isTicketPlanning
-  (selectedSeatIdsChange)="checkAction($event)" soldTicketDisabled [(selectedSeatIds)]="selectedSeatIds">
+@if(seats && venue && priceTiers){
+<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
+  isTicketPlanning (selectedSeatIdsChange)="checkAction($event)" soldTicketDisabled
+  [(selectedSeatIds)]="selectedSeatIds">
 </app-seating-plan>
 }
 @else{
 loading
 }
-<button mat-button (click)="openForm()">Select seats</button>
+<button mat-button (click)="openForm()">Select multiple seats</button>
 
 
 <!-- @if(event && event.eventname){

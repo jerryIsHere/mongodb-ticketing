@@ -24,7 +24,7 @@ import { Ticket } from '../../interface'
 export class TicketFormComponent {
   ticketForm: FormGroup = this._formBuilder.group({
     paid: new FormControl(this.ticket.paid),
-    paymentRemark: new FormControl(this.ticket.paymentRemark, [Validators.required,]),
+    paymentRemark: new FormControl(this.ticket.paymentRemark),
   });
   constructor(
     public dialogRef: MatDialogRef<TicketFormComponent>,

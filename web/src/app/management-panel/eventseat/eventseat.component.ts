@@ -129,7 +129,6 @@ export class EventseatComponent {
         })
         if (this.seatingPlan) {
           this.selectedSeatIds = new Set<string>(seatIds)
-          this.checkAction(new Set<string>(seatIds))
         }
       })
     }

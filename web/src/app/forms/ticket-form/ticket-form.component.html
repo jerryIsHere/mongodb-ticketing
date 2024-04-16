@@ -4,7 +4,7 @@
 <mat-card>
   <mat-card-header>{{ticket.event?.eventname}} {{ticket.seat?.row}}{{ticket.seat?.no}}</mat-card-header>
   <mat-card-content>
-    {{ticket.occupant?.username}} {{ticket.occupant?.fullname}}
+    {{ticket.occupant?.fullname}} ({{ticket.occupant?.username}})
     <br>
     Email: {{ticket.occupant?.email}}
     <form [formGroup]="ticketForm">
@@ -12,10 +12,7 @@
       <br>
       <mat-form-field>
         <mat-label>Remark</mat-label>
-        <textarea matInput formControlName="paymentRemark" required></textarea>
-        @if (ticketForm.controls['paymentRemark'].hasError('required')) {
-        <mat-error>This field is required</mat-error>
-        }
+        <textarea matInput formControlName="paymentRemark"></textarea>
       </mat-form-field>
     </form>
   </mat-card-content>

@@ -33,13 +33,14 @@ export class SeatingPlanComponent {
   clearSelectedSeat() {
     this._selectedSeatIds.clear()
   }
-  @Input()
   get selectedSeatIds(): Set<string> { return this._selectedSeatIds }
+  @Input()
   set selectedSeatIds(value: Set<string>) {
     value.forEach(id => {
       if (this.getBuyer(id) == null)
         this.addSelect(id)
     })
+    this.selectedSeatIdsChange.emit(this._selectedSeatIds)
   }
 
   @Input({ transform: booleanAttribute }) soldTicketDisabled: boolean = false;
@@ -77,15 +78,19 @@ export class SeatingPlanComponent {
     return
   }
   _seats: Seat[] = []
-  get seats(): Seat[]{ return this._seats}
-  @Input() set seats(value: Seat[]){
+  get seats(): Seat[] { return this._seats }
+  @Input() set seats(value: Seat[]) {
     this._seats = value
     this.render()
   }
   @Input() tickets: Ticket[] = []
   @Input({ transform: booleanAttribute }) seatingPlanEditing: boolean = false;
   @Input({ transform: booleanAttribute }) isTicketPlanning: boolean = false;
-  @Input() priceTiers: PriceTier[] | undefined
+  _priceTiers: PriceTier[] = []
+  get priceTiers(): PriceTier[] { return this._priceTiers }
+  @Input() set priceTiers(value: PriceTier[]) {
+    this._priceTiers = value.sort((a, b) => a.price && b.price && !Number.isNaN(Number(a.price)) && !Number.isNaN(Number(b.price)) ? Number(a.price) - Number(b.price) : 0)
+  }
   priceTiersColors: Map<string, string> = new Map<string, string>()
   getColorByTicket(ticket: Ticket | null): undefined | string {
     if (ticket && ticket.priceTier && ticket.priceTier._id) return "#" + this.priceTiersColors.get(ticket.priceTier._id)

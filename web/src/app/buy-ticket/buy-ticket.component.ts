@@ -116,7 +116,6 @@ export class BuyTicketComponent {
         })
         if (this.seatingPlan) {
           this.selectedSeatIds = new Set<string>(seatIds)
-          this.checkAction(this.selectedSeatIds)
         }
       })
     }

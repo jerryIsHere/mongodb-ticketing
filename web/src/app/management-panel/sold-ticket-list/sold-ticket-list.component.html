@@ -28,13 +28,13 @@ no data
       [matTooltip]="element.occupant.email + '(' + element.occupant.username + ')'"> {{element.occupant.fullname}} </td>
   </ng-container>
   <ng-container matColumnDef="_id">
-    <th mat-header-cell *matHeaderCellDef>Manage</th>
+    <th mat-header-cell *matHeaderCellDef>Payment verification
+    </th>
     <td mat-cell *matCellDef="let element">
       <button [matTooltip]="element.paymentRemark" mat-button (click)="openForm(element)">
-        <mat-icon>confirmation_number</mat-icon>
-        <mat-icon>paid</mat-icon>
+        <mat-icon>receipt_long</mat-icon>
         @if(element.paid){
-        <mat-icon>receipt</mat-icon>
+        <mat-icon>price_check</mat-icon>
         }
       </button>
   </ng-container>
