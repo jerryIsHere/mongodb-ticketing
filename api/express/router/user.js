@@ -20,6 +20,12 @@ var User;
         var updateSession = (req, res, dao) => {
             var _a;
             var userObj = Object.assign({ _id: (_a = dao.id) === null || _a === void 0 ? void 0 : _a.toString(), hasAdminRight: dao.hasAdminRight() }, dao.Hydrated({ withCredentials: false }));
+            if (req.session.test) {
+                req.session.test = req.session.test + 1;
+            }
+            else {
+                req.session.test = 0;
+            }
             req.session.user = userObj;
             res.cookie("user", JSON.stringify(userObj));
             req.session.save();
