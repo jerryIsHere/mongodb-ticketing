@@ -23,5 +23,19 @@ loading
       <mat-option value="BTT">Bottom to top</mat-option>
     </mat-select>
   </mat-form-field>
+  <mat-form-field>
+    <mat-label>Thumb Image URL</mat-label>
+    <input matInput formControlName="thumbImageURL" required>
+    @if (optionForm.controls['thumbImageURL'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Full Image URL</mat-label>
+    <input matInput formControlName="fullImageURL" required>
+    @if (optionForm.controls['fullImageURL'].hasError('required')) {
+    <mat-error>This field is required</mat-error>
+    }
+  </mat-form-field>
   <button mat-button (click)="submitSectionOption()">update</button>
 </form>

@@ -2,7 +2,15 @@
 {{event.eventname}}
 @if(isShowSelling(event)){
 @if(userSession.user){
-
+<span>
+  You may pick seat for sale by clicking on:
+  <mat-icon fontIcon="event_seat"></mat-icon>
+  &#9;&#9;
+  &#40;
+  <mat-icon fontIcon="block"></mat-icon> : Seat not for sale
+  <mat-icon fontIcon="airline_seat_recline_normal"></mat-icon> : Seat already sold
+  &#41;
+</span>
 }
 @else{
 <br>
@@ -13,7 +21,7 @@ You must login before you can start selecting seat for ticketing
   isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)"
   [(selectedSeatIds)]="selectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
 </app-seating-plan>
-<button mat-button (click)="openForm()">Select multiple seats</button>
+<button mat-button (click)="openForm()">Select multiple seats in this section</button>
 }
 @else {
 Ticket of this show is not purchasable right now. <br>

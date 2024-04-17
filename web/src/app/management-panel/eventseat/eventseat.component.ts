@@ -7,11 +7,12 @@ import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon'
 import { SeatSelectedComponent } from '../../snackbar/seat-selected/seat-selected.component';
 @Component({
   selector: 'app-eventseat',
   standalone: true,
-  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, MatIconModule],
   templateUrl: './eventseat.component.html',
   styleUrl: './eventseat.component.sass'
 })

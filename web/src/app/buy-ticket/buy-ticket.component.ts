@@ -8,6 +8,7 @@ import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.compon
 import { MatButtonModule } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon'
 import { UserSessionService } from '../service/user-session.service';
 import { TicketSelectedComponent } from '../snackbar/ticket-selected/ticket-selected.component';
 
@@ -15,7 +16,7 @@ const defaultShoppingCartSize = 6
 @Component({
   selector: 'app-buy-ticket',
   standalone: true,
-  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe, MatIconModule],
   templateUrl: './buy-ticket.component.html',
   styleUrl: './buy-ticket.component.sass'
 })

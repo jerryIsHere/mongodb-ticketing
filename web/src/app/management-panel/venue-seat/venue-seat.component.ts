@@ -10,7 +10,6 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { Seat } from '../../interface';
-import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,
@@ -34,15 +33,6 @@ export class VenueSeatComponent {
       let selectedSection: any;
       if (this.seatingPlan && this.seatingPlan.selectedSection) {
         selectedSection = this.seatingPlan.selectedSection
-       
-      }
-      else {
-        let sectionParam = this.activatedRoute.snapshot.queryParamMap.get('section')
-        let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
-        if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
-          selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
-          content.selectedSection = selectedSection
-        }
       }
       if (selectedSection && selectedSection.options) {
         this.optionForm.controls["horizontalOrder"].setValue(selectedSection.options.horizontalOrder)
@@ -59,8 +49,10 @@ export class VenueSeatComponent {
   optionForm: FormGroup = this._formBuilder.group({
     horizontalOrder: new FormControl("", [Validators.required]),
     verticleOrder: new FormControl("", [Validators.required]),
+    thumbImageURL: new FormControl("", [Validators.required]),
+    fullImageURL: new FormControl("", [Validators.required]),
   });
-  constructor(private api: ApiService, public dialog: MatDialog, private _formBuilder: FormBuilder, private activatedRoute: ActivatedRoute) {
+  constructor(private api: ApiService, public dialog: MatDialog, private _formBuilder: FormBuilder) {
 
   }
   loadData(id: string) {
@@ -114,6 +106,7 @@ export class VenueSeatComponent {
             seatIds.push(seat[0]._id)
           }
         })
+        console.log(rowsNcols, seatIds)
         if (this._id)
           this.api.request.delete(`/seat?batch`, {
             body: {
@@ -133,6 +126,8 @@ export class VenueSeatComponent {
     if (section && section.options) {
       this.optionForm.controls["horizontalOrder"].setValue(section.options.horizontalOrder)
       this.optionForm.controls["verticleOrder"].setValue(section.options.verticleOrder)
+      this.optionForm.controls["thumbImageURL"].setValue(section.options.thumbImageURL)
+      this.optionForm.controls["fullImageURL"].setValue(section.options.fullImageURL)
     }
     else {
       this.optionForm.controls["horizontalOrder"].setValue("LTR")

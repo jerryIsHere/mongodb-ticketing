@@ -8,6 +8,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select'
 import { FormsModule } from '@angular/forms';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { NgxImageZoomModule } from 'ngx-image-zoom';
 import { PriceTier, Venue, Ticket, Seat } from '../../interface';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors for pricetiers
@@ -15,17 +17,33 @@ type Section = { x: number, y: number }
 @Component({
   selector: 'app-seating-plan',
   standalone: true,
-  imports: [DragDropModule, MatTooltipModule, MatButtonModule, MatListModule, MatIconModule, MatChipsModule, MatSelectModule, FormsModule, MatCardModule],
+  imports: [DragDropModule, MatTooltipModule, MatButtonModule, MatListModule, MatIconModule, MatChipsModule,
+    MatSelectModule, FormsModule, MatCardModule, MatGridListModule, NgxImageZoomModule],
   templateUrl: './seating-plan.component.html',
   styleUrl: './seating-plan.component.scss'
 })
 export class SeatingPlanComponent {
-  @Input() venue: Venue = { sections: [] }
+  private _venue: Venue = { sections: [] }
+  get venue() { return this._venue }
+  @Input() set venue(value: Venue) {
+    this._venue = value
+    let sectionParam = this.activatedRoute.snapshot.queryParamMap.get('section')
+    let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
+    if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
+      this.selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
+    }
+    else if (value.sections) {
+      this.selectedSection = value.sections[0]
+    }
+
+  }
   @Input()
   _selectedSection?: { x: number, y: number, options?: any }
   get selectedSection(): undefined | { x: number, y: number, options?: any } { return this._selectedSection }
   set selectedSection(value: { x: number, y: number, options?: any }) {
     this._selectedSection = value
+    if (this.seats)
+      this.render()
     this.selectedSectionChange.emit(value)
   }
   @Output() selectedSectionChange = new EventEmitter<{ x: number, y: number }>();
@@ -79,7 +97,8 @@ export class SeatingPlanComponent {
   get seats(): Seat[] { return this._seats }
   @Input() set seats(value: Seat[]) {
     this._seats = value
-    this.render()
+    if (this.selectedSection)
+      this.render()
   }
   @Input() tickets: Ticket[] = []
   @Input({ transform: booleanAttribute }) seatingPlanEditing: boolean = false;
@@ -87,7 +106,19 @@ export class SeatingPlanComponent {
   _priceTiers: PriceTier[] = []
   get priceTiers(): PriceTier[] { return this._priceTiers }
   @Input() set priceTiers(value: PriceTier[]) {
-    this._priceTiers = value.sort((a, b) => a.price && b.price && !Number.isNaN(Number(a.price)) && !Number.isNaN(Number(b.price)) ? Number(a.price) - Number(b.price) : 0)
+    this._priceTiers = value.sort(
+      (a, b) => a.price && b.price && !Number.isNaN(Number(a.price)) && !Number.isNaN(Number(b.price)) ?
+        Number(a.price) - Number(b.price) : 0)
+    this.priceTiersColors = new Map<string, string>()
+    var colors = "" + (' ' + colorshex).slice(1);
+    for (let priceTier of value) {
+      if (priceTier._id) {
+        let c = colors.slice(0, 6)
+        this.priceTiersColors.set(priceTier._id, c)
+        if (colors.length <= 6) break;
+        colors = colors.slice(6, colors.length)
+      }
+    }
   }
   priceTiersColors: Map<string, string> = new Map<string, string>()
   getColorByTicket(ticket: Ticket | null): undefined | string {
@@ -110,7 +141,7 @@ export class SeatingPlanComponent {
     ]
   )
   render() {
-    console.log(this.selectedSection)
+    console.log("rendering seating plan")
     let horizontalOrder = this.selectedSection?.options?.horizontalOrder
     horizontalOrder = this.seatColumnSorting.has(horizontalOrder) ? horizontalOrder : "LTR"
     horizontalOrder = this.seatColumnSorting.get(horizontalOrder)
@@ -130,29 +161,11 @@ export class SeatingPlanComponent {
   //   this.init()
   //   if (changes["selectedSeatIds"]) this.selectedSeatIdsChange.emit(this._selectedSeatIds)
   // }
-  ngOnInit() {
-    this.init()
-  }
-  init() {
-    if (this.venue && this.venue.sections && this.venue.sections.length > 0 && this.selectedSection == undefined) {
-      this.selectedSection = this.venue.sections[0]
-    }
-    if (this.seats) {
-      this.render()
-    }
-    if (this.priceTiers) {
-      this.priceTiersColors = new Map<string, string>()
-      var colors = "" + (' ' + colorshex).slice(1);
-      for (let priceTier of this.priceTiers) {
-        if (priceTier._id) {
-          let c = colors.slice(0, 6)
-          this.priceTiersColors.set(priceTier._id, c)
-          if (colors.length <= 6) break;
-          colors = colors.slice(6, colors.length)
-        }
-      }
-    }
-  }
+  // ngOnInit() {
+  //   this.init()
+  // }
+  // init() {
+  // }
   compareSection(option: Section, value: Section) { return option.x == value.x && option.y == value.y }
   getSeat(row: string, col: number) {
     var search = this.seats.filter(s => s.row == row && s.no == col)
@@ -185,15 +198,15 @@ export class SeatingPlanComponent {
     let filtered = this.seats?.filter(s => s.coord.sectX == this.selectedSection?.x && s.coord.sectY == this.selectedSection?.y)
     return filtered ? filtered : []
   }
+  isSeatInSelectSection(row: string, col: number) {
+    let seat = this.getSeat(row, col)
+    if (seat) {
+
+    }
+    return seat && seat.coord.sectX == this.selectedSection?.x && seat.coord.sectY == this.selectedSection?.y
+  }
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {
-    this.activatedRoute.queryParamMap.subscribe((params: ParamMap) => {
-      let sectionParam = params.get('section')
-      let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
-      if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
-        this.selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
-        this.render()
-      }
-    })
+
   }
   setRoute() {
     if (this.selectedSection && Number.isInteger(this.selectedSection.x) && Number.isInteger(this.selectedSection.y))
