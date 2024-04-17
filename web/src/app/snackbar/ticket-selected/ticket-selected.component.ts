@@ -22,7 +22,8 @@ export class TicketSelectedComponent {
     public snackRef: MatSnackBarRef<TicketSelectedComponent>,
     @Inject(MAT_SNACK_BAR_DATA) public data: {
       tickets: Ticket[],
-      limit: number
+      limit: number,
+      rowNcol?: string[],
     }, private api: ApiService, private router: Router,) {
     this.limit = data.limit;
     router.events.subscribe((_) => {

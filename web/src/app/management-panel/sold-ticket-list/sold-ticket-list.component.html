@@ -22,28 +22,35 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Price </th>
     <td mat-cell *matCellDef="let element"> {{element.priceTier.price}} </td>
   </ng-container>
+  <ng-container matColumnDef="priceTier.tierName">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header> Tier </th>
+    <td mat-cell *matCellDef="let element"> {{element.priceTier.tierName}} </td>
+  </ng-container>
   <ng-container matColumnDef="occupant.fullname">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Buyer </th>
     <td mat-cell *matCellDef="let element"
       [matTooltip]="element.occupant.email + '(' + element.occupant.username + ')'"> {{element.occupant.fullname}} </td>
   </ng-container>
   <ng-container matColumnDef="_id">
-    <th mat-header-cell *matHeaderCellDef>Payment verification
+    <th mat-header-cell *matHeaderCellDef>Ticket verification
     </th>
     <td mat-cell *matCellDef="let element">
-      <button [matTooltip]="element.paymentRemark" mat-button (click)="openForm(element)">
+      <button mat-button (click)="openForm(element)">
         <mat-icon>receipt_long</mat-icon>
       </button>
+    </td>
   </ng-container>
-  <ng-container matColumnDef="paid">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header>Payment verification
+  <ng-container matColumnDef="securedBy">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Ticket confirmed with
     </th>
     <td mat-cell *matCellDef="let element">
-      <button [matTooltip]="element.paymentRemark" mat-button (click)="openForm(element)">
-        @if(element.paid){
-        <mat-icon>price_check</mat-icon>
+      <span mat-button>
+        {{element.securedBy}}
+        @if(element.remark){
+        &#40;remark: {{element.remark}}&#41;
         }
-      </button>
+      </span>
+    </td>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="ticketDataColumn"></tr>
   <tr mat-row *matRowDef="let row; columns: ticketDataColumn;"></tr>

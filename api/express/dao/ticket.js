@@ -31,13 +31,13 @@ class TicketDAO extends dao_1.BaseDAO {
     set priceTierId(value) {
         this._priceTierId = new mongodb_1.ObjectId(value);
     }
-    get paid() { return this._paid; }
-    set paid(value) {
-        this._paid = value;
+    get securedBy() { return this._securedBy; }
+    set securedBy(value) {
+        this._securedBy = value;
     }
-    get paymentRemark() { return this._paymentRemark; }
-    set paymentRemark(value) {
-        this._paymentRemark = value;
+    get remark() { return this._remark; }
+    set remark(value) {
+        this._remark = value;
     }
     get occupantId() { return this._occupantId; }
     void() {
@@ -58,7 +58,7 @@ class TicketDAO extends dao_1.BaseDAO {
                         reject(null);
                     if (this.id) {
                         database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                            .updateOne({ _id: this.id }, { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }).then((value) => __awaiter(this, void 0, void 0, function* () {
+                            .updateOne({ _id: this.id }, { $set: { "occupantId": null, securedBy: null, remark: null } }, { session: this.res.locals.session }).then((value) => __awaiter(this, void 0, void 0, function* () {
                             if (value.modifiedCount > 0) {
                                 if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
                                     let seatDao = yield seat_1.SeatDAO.getById(this.res, this.seatId.toString()).catch(err => console.log(err));
@@ -141,21 +141,21 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     constructor(res, params) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
-        this._paid = null;
-        this._paymentRemark = null;
+        this._securedBy = null;
+        this._remark = null;
         this._occupantId = null;
         if (params.doc && params.doc._id) {
             this._eventId = params.doc.eventId;
             this._seatId = params.doc.seatId;
             this._occupantId = params.doc.occupantId;
             this._priceTierId = params.doc.priceTierId;
-            this._paid = params.doc.paid;
-            this._paymentRemark = params.doc.paymentRemark;
+            this._securedBy = params.doc.securedBy;
+            this._remark = params.doc.remark;
         }
-        if (params.paid)
-            this.paid = params.paid;
-        if (params.paymentRemark)
-            this.paymentRemark = params.paymentRemark;
+        if (params.securedBy)
+            this.securedBy = params.securedBy;
+        if (params.remark)
+            this.remark = params.remark;
     }
     static listByEventId(evnetId, param) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -255,7 +255,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         (event.startSecondRoundSellDate <= new Date() && event.endSecondRoundSellDate >= new Date());
                     if (!isSelling) {
                         this.res.locals.RequestErrorList.push(new database_1.RequestError(`Ticket of event with id ${this._eventId} doesn't exists is not selling.`));
-                        return;
+                        return null;
                     }
                 }
                 let venueId = event.venueId;
@@ -264,10 +264,11 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         this.res.locals.RequestErrorList.push(new database_1.RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`));
                     }
                 });
-                yield database_1.Database.mongodb.collection(seat_1.SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: venueId }).then(instance => {
+                let seatDoc = yield database_1.Database.mongodb.collection(seat_1.SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: venueId }).then(instance => {
                     if (instance == null) {
                         this.res.locals.RequestErrorList.push(new database_1.RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`));
                     }
+                    return instance;
                 });
                 if (checkQuotaForUserId != undefined) {
                     var count = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).aggregate([
@@ -283,12 +284,16 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         }
                     }
                 }
-                if (this._occupantId)
-                    yield database_1.Database.mongodb.collection(user_1.UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
+                let userDoc = null;
+                if (this._occupantId) {
+                    userDoc = yield database_1.Database.mongodb.collection(user_1.UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
                         if (instance == null) {
                             this.res.locals.RequestErrorList.push(new database_1.RequestError(`User with id ${this._seatId} doesn't exists.`));
                         }
+                        return instance;
                     });
+                }
+                return { seat: seatDoc, user: userDoc };
             }
             else {
                 if (event == null)
@@ -440,8 +445,9 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                 if (originalOccupant && originalOccupant.email) {
                     Promise.all(daos.map(dao => new Promise((daoresolve, daoreject) => __awaiter(this, void 0, void 0, function* () {
                         dao._occupantId = new mongodb_1.ObjectId(userId);
+                        let info;
                         try {
-                            yield dao.checkReference(true, new mongodb_1.ObjectId(userId), daos.length);
+                            info = yield dao.checkReference(true, new mongodb_1.ObjectId(userId), daos.length);
                         }
                         catch (err) {
                             daoreject(err);
@@ -451,7 +457,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             try {
                                 var result = yield database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: res.locals.session });
                                 if (result && result.modifiedCount > 0) {
-                                    daoresolve(dao);
+                                    daoresolve({ dao: dao, info: info ? info : undefined });
                                 }
                                 else {
                                     daoreject(new database_1.RequestError(`Ticket with id ${dao.id} is not avaliable.`));
@@ -462,19 +468,23 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                                 reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
                             }
                         }
-                    })))).then((daos) => __awaiter(this, void 0, void 0, function* () {
+                    })))).then((ticketDaoWithInfo) => __awaiter(this, void 0, void 0, function* () {
+                        var _a, _b;
                         if (originalOccupant && originalOccupant.email) {
                             let notificationDao = new notification_1.NotificationDAO(res, {
                                 title: "Ticket Purchased",
                                 email: originalOccupant.email,
-                                message: `${daos.length} ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
-                                    + daos.map(dao => { var _a; return 'ids=' + ((_a = dao._id) === null || _a === void 0 ? void 0 : _a.toString()); }).join('&'),
+                                message: `Dear ${(_b = (_a = ticketDaoWithInfo[0].info) === null || _a === void 0 ? void 0 : _a.user) === null || _b === void 0 ? void 0 : _b.fullname}\n` +
+                                    `${ticketDaoWithInfo.length} ticket purchased:\n` +
+                                    ticketDaoWithInfo.map(withInfo => { var _a, _b, _c, _d; return ((_b = (_a = withInfo.info) === null || _a === void 0 ? void 0 : _a.seat) === null || _b === void 0 ? void 0 : _b.row) + ((_d = (_c = withInfo.info) === null || _c === void 0 ? void 0 : _c.seat) === null || _d === void 0 ? void 0 : _d.no); }).join(", ") +
+                                    `\nFor follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
+                                    + ticketDaoWithInfo.map(withInfo => { var _a; return 'ids=' + ((_a = withInfo.dao._id) === null || _a === void 0 ? void 0 : _a.toString()); }).join('&') + `&userId=${userId}`,
                                 recipientId: userId
                             });
                             yield notificationDao.create().catch(err => reject(err));
                             notificationDao.send().catch(err => console.log(err));
                         }
-                        resolve(daos);
+                        resolve(ticketDaoWithInfo.map(withInfo => withInfo.dao));
                     }));
                 }
                 else {

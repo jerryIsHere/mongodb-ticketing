@@ -30,15 +30,17 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Price </th>
     <td mat-cell *matCellDef="let element"> {{element.priceTier.price}} </td>
   </ng-container>
-  <ng-container matColumnDef="paid">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header> Payment verified </th>
-    <td mat-cell *matCellDef="let element">
-      <mat-checkbox readonly [checked]="element.paid" (click)="$event.preventDefault()"></mat-checkbox>
-    </td>
+  <ng-container matColumnDef="priceTier.tierName">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header> Tire </th>
+    <td mat-cell *matCellDef="let element"> {{element.priceTier.tierName}} </td>
   </ng-container>
-  <ng-container matColumnDef="paymentRemark">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header> Payment Remark </th>
-    <td mat-cell *matCellDef="let element"> {{element.paymentRemark}}
+  <ng-container matColumnDef="securedBy">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header> Ticket confirmed </th>
+    <td mat-cell *matCellDef="let element">     {{element.securedBy}}    </td>
+  </ng-container>
+  <ng-container matColumnDef="remark">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header> Confirmation remark </th>
+    <td mat-cell *matCellDef="let element"> {{element.remark}}
     </td>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="ticketDataColumn"></tr>

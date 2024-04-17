@@ -9,6 +9,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Ticket } from '../interface'
 import { ApiService } from '../service/api.service';
+import { UserSessionService } from '../service/user-session.service';
 
 @Component({
   selector: 'app-payment-info',
@@ -21,13 +22,23 @@ export class PaymentInfoComponent {
   loaded = false
   summary: { events: Set<string>, price: number, } = { events: new Set<string>(), price: 0, }
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['seat', 'priceTier.price', 'paid', 'paymentRemark'];
+  ticketDataColumn = ['seat', 'priceTier.tierName', 'priceTier.price', 'securedBy', 'remark'];
+  _ids?: string[]
+  _userId?: string
   @Input()
-  set ids(id: string[]) {
-    this.loadData(id)
+  set ids(ids: string[]) {
+    this._ids = ids
+    if (this._ids && this._userId)
+      this.loadData()
+  }
+  @Input()
+  set userId(userId: string) {
+    this._userId = userId
+    if (this._ids && this._userId)
+      this.loadData()
   }
   @ViewChild(MatSort) sort?: MatSort;
-  constructor(private api: ApiService) {
+  constructor(private api: ApiService, public userSession: UserSessionService) {
   }
   ngAfterViewInit() {
     if (this.sort && this.ticketDataSource) {
@@ -64,8 +75,8 @@ export class PaymentInfoComponent {
       this.ticketDataSource.sortingDataAccessor = valueAccessor
     }
   }
-  loadData(ids: string[]) {
-    return this.api.request.get("/ticket?list=" + encodeURIComponent(JSON.stringify(ids))).toPromise().then((result: any) => {
+  loadData() {
+    return this.api.request.get(`/ticket?userId=${this._userId}&list=` + encodeURIComponent(JSON.stringify(this._ids))).toPromise().then((result: any) => {
       if (result && result.data) {
         this.loaded = true
         this.ticketDataSource.data = result.data

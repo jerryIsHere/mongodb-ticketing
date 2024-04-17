@@ -61,6 +61,6 @@ export interface Ticket {
     occupied?: boolean,
     occupant?: any,
     _id: string,
-    paid?: boolean | null,
-    paymentRemark?: string | null,
+    securedBy?: string | null,
+    remark?: string | null,
 }

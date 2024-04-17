@@ -9,6 +9,11 @@ import { UserDAO } from "./user";
 import { NotificationDAO } from "./notification";
 import { Response } from "express";
 
+type TicketInfo = {
+    seat: WithId<Document> | null
+    user: WithId<Document> | null
+}
+
 export class TicketDAO extends BaseDAO {
     public static readonly collection_name = "tickets"
     private _eventId: ObjectId | undefined
@@ -28,16 +33,16 @@ export class TicketDAO extends BaseDAO {
     public set priceTierId(value: ObjectId | string | undefined) {
         this._priceTierId = new ObjectId(value);
     }
-    private _paid: Boolean | null | undefined = null
-    public get paid() { return this._paid }
-    public set paid(value: Boolean | null | undefined) {
-        this._paid = value;
+    private _securedBy: string | null | undefined = null
+    public get securedBy() { return this._securedBy }
+    public set securedBy(value: string | null | undefined) {
+        this._securedBy = value;
     }
 
-    private _paymentRemark: String | null | undefined = null
-    public get paymentRemark() { return this._paymentRemark }
-    public set paymentRemark(value: String | null | undefined) {
-        this._paymentRemark = value;
+    private _remark: String | null | undefined = null
+    public get remark() { return this._remark }
+    public set remark(value: String | null | undefined) {
+        this._remark = value;
     }
 
 
@@ -65,7 +70,7 @@ export class TicketDAO extends BaseDAO {
                         Database.mongodb.collection(TicketDAO.collection_name)
                             .updateOne(
                                 { _id: this.id },
-                                { $set: { "occupantId": null, paid: null, paymentRemark: null } }, { session: this.res.locals.session }
+                                { $set: { "occupantId": null, securedBy: null, remark: null } }, { session: this.res.locals.session }
                             ).then(async (value) => {
                                 if (value.modifiedCount > 0) {
                                     if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
@@ -154,7 +159,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     constructor(
         res: Response,
-        params: { paid?: boolean, paymentRemark?: string } & { doc?: WithId<Document> }
+        params: { securedBy?: string, remark?: string } & { doc?: WithId<Document> }
     ) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
@@ -162,13 +167,13 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             this._seatId = params.doc.seatId
             this._occupantId = params.doc.occupantId
             this._priceTierId = params.doc.priceTierId
-            this._paid = params.doc.paid
-            this._paymentRemark = params.doc.paymentRemark
+            this._securedBy = params.doc.securedBy
+            this._remark = params.doc.remark
         }
-        if (params.paid)
-            this.paid = params.paid
-        if (params.paymentRemark)
-            this.paymentRemark = params.paymentRemark
+        if (params.securedBy)
+            this.securedBy = params.securedBy
+        if (params.remark)
+            this.remark = params.remark
     }
 
     static lookupQuery = (condition: Document, param: { showOccupant: boolean, checkIfBelongsToUser?: string }) => {
@@ -298,7 +303,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             })
         })
     }
-    async checkReference(checkIsSelling: boolean = false, checkQuotaForUserId?: ObjectId, purchaseQuantity = 1) {
+    async checkReference(checkIsSelling: boolean = false, checkQuotaForUserId?: ObjectId, purchaseQuantity = 1): Promise<TicketInfo | null> {
         if (this._eventId == undefined) {
             this.res.locals.RequestErrorList.push(new RequestError(`Ticket with id ${this._id} has no associate event.`))
             return null
@@ -316,7 +321,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     (event.startSecondRoundSellDate <= new Date() && event.endSecondRoundSellDate >= new Date())
                 if (!isSelling) {
                     this.res.locals.RequestErrorList.push(new RequestError(`Ticket of event with id ${this._eventId} doesn't exists is not selling.`))
-                    return
+                    return null
                 }
             }
             let venueId = event.venueId
@@ -325,10 +330,11 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     this.res.locals.RequestErrorList.push(new RequestError(`Price Tier with id ${this._priceTierId} doesn't exists.`))
                 }
             })
-            await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: venueId }).then(instance => {
+            let seatDoc = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ _id: this._seatId, venueId: venueId }).then(instance => {
                 if (instance == null) {
                     this.res.locals.RequestErrorList.push(new RequestError(`Seat with id ${this._seatId} in the same event venue with id ${venueId} doesn't exists.`))
                 }
+                return instance
             })
             if (checkQuotaForUserId != undefined) {
                 var count = await Database.mongodb.collection(TicketDAO.collection_name).aggregate([
@@ -344,12 +350,17 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     }
                 }
             }
-            if (this._occupantId)
-                await Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
+            let userDoc = null
+            if (this._occupantId) {
+                userDoc = await Database.mongodb.collection(UserDAO.collection_name).findOne({ _id: this._occupantId }).then(instance => {
                     if (instance == null) {
                         this.res.locals.RequestErrorList.push(new RequestError(`User with id ${this._seatId} doesn't exists.`))
+
                     }
+                    return instance
                 })
+            }
+            return { seat: seatDoc, user: userDoc }
         }
         else {
             if (event == null)
@@ -481,10 +492,11 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             let originalOccupant = await UserDAO.getById(res, userId).catch(err => reject(err))
             if (originalOccupant && originalOccupant.email) {
                 Promise.all(daos.map(dao =>
-                    new Promise<TicketDAO>(async (daoresolve, daoreject) => {
+                    new Promise<{ dao: TicketDAO, info?: TicketInfo }>(async (daoresolve, daoreject) => {
                         dao._occupantId = new ObjectId(userId)
+                        let info
                         try {
-                            await dao.checkReference(true, new ObjectId(userId), daos.length)
+                            info = await dao.checkReference(true, new ObjectId(userId), daos.length)
                         }
                         catch (err) {
                             daoreject(err)
@@ -496,7 +508,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                                     { _id: dao.id, occupantId: null },
                                     { $set: { "occupantId": userId } }, { session: res.locals.session })
                                 if (result && result.modifiedCount > 0) {
-                                    daoresolve(dao)
+                                    daoresolve({ dao: dao, info: info ? info : undefined })
                                 }
                                 else {
                                     daoreject(new RequestError(`Ticket with id ${dao.id} is not avaliable.`))
@@ -504,20 +516,23 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
                         }
                     })
-                )).then(async (daos) => {
+                )).then(async (ticketDaoWithInfo: { dao: TicketDAO, info?: TicketInfo }[]) => {
                     if (originalOccupant && originalOccupant.email) {
                         let notificationDao = new NotificationDAO(res, {
                             title: "Ticket Purchased",
                             email: originalOccupant.email,
                             message:
-                                `${daos.length} ticket purchased, for follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
-                                + daos.map(dao => 'ids=' + dao._id?.toString()).join('&'),
+                                `Dear ${ticketDaoWithInfo[0].info?.user?.fullname}\n` +
+                                `${ticketDaoWithInfo.length} ticket purchased:\n` +
+                                ticketDaoWithInfo.map(withInfo => withInfo.info?.seat?.row + withInfo.info?.seat?.no).join(", ") +
+                                `\nFor follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
+                                + ticketDaoWithInfo.map(withInfo => 'ids=' + withInfo.dao._id?.toString()).join('&') + `&userId=${userId}`,
                             recipientId: userId
                         })
                         await notificationDao.create().catch(err => reject(err))
                         notificationDao.send().catch(err => console.log(err))
                     }
-                    resolve(daos)
+                    resolve(ticketDaoWithInfo.map(withInfo => withInfo.dao))
                 })
             }
             else {

@@ -23,7 +23,7 @@ import { ApiService } from '../service/api.service';
 export class MyticketComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'event.datetime', 'event.duration', 'seat', 'priceTier.price', 'paid', 'paymentRemark'];
+  ticketDataColumn = ['event.eventname', 'event.datetime', 'event.duration', 'seat', 'priceTier.tierName', 'priceTier.price', 'securedBy', 'remark'];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   constructor(private api: ApiService) {

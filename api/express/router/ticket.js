@@ -46,15 +46,22 @@ var Ticket;
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
-            else if (req.query.list != undefined) {
+            else if (req.query.list != undefined && req.query.userId && typeof req.query.userId === "string") {
                 let ids;
                 try {
                     ids = (JSON.parse(req.query.list)).filter((value) => typeof value == "string");
                 }
                 catch (e) {
                 }
+                if (req.session["user"] != null && req.session["user"]._id && req.session["user"]._id != req.query.userId) {
+                    next(new database_1.RequestError("This reveals information of another user"));
+                    return;
+                }
                 if (ids) {
-                    ticket_1.TicketDAO.listByIds(ids, Object.assign({ showOccupant: false }, req.session["user"] != null && req.session["user"]._id ? { checkIfBelongsToUser: req.session["user"]._id } : {})).then(result => {
+                    ticket_1.TicketDAO.listByIds(ids, {
+                        showOccupant: false,
+                        checkIfBelongsToUser: req.query.userId
+                    }).then(result => {
                         next({ success: true, data: result });
                     }).catch((error) => next(error));
                 }
@@ -77,7 +84,7 @@ var Ticket;
                         dao.eventId = t.eventId;
                         dao.seatId = t.seatId;
                         dao.priceTierId = t.priceTierId;
-                        dao.paid = false;
+                        dao.securedBy = "";
                         return dao;
                     });
                     ticket_1.TicketDAO.batchCreate(res, daos).then((tickets) => {
@@ -88,7 +95,7 @@ var Ticket;
                     req.body.seatId && typeof req.body.seatId == "string" &&
                     req.body.priceTierId && typeof req.body.priceTierId == "string") {
                     var dao = new ticket_1.TicketDAO(res, {});
-                    dao.paid = false;
+                    dao.securedBy = "";
                     var promises = [];
                     dao.eventId = req.body.eventId;
                     dao.seatId = req.body.seatId;
@@ -137,13 +144,13 @@ var Ticket;
                     next(new database_1.RequestError("Buying ticket requires a user login"));
                 }
             }
-            if (req.query.payment != undefined &&
-                (req.body.paid != undefined || req.body.paid == null || typeof req.body.paid == "boolean") &&
-                (req.body.paymentRemark == undefined || req.body.paymentRemark == null || typeof req.body.paymentRemark == "string") &&
+            if (req.query.verify != undefined &&
+                (req.body.securedBy != undefined || req.body.securedBy == null || typeof req.body.securedBy == "string") &&
+                (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string") &&
                 req.session['user'] && req.session['user'].hasAdminRight) {
                 ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => {
-                    dao.paid = req.body.paid;
-                    dao.paymentRemark = req.body.paymentRemark;
+                    dao.securedBy = req.body.securedBy;
+                    dao.remark = req.body.remark;
                     return dao.update();
                 }).then((value) => {
                     next({ success: true });

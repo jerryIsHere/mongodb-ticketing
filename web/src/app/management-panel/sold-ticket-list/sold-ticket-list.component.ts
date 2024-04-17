@@ -23,7 +23,7 @@ import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.compone
 export class SoldTicketListComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'seat', 'occupant.fullname', 'priceTier.price', '_id', 'paid'];
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', '_id', 'securedBy'];
   @Output() dataChanged = new EventEmitter()
   @Input()
   get tickets() { return this.ticketDataSource.data }
