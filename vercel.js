@@ -35,7 +35,7 @@ async function getFiles(dir) {
         });
         const files = await Promise.all(dirents.map((dirent) => {
             const res = resolve(dir, dirent.name);
-            return dirent.isDirectory() ? getFiles(res) : relative(root, res);
+            return dirent.isDirectory() ? getFiles(res) : relative(root, res).replace('\\',"/");
         }));
         return Array.prototype.concat(...files);
     }
