@@ -43,7 +43,7 @@ async function getFiles(dir) {
         var files = await getFiles(root)
         vercel.routes = [...files.map(f => {
             return {
-                "src": "/web/" + encodeURIComponent(f),
+                "src": "/web/" + encodeURIComponent(f).replace("%2F",'/'),
                 "dest": "/web/dist/ticketing/browser/" + f
             }
         }), ...vercel.routes]
