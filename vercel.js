@@ -19,20 +19,35 @@ var vercel = {
         }
     ]
 }
-var path = "/web/dist/ticketing/browser/"
-var files = []
-const fs = require('fs');
-fs.readdir(`.${path}`, (err, fileIter) => {
-    fileIter.forEach(file => {
-        files.push(file)
-    });
-    vercel.routes = [...files.map(f => {
-        return {
-            "src": "/web/" + f,
-            "dest": "/web/dist/ticketing/browser/" + f
-        }
-    }), ...vercel.routes]
-    console.log("vercel.json for: \n",files)
-    fs.writeFile('vercel.json',
-        JSON.stringify(vercel), 'utf8', () => {});
-});
+var root = "./web/dist/ticketing/browser/"
+const {
+    relative,
+    resolve
+} = require('path');
+const {
+    readdir,
+    writeFile
+} = require('fs').promises;
+
+async function getFiles(dir) {
+        const dirents = await readdir(dir, {
+            withFileTypes: true
+        });
+        const files = await Promise.all(dirents.map((dirent) => {
+            const res = resolve(dir, dirent.name);
+            return dirent.isDirectory() ? getFiles(res) : relative(root, res);
+        }));
+        return Array.prototype.concat(...files);
+    }
+    (async () => {
+        var files = await getFiles(root)
+        vercel.routes = [...files.map(f => {
+            return {
+                "src": "/web/" + f,
+                "dest": "/web/dist/ticketing/browser/" + f
+            }
+        }), ...vercel.routes]
+        console.log("vercel.json for: \n", files)
+        writeFile('vercel.json',
+            JSON.stringify(vercel), 'utf8', () => {});
+    })();
