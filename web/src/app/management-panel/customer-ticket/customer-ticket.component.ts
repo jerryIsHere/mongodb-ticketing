@@ -113,6 +113,12 @@ export class CustomerTicketComponent {
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
+      let ticket = result as Ticket
+      if (ticket) {
+        let ticketInd = this.tickets.findIndex(t => t._id == ticket._id)
+        if (ticketInd > -1) this.tickets[ticketInd] = ticket
+        this.ticketDataSource.data = this.tickets.slice()
+      }
     })
   }
   loadData() {

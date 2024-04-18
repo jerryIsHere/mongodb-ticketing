@@ -27,6 +27,6 @@ no data
   <tr mat-header-row *matHeaderRowDef="venueDataColumn"></tr>
   <tr mat-row *matRowDef="let row; columns: venueDataColumn;"></tr>
 </table>
-<mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
+<mat-paginator [pageSizeOptions]="[10, 25, 100]" aria-label="Select page of users"></mat-paginator>
 <mat-card-actions><button mat-button (click)="openForm()">Create</button>
 </mat-card-actions>

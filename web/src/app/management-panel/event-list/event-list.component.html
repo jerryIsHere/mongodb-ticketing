@@ -46,6 +46,6 @@ no data
   <tr mat-header-row *matHeaderRowDef="showDataColumn"></tr>
   <tr mat-row *matRowDef="let row; columns: showDataColumn;"></tr>
 </table>
-<mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of users"></mat-paginator>
+<mat-paginator [pageSizeOptions]="[10, 25, 100]" aria-label="Select page of users"></mat-paginator>
 <mat-card-actions><button mat-button (click)="openForm({event: {},venues: venues})">Create</button>
 </mat-card-actions>

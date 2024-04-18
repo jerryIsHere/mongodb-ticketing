@@ -23,7 +23,7 @@ import { Ticket } from '../../interface'
 })
 export class TicketFormComponent {
   ticketForm: FormGroup = this._formBuilder.group({
-    securedBy: new FormControl(this.ticket.securedBy ? this.ticket.securedBy :"" ),
+    securedBy: new FormControl(this.ticket.securedBy ? this.ticket.securedBy : ""),
     remark: new FormControl(this.ticket.remark),
   });
   constructor(
@@ -36,7 +36,7 @@ export class TicketFormComponent {
     if (this.ticketForm.valid) {
       this.api.request.patch(`/ticket/${this.ticket._id}?verify`, this.ticketForm.getRawValue()).toPromise().then((result: any) => {
         if (result && result.success) {
-          this.dialogRef.close(this.ticket)
+          this.dialogRef.close({ ...this.ticket, ...this.ticketForm.getRawValue() })
         }
       })
     }
