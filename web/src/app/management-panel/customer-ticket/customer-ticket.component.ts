@@ -115,8 +115,13 @@ export class CustomerTicketComponent {
     dialogRef.afterClosed().subscribe((result: any) => {
       let ticket = result as Ticket
       if (ticket) {
-        let ticketInd = this.tickets.findIndex(t => t._id == ticket._id)
-        if (ticketInd > -1) this.tickets[ticketInd] = ticket
+        if (result.voided) {
+          this.tickets = this.tickets.filter(t => t._id != ticket._id)
+        }
+        else {
+          let ticketInd = this.tickets.findIndex(t => t._id == ticket._id)
+          if (ticketInd > -1) this.tickets[ticketInd] = ticket
+        }
         this.ticketDataSource.data = this.tickets.slice()
       }
     })
