@@ -74,20 +74,25 @@ export class BuyTicketComponent {
     })
   }
   actionSnackbarRef?: MatSnackBarRef<TicketSelectedComponent>
-  selectedSeatIds: Set<string> = new Set<string>()
+  sectionSelectedSeatIds: Set<string> = new Set<string>()
   shoppingCartSize: number = defaultShoppingCartSize
-  checkAction(seatIds: Set<string>, rowNcol: string[] = []) {
-    let tickets: Ticket[] = []
-    Array.from(seatIds.values()).map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
+  checkAction() {
+    let tickets: Ticket[] = [];
+    [...this.seatingPlan && this.seatingPlan.selectedSeatIds ? Array.from(this.seatingPlan.selectedSeatIds.values()) : [],
+    ...this.outsideSelectedSeat.map(seat => seat._id)
+    ].map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
       if (t && !(t.occupant || t.occupied))
         tickets.push(t)
     })
+    let seatInfo = this.outsideSelectedSeat.map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seatId == seat._id) } })
+      .map(seatNticket => { return { ...seatNticket, ...{ priceTier: this.priceTiers?.find(p => p._id == seatNticket.ticket?.priceTierId) } } })
+      .map(info => info.seat.row + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
     if (this.actionSnackbarRef == undefined && this.seatingPlan) {
       this.actionSnackbarRef = this._snackBar.openFromComponent(TicketSelectedComponent, {
         data: {
           tickets: tickets,
           limit: this.shoppingCartSize,
-          rowNcol: rowNcol
+          seatInfo: seatInfo
         }
       });
       this.actionSnackbarRef.afterDismissed().subscribe(() => {
@@ -98,10 +103,17 @@ export class BuyTicketComponent {
       });
     }
     else if (this.actionSnackbarRef && this.seatingPlan) {
-      this.actionSnackbarRef.instance.data.tickets = tickets
+      if(tickets.length == 0){
+        this.actionSnackbarRef.dismiss()
+      }
+      else{
+        this.actionSnackbarRef.instance.data.tickets = tickets
+        this.actionSnackbarRef.instance.data.seatInfo = seatInfo
+      }
     }
   }
-  openForm(checkSection: Boolean = true, showRowsNcolsInSnackbar: Boolean = false) {
+  outsideSelectedSeat: Seat[] = []
+  openForm(checkSection: Boolean = true) {
     if (this._id && this.seatingPlan?.selectedSection) {
       const dialogRef = this.dialog.open(SeatFormComponent, {
         data: { _id: this._id },
@@ -109,8 +121,7 @@ export class BuyTicketComponent {
       });
       dialogRef.afterClosed().subscribe((rowsNcols: { row: string, no: string }[]) => {
         let avalibleSeat: any[] = rowsNcols.map((rc) => {
-          let seat = this.seats?.filter(s => s.row == rc.row && s.no == Number(rc.no) &&
-            (!checkSection || (s.coord.sectX == this.seatingPlan?.selectedSection?.x && s.coord.sectY == this.seatingPlan?.selectedSection?.y)))
+          let seat = this.seats?.filter(s => s.row == rc.row && s.no == Number(rc.no))
           if (seat && seat.length > 0) {
             return seat[0]
           }
@@ -118,19 +129,21 @@ export class BuyTicketComponent {
             return null
           }
         }).filter((seat) => seat != null && this.seatingPlan && this.seatingPlan.getTiceket(seat._id) != null && this.seatingPlan.getBuyer(seat._id) == null)
-        if (checkSection) {
-          this.selectedSeatIds = new Set<string>(avalibleSeat.map(seat => seat._id))
+        let seatInside: any[] = avalibleSeat.filter(s => s.coord.sectX == this.seatingPlan?.selectedSection?.x && s.coord.sectY == this.seatingPlan?.selectedSection?.y)
+        if (!checkSection) {
+          this.outsideSelectedSeat = avalibleSeat.filter(s => !(s.coord.sectX == this.seatingPlan?.selectedSection?.x && s.coord.sectY == this.seatingPlan?.selectedSection?.y))
         }
         else {
-          if (showRowsNcolsInSnackbar) {
-            this.checkAction(new Set<string>(avalibleSeat.map(seat => seat._id)), avalibleSeat.map(seat => seat.row + seat.no))
-          }
-          else {
-            this.checkAction(new Set<string>(avalibleSeat.map(seat => seat._id)))
-          }
+          this.outsideSelectedSeat = [];
         }
+        this.sectionSelectedSeatIds = new Set<string>(seatInside.map(seat => seat._id))
+        this.checkAction()
       })
     }
+  }
+  clearAction() {
+    this.seatingPlan?.clearSelectedSeat();
+    this.outsideSelectedSeat = [];
   }
   isShowSelling(show: Show) {
     return isShowSelling(show)

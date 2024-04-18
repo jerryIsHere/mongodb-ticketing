@@ -144,6 +144,13 @@ export class UserDAO extends BaseDAO {
         obj = { _id: this._id, ...obj }
         return obj
     }
+    static async listAll(
+        res: Response,) {
+        return new Promise<UserDAO[]>(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(UserDAO.collection_name).find()
+            resolve((await cursor.toArray()).map(doc => new UserDAO(res, { doc: doc })));
+        })
+    }
     static async findByEmail(
         res: Response, email: string): Promise<UserDAO | null> {
 

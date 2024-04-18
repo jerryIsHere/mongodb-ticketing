@@ -1,18 +1,26 @@
 <mat-card>
-  <mat-card-title>Sold TIckets</mat-card-title>
-  <app-sold-ticket-list #soldTicketListComp [tickets]="soldTickets" (dataChanged)="dataListControls['soldTickets'].loadData()"></app-sold-ticket-list>
+  <mat-card-title>Sold TIckets &Tab; &Tab;
+    <a mat-button [routerLink]="['/management/customer-ticket', ]">
+      manage ticketing <mat-icon>login</mat-icon>
+    </a>
+  </mat-card-title>
+  <app-sold-ticket-list #soldTicketListComp [tickets]="soldTickets"
+    (dataChanged)="dataListControls['soldTickets'].loadData()"></app-sold-ticket-list>
 </mat-card>
 <mat-card>
   <mat-card-title>Events</mat-card-title>
-  <app-event-list #eventListComp [venues]="venues" [shows]="events" (dataChanged)="dataListControls['events'].loadData()">
+  <app-event-list #eventListComp [venues]="venues" [shows]="events"
+    (dataChanged)="dataListControls['events'].loadData()">
   </app-event-list>
 </mat-card>
 <mat-card>
   <mat-card-title>Venues</mat-card-title>
-  <app-venue-list #venueListComp [venues]="venues" (dataChanged)="dataListControls['venues'].loadData()"></app-venue-list>
+  <app-venue-list #venueListComp [venues]="venues" (dataChanged)="dataListControls['venues'].loadData()">
+  </app-venue-list>
 </mat-card>
 <mat-card>
   <mat-card-title>Price Tiers</mat-card-title>
-  <app-price-tier-list #priceTierListComp [priceTiers]="priceTiers" (dataChanged)="dataListControls['priceTiers'].loadData()">
+  <app-price-tier-list #priceTierListComp [priceTiers]="priceTiers"
+    (dataChanged)="dataListControls['priceTiers'].loadData()">
   </app-price-tier-list>
 </mat-card>

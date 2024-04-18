@@ -8,14 +8,17 @@
     <br>
     Email: {{ticket.occupant?.email}}
     <form [formGroup]="ticketForm">
-      <mat-radio-group formControlName="securedBy">
-        <mat-radio-button value=""></mat-radio-button>
-        <mat-radio-button value="fps">FPS</mat-radio-button>
-        <mat-radio-button value="payme">PayMe</mat-radio-button>
-        <mat-radio-button value="wechatpay">WechatPay</mat-radio-button>
-        <mat-radio-button value="alipay">AliPay</mat-radio-button>
-        <mat-radio-button value="free">Free</mat-radio-button>
-      </mat-radio-group>
+      <div>
+        <mat-label>Ticket confirmed by:</mat-label>
+        <mat-radio-group formControlName="securedBy">
+          <mat-radio-button [checked]="" value="">&#40;unconfirmed&#41;</mat-radio-button>
+          <mat-radio-button value="fps">FPS</mat-radio-button>
+          <mat-radio-button value="payme">PayMe</mat-radio-button>
+          <mat-radio-button value="wechatpay">WechatPay</mat-radio-button>
+          <mat-radio-button value="alipay">AliPay</mat-radio-button>
+          <mat-radio-button value="free">Free</mat-radio-button>
+        </mat-radio-group>
+      </div>
       <br>
       <mat-form-field>
         <mat-label>Remark</mat-label>

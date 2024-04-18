@@ -131,6 +131,14 @@ class UserDAO extends dao_1.BaseDAO {
         obj = Object.assign({ _id: this._id }, obj);
         return obj;
     }
+    static listAll(res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                var cursor = database_1.Database.mongodb.collection(UserDAO.collection_name).find();
+                resolve((yield cursor.toArray()).map(doc => new UserDAO(res, { doc: doc })));
+            }));
+        });
+    }
     static findByEmail(res, email) {
         return __awaiter(this, void 0, void 0, function* () {
             var doc = yield database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ email: email });

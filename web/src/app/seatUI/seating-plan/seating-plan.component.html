@@ -10,14 +10,19 @@
   <mat-grid-list [cols]="selectedSection?.options?.thumbImageURL && selectedSection?.options?.fullImageURL?2:1">
     <mat-grid-tile>
       <mat-list>
+        @if(this.selectedSection?.options.seatAlign){
+        }
+        @else{
         <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
           <button mat-button style="pointer-events: none;"></button>
           @for(col of cols; track col){
           <button mat-button style="pointer-events: none;">{{col}}</button>
           }
         </mat-list-item>
+        }
         @for(row of rows; track row){
-        <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
+        <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
+          [style.text-align]="this.selectedSection?.options.seatAlign">
           <button mat-button style="pointer-events: none;">{{row}}</button>
           @for(col of cols; track col){
           @if (getSeat(row,col) && isSeatInSelectSection(row, col)) {
@@ -40,7 +45,9 @@
             }
           </button>
           }
-          @else {
+          @else if(this.selectedSection?.options.seatAlign){
+          }
+          @else{
           <button mat-button style="background-color: transparent" cdkDrag [cdkDragDisabled]="seatingPlanEditing"
             disabled>
           </button>
@@ -52,7 +59,9 @@
     </mat-grid-tile>
     @if(selectedSection?.options?.thumbImageURL && selectedSection?.options?.fullImageURL){
     <mat-grid-tile>
-      <lib-ngx-image-zoom zoomMode="click" [enableScrollZoom]="true" [thumbImage]="selectedSection?.options?.thumbImageURL" [fullImage]="selectedSection?.options?.fullImageURL"></lib-ngx-image-zoom>
+      <lib-ngx-image-zoom zoomMode="click" [enableScrollZoom]="true"
+        [thumbImage]="selectedSection?.options?.thumbImageURL" [fullImage]="selectedSection?.options?.fullImageURL">
+      </lib-ngx-image-zoom>
     </mat-grid-tile>
     }
   </mat-grid-list>

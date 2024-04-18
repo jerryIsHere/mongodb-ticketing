@@ -51,6 +51,7 @@ export class VenueSeatComponent {
     verticleOrder: new FormControl("", [Validators.required]),
     thumbImageURL: new FormControl("", [Validators.required]),
     fullImageURL: new FormControl("", [Validators.required]),
+    seatAlign: new FormControl("",),
   });
   constructor(private api: ApiService, public dialog: MatDialog, private _formBuilder: FormBuilder) {
 

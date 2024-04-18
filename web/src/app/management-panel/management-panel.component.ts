@@ -5,6 +5,9 @@ import { VenueListComponent } from './venue-list/venue-list.component';
 import { PriceTierListComponent } from './price-tier-list/price-tier-list.component';
 import { SoldTicketListComponent } from './sold-ticket-list/sold-ticket-list.component';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '../service/api.service';
 
 interface IDataListControl {
@@ -14,7 +17,8 @@ interface IDataListControl {
 @Component({
   selector: 'app-management-panel',
   standalone: true,
-  imports: [EventListComponent, VenueListComponent, PriceTierListComponent, SoldTicketListComponent, MatCardModule],
+  imports: [EventListComponent, VenueListComponent, PriceTierListComponent, SoldTicketListComponent, MatCardModule,
+    MatButtonModule, RouterModule, MatIconModule],
   templateUrl: './management-panel.component.html',
   styleUrl: './management-panel.component.sass'
 })

@@ -20,6 +20,13 @@ export namespace User {
     var clearSession = (req: Request, res: Response) => {
       req.session.user = null
     }
+    user.get("/", async (req: Request, res: Response, next) => {
+      if (req.query.list != undefined) {
+          UserDAO.listAll(res).then(result => {
+            next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false }))  })
+        }).catch((error) => next(error))
+      }
+  })
     user.post(
       "/forget-password",
       async (req: Request, res: Response, next): Promise<any> => {

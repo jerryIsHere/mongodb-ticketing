@@ -26,6 +26,13 @@ var User;
         var clearSession = (req, res) => {
             req.session.user = null;
         };
+        user.get("/", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            if (req.query.list != undefined) {
+                user_1.UserDAO.listAll(res).then(result => {
+                    next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false })) });
+                }).catch((error) => next(error));
+            }
+        }));
         user.post("/forget-password", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             if (req.body.email === undefined && req.body.username === undefined)
                 res.status(400).send("Email Address / Username are Required.");

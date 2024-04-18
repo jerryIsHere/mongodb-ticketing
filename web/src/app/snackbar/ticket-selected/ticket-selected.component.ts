@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../service/api.service';
 import { Router } from '@angular/router';
+import { UserSessionService } from '../../service/user-session.service';
 
 @Component({
   selector: 'app-seat-selected',
@@ -23,8 +24,8 @@ export class TicketSelectedComponent {
     @Inject(MAT_SNACK_BAR_DATA) public data: {
       tickets: Ticket[],
       limit: number,
-      rowNcol?: string[],
-    }, private api: ApiService, private router: Router,) {
+      seatInfo?: string[],
+    }, private api: ApiService, private router: Router, private userSession: UserSessionService) {
     this.limit = data.limit;
     router.events.subscribe((_) => {
       snackRef.dismiss()
@@ -41,7 +42,7 @@ export class TicketSelectedComponent {
         ticketIds: this.data.tickets.map(t => t._id)
       },).toPromise().then((result: any) => {
         if (result && result.success) {
-          this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: Ticket) => ticket._id) } })
+          this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: Ticket) => ticket._id), userId: this.userSession.user._id } })
         }
       }).then(result => {
         this.snackRef.dismiss();

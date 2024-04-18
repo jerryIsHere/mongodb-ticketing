@@ -18,12 +18,12 @@ You must login before you can start selecting seat for ticketing
 }
 <br>
 <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction($event)"
-  [(selectedSeatIds)]="selectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
+  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()" (selectedSectionChange)="clearAction()"
+  [(selectedSeatIds)]="sectionSelectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
 </app-seating-plan>
 Select seats with text: 
 <button mat-button (click)="openForm()">seats in this section</button> / 
-<button mat-button (click)="openForm(false, true)">any seats</button>
+<button mat-button (click)="openForm(false)">any seats</button>
 }
 @else {
 Ticket of this show is not purchasable right now. <br>

@@ -38,6 +38,13 @@ export interface Venue {
     sections?: { x: number, y: number }[]
     _id?: string;
 }
+export interface User {
+    username?: string;
+    singingPart?: string;
+    email?: string;
+    fullname?: string;
+    _id?: string;
+}
 export interface PriceTier {
     tierName?: string;
     price?: number;

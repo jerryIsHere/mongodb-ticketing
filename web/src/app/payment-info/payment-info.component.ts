@@ -26,8 +26,8 @@ export class PaymentInfoComponent {
   _ids?: string[]
   _userId?: string
   @Input()
-  set ids(ids: string[]) {
-    this._ids = ids
+  set ids(ids: string[]| string) {
+    this._ids = Array.isArray(ids) ? ids : [ids]
     if (this._ids && this._userId)
       this.loadData()
   }

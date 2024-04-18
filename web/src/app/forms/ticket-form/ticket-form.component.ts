@@ -23,7 +23,7 @@ import { Ticket } from '../../interface'
 })
 export class TicketFormComponent {
   ticketForm: FormGroup = this._formBuilder.group({
-    securedBy: new FormControl(this.ticket.securedBy ? "" : this.ticket.securedBy),
+    securedBy: new FormControl(this.ticket.securedBy ? this.ticket.securedBy :"" ),
     remark: new FormControl(this.ticket.remark),
   });
   constructor(

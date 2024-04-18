@@ -37,5 +37,14 @@ loading
     <mat-error>This field is required</mat-error>
     }
   </mat-form-field>
+  <mat-form-field>
+    <mat-label>Seat Align</mat-label>
+    <mat-select formControlName="seatAlign">
+      <mat-option value="start">Left</mat-option>
+      <mat-option value="end">Right</mat-option>
+      <mat-option value="center">Center</mat-option>
+      <mat-option value="">Padding</mat-option>
+    </mat-select>
+  </mat-form-field>
   <button mat-button (click)="submitSectionOption()">update</button>
 </form>

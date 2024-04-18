@@ -1,18 +1,21 @@
 @if(data.tickets){
-@if(data.rowNcol){
-  {{data.rowNcol.join(", ")}}
-}
-@else{
-{{data.tickets.length }} ticket{{data.tickets.length >1? 's':''}}} selected (up to {{limit}})
+{{data.tickets.length }} ticket{{data.tickets.length >1? 's':''}}
+selected &#40;up to {{limit}}&#41;
 (cost: {{totalCost()}})
 <span matSnackBarActions style="color: white">
   <button matSnackBarAction style="color: white" mat-button (click)="buy()" [disabled]="doing">
-
     @if(doing){
     <mat-spinner></mat-spinner>
     }
     @else{buy
     }
   </button>
+  <button matSnackBarAction color="warning" mat-button (click)="
+  snackRef.dismiss()"> cancel
+  </button>
 </span>
+}
+<br>
+@if(data.seatInfo && data.seatInfo.length > 0){
+seats that is not in this section: {{data.seatInfo.join(", ")}}
 }
