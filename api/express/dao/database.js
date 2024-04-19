@@ -23,7 +23,8 @@ class Database {
 }
 exports.Database = Database;
 Database.db_name = "ticketing";
-Database.uri = `mongodb+srv://${process.env.mongo_username}:${process.env.mongo_password}@atlascluster.gbqtcg3.mongodb.net/?retryWrites=true&w=majority`;
+Database.uri = process.env.mongo_url ? process.env.mongo_url :
+    `mongodb+srv://${process.env.mongo_username}:${process.env.mongo_password}@atlascluster.gbqtcg3.mongodb.net/?retryWrites=true&w=majority`;
 Database.mongo = new mongodb_1.MongoClient(Database.uri);
 class RequestError extends Error {
     constructor(m) {

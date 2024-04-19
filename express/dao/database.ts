@@ -4,13 +4,15 @@ declare namespace process {
     namespace env {
         let mongo_username: string
         let mongo_password: string
+        let mongo_url: string | undefined
         let PORT: string | null
     }
 }
 export abstract class Database {
     public static readonly db_name = "ticketing"
 
-    public static readonly uri: string = `mongodb+srv://${process.env.mongo_username}:${process.env.mongo_password}@atlascluster.gbqtcg3.mongodb.net/?retryWrites=true&w=majority`
+    public static readonly uri: string = process.env.mongo_url ? process.env.mongo_url :
+        `mongodb+srv://${process.env.mongo_username}:${process.env.mongo_password}@atlascluster.gbqtcg3.mongodb.net/?retryWrites=true&w=majority`
 
     public static mongo: MongoClient = new MongoClient(Database.uri)
 
