@@ -43,11 +43,16 @@ class TicketDAO extends dao_1.BaseDAO {
     get purchaseDate() { return this._purchaseDate; }
     set purchaseDate(value) {
         if (typeof value == "string") {
-            try {
-                this._purchaseDate = new Date(value);
+            if (value = "$$NOW") {
+                this._purchaseDate = value;
             }
-            catch (err) {
-                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse purchaseDate parameter of event request"));
+            else {
+                try {
+                    this._purchaseDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse lastLoginDate parameter of event request"));
+                }
             }
         }
         else if (value instanceof Date) {
@@ -58,11 +63,16 @@ class TicketDAO extends dao_1.BaseDAO {
     get confirmationDate() { return this._confirmationDate; }
     set confirmationDate(value) {
         if (typeof value == "string") {
-            try {
-                this._confirmationDate = new Date(value);
+            if (value = "$$NOW") {
+                this._confirmationDate = value;
             }
-            catch (err) {
-                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse confirmationDate parameter of event request"));
+            else {
+                try {
+                    this._confirmationDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse lastLoginDate parameter of event request"));
+                }
             }
         }
         else if (value instanceof Date) {

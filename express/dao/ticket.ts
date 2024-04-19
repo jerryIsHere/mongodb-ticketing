@@ -48,15 +48,20 @@ export class TicketDAO extends BaseDAO {
         this._remark = value;
     }
 
-    private _purchaseDate: Date | undefined
+    private _purchaseDate: Date | string | undefined
     public get purchaseDate() { return this._purchaseDate }
     public set purchaseDate(value: Date | string | undefined) {
         if (typeof value == "string") {
-            try {
-                this._purchaseDate = new Date(value);
+            if (value = "$$NOW") {
+                this._purchaseDate = value
             }
-            catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse purchaseDate parameter of event request"))
+            else {
+                try {
+                    this._purchaseDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new RequestError("Cannot parse lastLoginDate parameter of event request"))
+                }
             }
         }
         else if (value instanceof Date) {
@@ -64,15 +69,20 @@ export class TicketDAO extends BaseDAO {
         }
     }
 
-    private _confirmationDate: Date | undefined
+    private _confirmationDate: Date | string | undefined
     public get confirmationDate() { return this._confirmationDate }
     public set confirmationDate(value: Date | string | undefined) {
         if (typeof value == "string") {
-            try {
-                this._confirmationDate = new Date(value);
+            if (value = "$$NOW") {
+                this._confirmationDate = value
             }
-            catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse confirmationDate parameter of event request"))
+            else {
+                try {
+                    this._confirmationDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new RequestError("Cannot parse lastLoginDate parameter of event request"))
+                }
             }
         }
         else if (value instanceof Date) {
@@ -540,7 +550,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             try {
                                 var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne(
                                     { _id: dao.id, occupantId: null },
-                                    { $set: { "occupantId": userId,  "purchaseDate": "$$NOW" } }, { session: res.locals.session })
+                                    { $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }, { session: res.locals.session })
                                 if (result && result.modifiedCount > 0) {
                                     daoresolve({ dao: dao, info: info ? info : undefined })
                                 }

@@ -65,6 +65,26 @@ class UserDAO extends dao_1.BaseDAO {
     _verificationToken = null;
     get verificationToken() { return this._verificationToken; }
     set verificationToken(value) { this._verificationToken = value; }
+    _lastLoginDate;
+    get lastLoginDate() { return this._lastLoginDate; }
+    set lastLoginDate(value) {
+        if (typeof value == "string") {
+            if (value = "$$NOW") {
+                this._lastLoginDate = value;
+            }
+            else {
+                try {
+                    this._lastLoginDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse lastLoginDate parameter of event request"));
+                }
+            }
+        }
+        else if (value instanceof Date) {
+            this._lastLoginDate = value;
+        }
+    }
     constructor(res, params) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
@@ -167,7 +187,8 @@ class UserDAO extends dao_1.BaseDAO {
                 reject(new database_1.RequestError(`User with username ${username} not found.`));
             }
             else if (user.saltedpassword && await (0, bcrypt_1.compare)(password, user.saltedpassword)) {
-                resolve(user);
+                user.lastLoginDate = "$$NOW";
+                resolve(user.update());
             }
             else {
                 reject(new database_1.RequestError("Incorrect password"));
