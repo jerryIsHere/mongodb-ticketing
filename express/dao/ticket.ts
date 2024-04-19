@@ -36,7 +36,7 @@ export class TicketDAO extends BaseDAO {
     private _securedBy: string | null | undefined = null
     public get securedBy() { return this._securedBy }
     public set securedBy(value: string | null | undefined) {
-        if (value) {
+        if (value && value != this._securedBy) {
             this.confirmationDate = "$$NOW"
         }
         this._securedBy = value;

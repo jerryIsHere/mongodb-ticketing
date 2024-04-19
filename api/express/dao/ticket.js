@@ -29,7 +29,7 @@ class TicketDAO extends dao_1.BaseDAO {
     _securedBy = null;
     get securedBy() { return this._securedBy; }
     set securedBy(value) {
-        if (value) {
+        if (value && value != this._securedBy) {
             this.confirmationDate = "$$NOW";
         }
         this._securedBy = value;
