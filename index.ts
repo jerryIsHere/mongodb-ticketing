@@ -115,5 +115,5 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
   }
 })
 
-app.listen(port, async () => { console.log("Server ready!"); });
+app.listen(port, () => { console.log("Server ready!"); });
 export default app;

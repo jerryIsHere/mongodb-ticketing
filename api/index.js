@@ -93,5 +93,5 @@ app.use(async (output, req, res, next) => {
         next();
     }
 });
-app.listen(port, async () => { console.log("Server ready!"); });
+app.listen(port, () => { console.log("Server ready!"); });
 exports.default = app;
