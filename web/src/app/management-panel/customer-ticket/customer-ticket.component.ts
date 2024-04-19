@@ -17,7 +17,7 @@ import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
-
+import dateFormat, { masks } from "dateformat";
 
 @Component({
   selector: 'app-customer-ticket',
@@ -178,13 +178,13 @@ export class CustomerTicketComponent {
       [
         ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate"].join(","),
         ...this.users.map(user =>
-          [user._id, user.username, user.fullname, user.email, user.singingPart, user.lastLoginDate ? new Date(user.lastLoginDate).toISOString() : ''].map(value => value ? value : '').join(",")
+          [user._id, user.username, user.fullname, user.email, user.singingPart, user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss'): ''].map(value => value ? value : '').join(",")
         )
       ].join("\n")
 
     var link = document.createElement("a");
     link.setAttribute("href", encodeURI(data));
-    link.setAttribute("download", `USER-${new Date().toLocaleDateString()}.csv`);
+    link.setAttribute("download", `user-${new Date().toLocaleDateString()}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -200,8 +200,8 @@ export class CustomerTicketComponent {
           ticket.priceTier.price,
           ticket.occupant.username,
           ticket.occupant.fullname,
-          ticket.purchaseDate ? new Date(ticket.purchaseDate).toISOString() : '',
-          ticket.confirmationDate ? new Date(ticket.confirmationDate).toISOString() : ''].map(value => value ? value : '').join(",")
+          ticket.purchaseDate ? dateFormat(new Date(ticket.purchaseDate), 'yyyymmdd hhmmss') : '',
+          ticket.confirmationDate ? dateFormat(new Date(ticket.confirmationDate), 'yyyymmdd hhmmss') : ''].map(value => value ? value : '').join(",")
         )
       ].join("\n")
 

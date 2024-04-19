@@ -1,5 +1,5 @@
-<button mat-button (click)="downloadUserDataCSV()">Export user data</button>
-<button mat-button (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
+
+
 <mat-form-field>
   <mat-label>Select user</mat-label>
   <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="auto">
@@ -10,6 +10,9 @@
     }
   </mat-autocomplete>
 </mat-form-field>
+<br>
+<button mat-button (click)="downloadUserDataCSV()">Export user data</button>
+<button mat-button (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>
 @if(summary){
 Ticket baught:
