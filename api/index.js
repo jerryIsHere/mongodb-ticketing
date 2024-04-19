@@ -32,7 +32,8 @@ app.use('/web/*', function (_, res) {
     const fileName = 'index.html';
     res.sendFile(fileName, options);
 });
-app.use('*', function (req, res, next) {
+app.use('*', async function (req, res, next) {
+    await Database.init();
     res.locals.RequestErrorList = new Array();
     res.locals.session = Database.mongo.startSession();
     next();
@@ -86,9 +87,6 @@ app.use(async (output, req, res, next) => {
     finally {
         next();
     }
-});
-await Database.init().then(_ => {
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
 });
 app.listen(port, async () => { console.log("Server ready!"); });
 module.exports = app;
