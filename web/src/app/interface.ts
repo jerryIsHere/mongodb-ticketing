@@ -33,6 +33,12 @@ export function showSellingString(show: Show): string {
 ${new Date(show.startSecondRoundSellDate).toLocaleDateString()}-${new Date(show.endSecondRoundSellDate).toLocaleDateString()}`
     return ''
 }
+export function ticketConfirmDateString(ticket: Ticket): string {
+    return ticket.confirmationDate ? 'Ticket confirmed at '+ new Date(ticket.confirmationDate).toLocaleDateString() : ''
+}
+export function ticketPurchaseDateString(ticket: Ticket): string {
+    return ticket.purchaseDate ? new Date(ticket.purchaseDate).toLocaleDateString() : ''
+}
 export interface Venue {
     venuename?: string;
     sections?: { x: number, y: number }[]
@@ -44,6 +50,7 @@ export interface User {
     email?: string;
     fullname?: string;
     _id?: string;
+    lastLoginDate?: Date
 }
 export interface PriceTier {
     tierName?: string;
@@ -70,4 +77,6 @@ export interface Ticket {
     _id: string,
     securedBy?: string | null,
     remark?: string | null,
+    purchaseDate?: Date,
+    confirmationDate?: Date,
 }

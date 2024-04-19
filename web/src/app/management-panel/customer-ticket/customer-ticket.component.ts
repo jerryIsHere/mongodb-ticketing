@@ -7,12 +7,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatAutocompleteModule, MatAutocomplete, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MatOption } from '@angular/material/core';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
-import { Ticket, User } from '../../interface'
+import { DatePipe } from '@angular/common';
+import { Ticket, User, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -28,14 +28,14 @@ import { map, startWith } from 'rxjs/operators';
     MatFormFieldModule,
     MatAutocompleteModule,
     ReactiveFormsModule,
-    AsyncPipe,],
+    AsyncPipe, DatePipe],
   templateUrl: './customer-ticket.component.html',
   styleUrl: './customer-ticket.component.sass'
 })
 export class CustomerTicketComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', '_id', 'securedBy'];
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', '_id', 'securedBy'];
   users: User[] = [];
   tickets: Ticket[] = []
   @ViewChild(MatPaginator) paginator?: MatPaginator;
@@ -145,6 +145,7 @@ export class CustomerTicketComponent {
       }
     })
   }
+  summary: any
   userSelected(event: MatAutocompleteSelectedEvent) {
     console.log(event.option.value._id)
     this.ticketDataSource.data = this.tickets.filter(ticket => ticket.occupant._id == event.option.value._id)
@@ -166,5 +167,50 @@ export class CustomerTicketComponent {
         return summary
       }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0 })
   }
-  summary: any
+  ticketConfirmDateString(ticket: Ticket): string {
+    return ticketConfirmDateString(ticket)
+  }
+  ticketPurchaseDateString(ticket: Ticket): string {
+    return ticketPurchaseDateString(ticket)
+  }
+  downloadUserDataCSV() {
+    var data = "data:text/csv;charset=utf-8," +
+      [
+        ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate"].join(","),
+        ...this.users.map(user =>
+          [user._id, user.username, user.fullname, user.email, user.singingPart, user.lastLoginDate ? new Date(user.lastLoginDate).toISOString() : ''].map(value => value ? value : '').join(",")
+        )
+      ].join("\n")
+
+    var link = document.createElement("a");
+    link.setAttribute("href", encodeURI(data));
+    link.setAttribute("download", `USER-${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+  }
+  downloadSoldTicketDataCSV() {
+    var data = "data:text/csv;charset=utf-8," +
+      [
+        ["_id", "event.eventname", "seat.row+seat.no", "priceTier.tierName", "priceTier.price", "occupant.username", "occupant.fullname", "purchaseDate", "confirmationDate"].join(","),
+        ...this.tickets.map(ticket =>
+          [ticket._id, ticket?.event?.eventname,
+          ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row.toUpperCase() + ticket.seat?.no : '',
+          ticket.priceTier.tierName,
+          ticket.priceTier.price,
+          ticket.occupant.username,
+          ticket.occupant.fullname,
+          ticket.purchaseDate ? new Date(ticket.purchaseDate).toISOString() : '',
+          ticket.confirmationDate ? new Date(ticket.confirmationDate).toISOString() : ''].map(value => value ? value : '').join(",")
+        )
+      ].join("\n")
+
+    var link = document.createElement("a");
+    link.setAttribute("href", encodeURI(data));
+    link.setAttribute("download", `ticketing-${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+
+  }
 }
