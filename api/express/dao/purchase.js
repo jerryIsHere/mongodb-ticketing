@@ -1,24 +1,27 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PurchaseDAO = void 0;
 //indevelopment, not in use
-import { ObjectId } from "mongodb";
-import { BaseDAO } from "./dao";
-export class PurchaseDAO extends BaseDAO {
+const mongodb_1 = require("mongodb");
+const dao_1 = require("./dao");
+class PurchaseDAO extends dao_1.BaseDAO {
     static collection_name = "purchases";
     _ticketIds = new Array();
     get ticketIds() { return this._ticketIds; }
     set ticketIds(value) {
         if (Array.isArray(value)) {
             function isObjectIdArray(arr) {
-                return arr.every(it => it instanceof ObjectId);
+                return arr.every(it => it instanceof mongodb_1.ObjectId);
             }
             if (isObjectIdArray(value)) {
                 this._ticketIds = value;
             }
             else {
-                this._ticketIds = value.filter(it => typeof it === "string").map(it => new ObjectId(it));
+                this._ticketIds = value.filter(it => typeof it === "string").map(it => new mongodb_1.ObjectId(it));
             }
         }
         else if (typeof value === "string") {
-            this._ticketIds?.push(new ObjectId(value));
+            this._ticketIds?.push(new mongodb_1.ObjectId(value));
         }
     }
     _purchaserId;
@@ -35,9 +38,10 @@ export class PurchaseDAO extends BaseDAO {
             }
         }
         else if (typeof value === "string") {
-            this._ticketIds?.push(new ObjectId(value));
+            this._ticketIds?.push(new mongodb_1.ObjectId(value));
         }
     }
     _perchaserId = null;
     get perchaserId() { return this._perchaserId; }
 }
+exports.PurchaseDAO = PurchaseDAO;

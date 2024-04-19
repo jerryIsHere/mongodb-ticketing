@@ -1,6 +1,11 @@
-import nodemailer from "nodemailer";
-import { REGEX } from "../utils/regex";
-export default class EmailService {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const nodemailer_1 = __importDefault(require("nodemailer"));
+const regex_1 = require("../utils/regex");
+class EmailService {
     static singleton = new EmailService();
     transporter;
     option;
@@ -17,10 +22,10 @@ export default class EmailService {
                 pass: process.env.EMAIL_SERVICE_PASSWORD || "",
             },
         };
-        this.transporter = nodemailer.createTransport(this.option);
+        this.transporter = nodemailer_1.default.createTransport(this.option);
     }
     async sendEmail(to, subject, text) {
-        const isValidEmail = REGEX.EMAIL.test(to);
+        const isValidEmail = regex_1.REGEX.EMAIL.test(to);
         if (!isValidEmail)
             throw {
                 error: { code: 400, message: "Invalid email address provided" },
@@ -65,3 +70,4 @@ export default class EmailService {
         }
     }
 }
+exports.default = EmailService;

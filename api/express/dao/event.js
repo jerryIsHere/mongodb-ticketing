@@ -1,10 +1,13 @@
-import { ObjectId, } from "mongodb";
-import { Database, RequestError } from "./database";
-import { BaseDAO } from "./dao";
-import { VenueDAO } from "./venue";
-import { TicketDAO } from "./ticket";
-import { SeatDAO } from "./seat";
-export class EventDAO extends BaseDAO {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EventDAO = void 0;
+const mongodb_1 = require("mongodb");
+const database_1 = require("./database");
+const dao_1 = require("./dao");
+const venue_1 = require("./venue");
+const ticket_1 = require("./ticket");
+const seat_1 = require("./seat");
+class EventDAO extends dao_1.BaseDAO {
     static collection_name = "events";
     _eventname;
     get eventname() { return this._eventname; }
@@ -17,7 +20,7 @@ export class EventDAO extends BaseDAO {
                 this._datetime = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse datetime parameter of event request"));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse datetime parameter of event request"));
             }
         }
         else if (value instanceof Date) {
@@ -32,7 +35,7 @@ export class EventDAO extends BaseDAO {
                 this._startFirstRoundSellDate = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse startFirstRoundSellDate parameter of event request"));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse startFirstRoundSellDate parameter of event request"));
             }
         }
         else if (value instanceof Date) {
@@ -47,7 +50,7 @@ export class EventDAO extends BaseDAO {
                 this._endFirstRoundSellDate = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse endFirstRoundSellDate parameter of event request"));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse endFirstRoundSellDate parameter of event request"));
             }
         }
         else if (value instanceof Date) {
@@ -62,7 +65,7 @@ export class EventDAO extends BaseDAO {
                 this._startSecondRoundSellDate = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse startSecondRoundSellDate parameter of event request"));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse startSecondRoundSellDate parameter of event request"));
             }
         }
         else if (value instanceof Date) {
@@ -77,7 +80,7 @@ export class EventDAO extends BaseDAO {
                 this._endSecondRoundSellDate = new Date(value);
             }
             catch (err) {
-                this.res.locals.RequestErrorList.push(new RequestError("Cannot parse endSecondRoundSellDate parameter of event request"));
+                this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse endSecondRoundSellDate parameter of event request"));
             }
         }
         else if (value instanceof Date) {
@@ -88,7 +91,7 @@ export class EventDAO extends BaseDAO {
     get duration() { return this._duration; }
     set duration(value) {
         if (value && value < 0) {
-            this.res.locals.RequestErrorList.push(new RequestError('Duration must be greater then 0.'));
+            this.res.locals.RequestErrorList.push(new database_1.RequestError('Duration must be greater then 0.'));
         }
         else {
             this._duration = value;
@@ -112,7 +115,7 @@ export class EventDAO extends BaseDAO {
     _venueId;
     get venueId() { return this._venueId; }
     set venueId(value) {
-        this._venueId = new ObjectId(value);
+        this._venueId = new mongodb_1.ObjectId(value);
     }
     constructor(res, params) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
@@ -152,10 +155,10 @@ export class EventDAO extends BaseDAO {
     }
     static async listAll() {
         return new Promise(async (resolve, reject) => {
-            var cursor = Database.mongodb.collection(EventDAO.collection_name).aggregate([
+            var cursor = database_1.Database.mongodb.collection(EventDAO.collection_name).aggregate([
                 {
                     $lookup: {
-                        from: VenueDAO.collection_name,
+                        from: venue_1.VenueDAO.collection_name,
                         localField: "venueId",
                         foreignField: "_id",
                         as: "venue",
@@ -168,7 +171,7 @@ export class EventDAO extends BaseDAO {
     }
     static async listSelling() {
         return new Promise(async (resolve, reject) => {
-            var cursor = Database.mongodb.collection(EventDAO.collection_name).aggregate([
+            var cursor = database_1.Database.mongodb.collection(EventDAO.collection_name).aggregate([
                 {
                     $match: {
                         $or: [
@@ -189,7 +192,7 @@ export class EventDAO extends BaseDAO {
                 },
                 {
                     $lookup: {
-                        from: VenueDAO.collection_name,
+                        from: venue_1.VenueDAO.collection_name,
                         localField: "venueId",
                         foreignField: "_id",
                         as: "venue",
@@ -202,17 +205,17 @@ export class EventDAO extends BaseDAO {
     }
     static async getById(res, id) {
         return new Promise(async (resolve, reject) => {
-            var doc = await Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new ObjectId(id) }, { session: res.locals.session });
+            var doc = await database_1.Database.mongodb.collection(EventDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) }, { session: res.locals.session });
             if (doc) {
                 resolve(new EventDAO(res, { doc: doc }));
             }
-            reject(new RequestError(`${this.name} has no instance with id ${id}.`));
+            reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
         });
     }
     async checkReference() {
-        return Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: this._venueId }, { session: this.res.locals.session }).then(instance => {
+        return database_1.Database.mongodb.collection(venue_1.VenueDAO.collection_name).findOne({ _id: this._venueId }, { session: this.res.locals.session }).then(instance => {
             if (instance == null) {
-                return new RequestError(`Venue with id ${this._venueId} doesn't exists.`);
+                return new database_1.RequestError(`Venue with id ${this._venueId} doesn't exists.`);
             }
             else {
                 return null;
@@ -227,29 +230,29 @@ export class EventDAO extends BaseDAO {
                 reject(referror);
                 return;
             }
-            var result = await Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
+            var result = await database_1.Database.mongodb.collection(EventDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
             if (result.insertedId) {
                 resolve(this);
             }
             else {
-                reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`));
+                reject(new database_1.RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`));
             }
         });
     }
     async checkTicketVenueDependency() {
         if (this._id) {
-            return (await Database.mongodb.collection(TicketDAO.collection_name).aggregate([
-                { $match: { eventId: new ObjectId(this._id) } },
+            return (await database_1.Database.mongodb.collection(ticket_1.TicketDAO.collection_name).aggregate([
+                { $match: { eventId: new mongodb_1.ObjectId(this._id) } },
                 {
                     $lookup: {
-                        from: SeatDAO.collection_name,
+                        from: seat_1.SeatDAO.collection_name,
                         localField: "seatId",
                         foreignField: "_id",
                         as: "seat",
                     }
                 },
                 { $set: { 'seat': { $first: '$seat' } } },
-                { $match: { 'seat.venueId': { $ne: new ObjectId(this.venueId) } } },
+                { $match: { 'seat.venueId': { $ne: new mongodb_1.ObjectId(this.venueId) } } },
             ], { session: this.res.locals.session })).next();
         }
         return;
@@ -258,27 +261,27 @@ export class EventDAO extends BaseDAO {
         return new Promise(async (resolve, reject) => {
             var dependency = await this.checkTicketVenueDependency();
             if (dependency != null) {
-                reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed ` +
+                reject(new database_1.RequestError(`Update of ${this.constructor.name} with id ${this._id} failed ` +
                     `as ticket with id ${dependency._id} depends on another venue ${dependency.seat.venueId}.`));
                 return;
             }
             if (this._id) {
-                var result = await Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
+                var result = await database_1.Database.mongodb.collection(EventDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
                 if (result.modifiedCount > 0) {
                     resolve(this);
                 }
                 else {
-                    reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`));
+                    reject(new database_1.RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`));
                 }
             }
             else {
-                reject(new RequestError(`${this.constructor.name}'s id is not initialized.`));
+                reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
             }
         });
     }
     async checkTicketDependency() {
         if (this._id) {
-            return await Database.mongodb.collection(TicketDAO.collection_name).findOne({ eventId: new ObjectId(this._id) }, { session: this.res.locals.session });
+            return await database_1.Database.mongodb.collection(ticket_1.TicketDAO.collection_name).findOne({ eventId: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
         }
         return;
     }
@@ -287,20 +290,21 @@ export class EventDAO extends BaseDAO {
             this.res.locals.session.startTransaction();
             var dependency = await this.checkTicketDependency();
             if (dependency) {
-                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+                reject(new database_1.RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
                     `as ticket with id ${dependency._id} depends on it.`));
                 return;
             }
             if (this._id) {
-                var result = await Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) }, { session: this.res.locals.session });
+                var result = await database_1.Database.mongodb.collection(EventDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
                 if (result.deletedCount > 0) {
                     resolve(this);
                 }
             }
             else {
-                reject(new RequestError(`${this.constructor.name}'s id is not initialized.`));
+                reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
                 return;
             }
         });
     }
 }
+exports.EventDAO = EventDAO;

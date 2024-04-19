@@ -1,15 +1,18 @@
-import { Router } from "express";
-import { Database } from "../dao/database";
-import { UserDAO } from "../dao/user";
-import { EventDAO } from "../dao/event";
-import { SeatDAO } from "../dao/seat";
-import { VenueDAO } from "../dao/venue";
-import { PriceTierDAO } from "../dao/priceTier";
-import { TicketDAO } from "../dao/ticket";
-export var Admin;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Admin = void 0;
+const express_1 = require("express");
+const database_1 = require("../dao/database");
+const user_1 = require("../dao/user");
+const event_1 = require("../dao/event");
+const seat_1 = require("../dao/seat");
+const venue_1 = require("../dao/venue");
+const priceTier_1 = require("../dao/priceTier");
+const ticket_1 = require("../dao/ticket");
+var Admin;
 (function (Admin) {
     function RouterFactory() {
-        var admin = Router();
+        var admin = (0, express_1.Router)();
         admin.use((req, res, next) => {
             if (req.session["user"]?.hasAdminRight != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" });
@@ -18,11 +21,11 @@ export var Admin;
                 next();
             }
         });
-        var db = Database.mongo.db(Database.db_name);
+        var db = database_1.Database.mongo.db(database_1.Database.db_name);
         admin.get("/initMongoDB", async (req, res, next) => {
-            [UserDAO, EventDAO, SeatDAO, VenueDAO, PriceTierDAO, TicketDAO].forEach((namespace) => {
+            [user_1.UserDAO, event_1.EventDAO, seat_1.SeatDAO, venue_1.VenueDAO, priceTier_1.PriceTierDAO, ticket_1.TicketDAO].forEach((namespace) => {
                 if (namespace.collection_name) {
-                    Database.mongodb.createCollection(namespace.collection_name);
+                    database_1.Database.mongodb.createCollection(namespace.collection_name);
                 }
             });
             next({ success: true });
@@ -31,4 +34,4 @@ export var Admin;
     }
     Admin.RouterFactory = RouterFactory;
     ;
-})(Admin || (Admin = {}));
+})(Admin = exports.Admin || (exports.Admin = {}));
