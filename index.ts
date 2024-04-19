@@ -28,7 +28,7 @@ sessionStore.on('error', (error: any) => {
 });
 app.set("trust proxy", true);
 app.use(session({
-  name:'ticketing_sessionid',
+  name: 'ticketing_sessionid',
   secret: 'sakdjfpaoisdfjpaosdijf',
   store: sessionStore,
   resave: false,
@@ -109,18 +109,13 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
   catch (err) {
     console.log(err)
   }
-  finally{
+  finally {
     next()
   }
 })
-Database.init().then(_ => {
-  app.listen(port, async () => {
-    try {
-      // Connect the client to the server	(optional starting in v4.7)
-
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } catch (_) {
-
-    }
-  });
+await Database.init().then(_ => {
+  console.log("Pinged your deployment. You successfully connected to MongoDB!");
 })
+
+app.listen(port, async () => { console.log("Server ready!"); });
+module.exports = app;

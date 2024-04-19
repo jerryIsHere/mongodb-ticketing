@@ -1,28 +1,18 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VenueDAO = exports.sectionTypeCheck = void 0;
-const mongodb_1 = require("mongodb");
-const database_1 = require("./database");
-const dao_1 = require("./dao");
-const seat_1 = require("./seat");
-const event_1 = require("./event");
-function sectionTypeCheck(s) {
+import { ObjectId } from "mongodb";
+import { Database, RequestError } from "./database";
+import { BaseDAO } from "./dao";
+import { SeatDAO } from "./seat";
+import { EventDAO } from "./event";
+export function sectionTypeCheck(s) {
     return typeof s.x == "number" &&
         typeof s.y == "number";
 }
-exports.sectionTypeCheck = sectionTypeCheck;
-class VenueDAO extends dao_1.BaseDAO {
+export class VenueDAO extends BaseDAO {
+    static collection_name = "venues";
+    _sections;
     get sections() { return this._sections; }
     set sections(value) { this._sections = value; }
+    _venuename;
     get venuename() { return this._venuename; }
     set venuename(value) { this._venuename = value; }
     constructor(res, params) {
@@ -36,109 +26,92 @@ class VenueDAO extends dao_1.BaseDAO {
         if (params.sections)
             this.sections = params.sections;
     }
-    static listAll(res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var cursor = database_1.Database.mongodb.collection(VenueDAO.collection_name).find();
-                resolve((yield cursor.toArray()).map(doc => new VenueDAO(res, { doc: doc })));
-            }));
+    static async listAll(res) {
+        return new Promise(async (resolve, reject) => {
+            var cursor = Database.mongodb.collection(VenueDAO.collection_name).find();
+            resolve((await cursor.toArray()).map(doc => new VenueDAO(res, { doc: doc })));
         });
     }
-    static getById(res, id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var doc = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: new mongodb_1.ObjectId(id) });
-                if (doc) {
-                    resolve(new VenueDAO(res, { doc: doc }));
+    static async getById(res, id) {
+        return new Promise(async (resolve, reject) => {
+            var doc = await Database.mongodb.collection(VenueDAO.collection_name).findOne({ _id: new ObjectId(id) });
+            if (doc) {
+                resolve(new VenueDAO(res, { doc: doc }));
+            }
+            reject(new RequestError(`${this.name} has no instance with id ${id}.`));
+        });
+    }
+    async create() {
+        return new Promise(async (resolve, reject) => {
+            var result = await Database.mongodb.collection(VenueDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
+            if (result.insertedId) {
+                resolve(this);
+            }
+            else {
+                reject(new RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`));
+            }
+        });
+    }
+    async checkSeatSectionDependency() {
+        let seat;
+        if (this._id && this.sections) {
+            seat = await Database.mongodb.collection(SeatDAO.collection_name).findOne({
+                venueId: this._id,
+                $nor: this.sections.map(s => {
+                    return { $and: [{ "coord.sectX": s.x }, { "coord.sectY": s.y }] };
+                })
+            });
+        }
+        return seat;
+    }
+    async update() {
+        return new Promise(async (resolve, reject) => {
+            if (this._id) {
+                var dependency = await this.checkSeatSectionDependency();
+                if (dependency) {
+                    reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed ` +
+                        `as seat  with id ${dependency._id} depends on section ${dependency.coord.sectX}-${dependency.coord.sectY}.`));
+                    return;
                 }
-                reject(new database_1.RequestError(`${this.name} has no instance with id ${id}.`));
-            }));
-        });
-    }
-    create() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).insertOne(this.Serialize(true), { session: this.res.locals.session });
-                if (result.insertedId) {
+                var result = await Database.mongodb.collection(VenueDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
+                if (result.modifiedCount > 0) {
                     resolve(this);
                 }
                 else {
-                    reject(new database_1.RequestError(`Creation of ${this.constructor.name} failed with unknown reason.`));
+                    reject(new RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`));
                 }
-            }));
-        });
-    }
-    checkSeatSectionDependency() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let seat;
-            if (this._id && this.sections) {
-                seat = yield database_1.Database.mongodb.collection(seat_1.SeatDAO.collection_name).findOne({
-                    venueId: this._id,
-                    $nor: this.sections.map(s => {
-                        return { $and: [{ "coord.sectX": s.x }, { "coord.sectY": s.y }] };
-                    })
-                });
             }
-            return seat;
+            else {
+                reject(new RequestError(`${this.constructor.name}'s id is not initialized.`));
+            }
         });
     }
-    update() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                if (this._id) {
-                    var dependency = yield this.checkSeatSectionDependency();
-                    if (dependency) {
-                        reject(new database_1.RequestError(`Update of ${this.constructor.name} with id ${this._id} failed ` +
-                            `as seat  with id ${dependency._id} depends on section ${dependency.coord.sectX}-${dependency.coord.sectY}.`));
-                        return;
-                    }
-                    var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
-                    if (result.modifiedCount > 0) {
-                        resolve(this);
-                    }
-                    else {
-                        reject(new database_1.RequestError(`Update of ${this.constructor.name} with id ${this._id} failed with unknown reason.`));
-                    }
-                }
-                else {
-                    reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
-                }
-            }));
-        });
+    async checkDependency() {
+        var seat = await Database.mongodb.collection(SeatDAO.collection_name).findOne({ venueId: this._id });
+        var event = await Database.mongodb.collection(EventDAO.collection_name).findOne({ venueId: this._id });
+        return { seat: seat, event: event };
     }
-    checkDependency() {
-        return __awaiter(this, void 0, void 0, function* () {
-            var seat = yield database_1.Database.mongodb.collection(seat_1.SeatDAO.collection_name).findOne({ venueId: this._id });
-            var event = yield database_1.Database.mongodb.collection(event_1.EventDAO.collection_name).findOne({ venueId: this._id });
-            return { seat: seat, event: event };
-        });
-    }
-    delete() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
-                this.res.locals.session.startTransaction();
-                var dependency = yield this.checkDependency();
-                if (dependency.event != null || dependency.seat != null) {
-                    var dependencyType = dependency.event != null ? "event" : "seat";
-                    var dependencyId = dependency.event != null ? dependency.event._id : (_a = dependency.seat) === null || _a === void 0 ? void 0 : _a._id;
-                    reject(new database_1.RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-                        `as ${dependencyType}  with id ${dependencyId} depends on it.`));
-                    return;
+    async delete() {
+        return new Promise(async (resolve, reject) => {
+            this.res.locals.session.startTransaction();
+            var dependency = await this.checkDependency();
+            if (dependency.event != null || dependency.seat != null) {
+                var dependencyType = dependency.event != null ? "event" : "seat";
+                var dependencyId = dependency.event != null ? dependency.event._id : dependency.seat?._id;
+                reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+                    `as ${dependencyType}  with id ${dependencyId} depends on it.`));
+                return;
+            }
+            if (this._id) {
+                var result = await Database.mongodb.collection(VenueDAO.collection_name).deleteOne({ _id: new ObjectId(this._id) }, { session: this.res.locals.session });
+                if (result.deletedCount > 0) {
+                    resolve(this);
                 }
-                if (this._id) {
-                    var result = yield database_1.Database.mongodb.collection(VenueDAO.collection_name).deleteOne({ _id: new mongodb_1.ObjectId(this._id) }, { session: this.res.locals.session });
-                    if (result.deletedCount > 0) {
-                        resolve(this);
-                    }
-                }
-                else {
-                    reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
-                    return;
-                }
-            }));
+            }
+            else {
+                reject(new RequestError(`${this.constructor.name}'s id is not initialized.`));
+                return;
+            }
         });
     }
 }
-exports.VenueDAO = VenueDAO;
-VenueDAO.collection_name = "venues";

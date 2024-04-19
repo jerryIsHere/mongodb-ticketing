@@ -1,12 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseDAO = void 0;
-const mongodb_1 = require("mongodb");
-const database_1 = require("./database");
-class BaseDAO {
+import { ObjectId } from "mongodb";
+import { RequestError } from "./database";
+export class BaseDAO {
+    _id;
     get id() {
-        return this._id ? new mongodb_1.ObjectId(this._id.toString()) : null;
+        return this._id ? new ObjectId(this._id.toString()) : null;
     }
+    res;
     constructor(res, id) {
         this._id = id;
         this.res = res;
@@ -24,14 +23,13 @@ class BaseDAO {
         if (pushErrorWhenUndefined) {
             var undefinedEntries = Object.entries(obj).filter(e => e[1] === undefined);
             if (undefinedEntries.length > 0)
-                this.res.locals.RequestErrorList.push(new database_1.RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
+                this.res.locals.RequestErrorList.push(new RequestError(`Undefined entries: ${undefinedEntries.map(e => e[0]).join(", ")}`));
         }
         return obj;
     }
     Hydrated() {
         var obj = this.PropertiesWithGetter();
-        obj = Object.assign({ _id: this._id }, obj);
+        obj = { _id: this._id, ...obj };
         return obj;
     }
 }
-exports.BaseDAO = BaseDAO;
