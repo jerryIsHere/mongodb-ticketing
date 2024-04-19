@@ -276,7 +276,7 @@ class UserDAO extends dao_1.BaseDAO {
                 return;
             }
             console.log(this.Serialize(true));
-            var result = await database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+            var result = await database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, [{ $set: this.Serialize(true) }]);
             if (result.modifiedCount > 0) {
                 resolve(this);
             }

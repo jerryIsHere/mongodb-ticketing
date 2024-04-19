@@ -145,7 +145,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             if (originalOccupant && originalOccupant.email) {
                 if (this.id) {
                     database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                        .updateOne({ _id: this.id, occupantId: null }, { $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }, { session: this.res.locals.session }).then(async (value) => {
+                        .updateOne({ _id: this.id, occupantId: null }, [{ $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }], { session: this.res.locals.session }).then(async (value) => {
                         if (value.modifiedCount > 0) {
                             if (originalOccupant && originalOccupant.email) {
                                 let notificationDao = new notification_1.NotificationDAO(this.res, {
@@ -494,7 +494,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                 reject(err);
                 return;
             }
-            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
+            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, [{ $set: this.Serialize(true) }], { session: this.res.locals.session });
             if (result.modifiedCount > 0) {
                 resolve(this);
             }
@@ -520,7 +520,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     }
                     if (dao.id) {
                         try {
-                            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }, { session: res.locals.session });
+                            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, [{ $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }], { session: res.locals.session });
                             if (result && result.modifiedCount > 0) {
                                 daoresolve({ dao: dao, info: info ? info : undefined });
                             }
