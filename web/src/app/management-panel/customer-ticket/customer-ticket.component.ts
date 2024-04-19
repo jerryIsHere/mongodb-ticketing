@@ -127,12 +127,13 @@ export class CustomerTicketComponent {
     })
   }
   loadData() {
-    this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
+    let promises = []
+    promises.push(this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
       if (result && result.data)
         this.tickets = result.data
       this.ticketDataSource.data = this.tickets
-    })
-    this.api.request.get("/user?list").toPromise().then((result: any) => {
+    }))
+    promises.push(this.api.request.get("/user?list").toPromise().then((result: any) => {
       if (result && result.data) {
         this.users = result.data
         this.filteredUsers = this.userSearch.valueChanges.pipe(
@@ -143,7 +144,8 @@ export class CustomerTicketComponent {
           }),
         );
       }
-    })
+    }))
+    return Promise.all(promises)
   }
   summary: any
   userSelected(event: MatAutocompleteSelectedEvent) {
@@ -174,43 +176,93 @@ export class CustomerTicketComponent {
     return ticketPurchaseDateString(ticket)
   }
   downloadUserDataCSV() {
-    var data = "data:text/csv;charset=utf-8," +
-      [
-        ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate"].join(","),
-        ...this.users.map(user =>
-          [user._id, user.username, user.fullname, user.email, user.singingPart, user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss'): ''].map(value => value ? value : '').join(",")
-        )
-      ].join("\n")
+    this.loadData().then(() => {
+      var data = "data:text/csv;charset=utf-8," +
+        [
+          ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate", "latestTicketPurchaseDate", "latestTicketConfirmDate", "latestTicketConfirmationType",
+            "latestTicketRemark",].join(","),
+          ...this.users.map(user => {
+            let sortedTicket = this.tickets.filter(ticket => ticket.occupant._id == user._id).sort((ticketA, ticketB) => {
+              if (ticketA.purchaseDate && ticketB.purchaseDate) {
+                return new Date(ticketA.purchaseDate) > new Date(ticketB.purchaseDate) ? -1 :
+                  new Date(ticketA.purchaseDate) < new Date(ticketB.purchaseDate) ? 1 : 0
+              }
+              else {
+                if (ticketA.purchaseDate) {
+                  return -1
+                }
+                else if (ticketB.purchaseDate) {
+                  return 1
+                }
+                else {
+                  return 0
 
-    var link = document.createElement("a");
-    link.setAttribute("href", encodeURI(data));
-    link.setAttribute("download", `user-${new Date().toLocaleDateString()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
+                }
+              }
+            }
+            )
+            let lastTicket = sortedTicket.length > 0 ? sortedTicket[0] : null
+            return [
+              user._id,
+              user.username,
+              user.fullname,
+              user.email,
+              user.singingPart,
+              user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss') : '',
+              lastTicket ? lastTicket.purchaseDate ? dateFormat(new Date(lastTicket.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
+              lastTicket ? lastTicket.confirmationDate ? dateFormat(new Date(lastTicket.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
+              lastTicket ? lastTicket.securedBy : '',
+              lastTicket ? lastTicket.remark : '',
+
+            ].map(value => value ? value : '').join(",")
+          }
+          )
+        ].join("\n")
+
+      var link = document.createElement("a");
+      link.setAttribute("href", encodeURI(data));
+      link.setAttribute("download", `user-${new Date().toLocaleDateString()}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+    })
   }
   downloadSoldTicketDataCSV() {
-    var data = "data:text/csv;charset=utf-8," +
-      [
-        ["_id", "event.eventname", "seat.row+seat.no", "priceTier.tierName", "priceTier.price", "occupant.username", "occupant.fullname", "purchaseDate", "confirmationDate"].join(","),
-        ...this.tickets.map(ticket =>
-          [ticket._id, ticket?.event?.eventname,
-          ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row.toUpperCase() + ticket.seat?.no : '',
-          ticket.priceTier.tierName,
-          ticket.priceTier.price,
-          ticket.occupant.username,
-          ticket.occupant.fullname,
-          ticket.purchaseDate ? dateFormat(new Date(ticket.purchaseDate), 'yyyymmdd hhmmss') : '',
-          ticket.confirmationDate ? dateFormat(new Date(ticket.confirmationDate), 'yyyymmdd hhmmss') : ''].map(value => value ? value : '').join(",")
-        )
-      ].join("\n")
+    this.loadData().then(() => {
+      var data = "data:text/csv;charset=utf-8," +
+        [
+          ["_id",
+            "event.eventname",
+            "seat.row+seat.no",
+            "priceTier.tierName",
+            "priceTier.price",
+            "occupant.username",
+            "occupant.fullname",
+            "purchaseDate",
+            "confirmationDate",
+            "confirmationType",
+            "remark"].join(","),
+          ...this.tickets.map(ticket =>
+            [ticket._id,
+            ticket?.event?.eventname,
+            ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row.toUpperCase() + ticket.seat?.no : '',
+            ticket.priceTier.tierName,
+            ticket.priceTier.price,
+            ticket.occupant.username,
+            ticket.occupant.fullname,
+            ticket.purchaseDate ? dateFormat(new Date(ticket.purchaseDate), 'yyyymmdd hhmmss') : '',
+            ticket.confirmationDate ? dateFormat(new Date(ticket.confirmationDate), 'yyyymmdd hhmmss') : '',
+            ticket.securedBy,
+            ticket.remark,].map(value => value ? value : '').join(",")
+          )
+        ].join("\n")
 
-    var link = document.createElement("a");
-    link.setAttribute("href", encodeURI(data));
-    link.setAttribute("download", `ticketing-${new Date().toLocaleDateString()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-
+      var link = document.createElement("a");
+      link.setAttribute("href", encodeURI(data));
+      link.setAttribute("download", `ticketing-${new Date().toLocaleDateString()}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+    })
   }
 }
