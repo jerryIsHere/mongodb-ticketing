@@ -124,3 +124,4 @@ Database.init().then(_ => {
     }
   });
 })
+export default app;

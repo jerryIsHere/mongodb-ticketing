@@ -111,3 +111,4 @@ database_1.Database.init().then(_ => {
         }
     }));
 });
+exports.default = app;
