@@ -113,6 +113,7 @@ export class UserDAO extends BaseDAO {
             this._verified = params.doc.verified ? true : false
             this._verificationToken = params.doc.verificationToken
             this._resetToken = params.doc.resetToken
+            this._lastLoginDate = params.doc.lastLoginDate
             if (params.doc.isAdmin) this._isAdmin = true;
         }
         else {
@@ -222,6 +223,7 @@ export class UserDAO extends BaseDAO {
             }
             else if (user.saltedpassword && await compare(password, user.saltedpassword)) {
                 user.lastLoginDate = "$$NOW"
+                console.log(user.Serialize(true))
                 resolve(user.update())
             }
             else {
@@ -312,8 +314,9 @@ export class UserDAO extends BaseDAO {
     public async update() {
         return new Promise<UserDAO>(async (resolve, reject) => {
             if (this._id == undefined) { reject(new RequestError(`${this.constructor.name}'s id is not initialized.`)); return }
-            console.log(this.Serialize(true))
-            var result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new ObjectId(this._id) },[ { $set: this.Serialize(true) }])
+            //salted password start with $ sign and mongodb things it is a aggregate pipe operation
+            let escapedSaltedpassword = { ...this.Serialize(true), ...{ saltedpassword: { $literal: this.saltedpassword } } }
+            var result = await Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, [{ $set: escapedSaltedpassword }])
             if (result.modifiedCount > 0) {
                 resolve(this)
             }
