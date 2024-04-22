@@ -29,12 +29,55 @@ class TicketDAO extends dao_1.BaseDAO {
     _securedBy = null;
     get securedBy() { return this._securedBy; }
     set securedBy(value) {
+        if (value && value != this._securedBy) {
+            this.confirmationDate = "$$NOW";
+        }
         this._securedBy = value;
     }
     _remark = null;
     get remark() { return this._remark; }
     set remark(value) {
         this._remark = value;
+    }
+    _purchaseDate;
+    get purchaseDate() { return this._purchaseDate; }
+    set purchaseDate(value) {
+        if (typeof value == "string") {
+            if (value = "$$NOW") {
+                this._purchaseDate = value;
+            }
+            else {
+                try {
+                    this._purchaseDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse lastLoginDate parameter of event request"));
+                }
+            }
+        }
+        else if (value instanceof Date) {
+            this._purchaseDate = value;
+        }
+    }
+    _confirmationDate;
+    get confirmationDate() { return this._confirmationDate; }
+    set confirmationDate(value) {
+        if (typeof value == "string") {
+            if (value = "$$NOW") {
+                this._confirmationDate = value;
+            }
+            else {
+                try {
+                    this._confirmationDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse lastLoginDate parameter of event request"));
+                }
+            }
+        }
+        else if (value instanceof Date) {
+            this._confirmationDate = value;
+        }
     }
     _occupantId = null;
     get occupantId() { return this._occupantId; }
@@ -56,7 +99,7 @@ class TicketDAO extends dao_1.BaseDAO {
                         reject(null);
                     if (this.id) {
                         database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                            .updateOne({ _id: this.id }, { $set: { "occupantId": null, securedBy: null, remark: null } }, { session: this.res.locals.session }).then(async (value) => {
+                            .updateOne({ _id: this.id }, { $set: { "occupantId": null, securedBy: null, remark: null, confirmationDate: null, purchaseDate: null } }, { session: this.res.locals.session }).then(async (value) => {
                             if (value.modifiedCount > 0) {
                                 if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
                                     let seatDao = await seat_1.SeatDAO.getById(this.res, this.seatId.toString()).catch(err => console.log(err));
@@ -102,7 +145,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             if (originalOccupant && originalOccupant.email) {
                 if (this.id) {
                     database_1.Database.mongodb.collection(TicketDAO.collection_name)
-                        .updateOne({ _id: this.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: this.res.locals.session }).then(async (value) => {
+                        .updateOne({ _id: this.id, occupantId: null }, [{ $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }], { session: this.res.locals.session }).then(async (value) => {
                         if (value.modifiedCount > 0) {
                             if (originalOccupant && originalOccupant.email) {
                                 let notificationDao = new notification_1.NotificationDAO(this.res, {
@@ -146,6 +189,8 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             this._priceTierId = params.doc.priceTierId;
             this._securedBy = params.doc.securedBy;
             this._remark = params.doc.remark;
+            this._confirmationDate = params.doc.confirmDateparams ? params.doc.confirmDateparams : null;
+            this._purchaseDate = params.doc.purchaseDate ? params.doc.purchaseDate : null;
         }
         if (params.securedBy)
             this.securedBy = params.securedBy;
@@ -449,7 +494,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                 reject(err);
                 return;
             }
-            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session });
+            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, [{ $set: this.Serialize(true) }], { session: this.res.locals.session });
             if (result.modifiedCount > 0) {
                 resolve(this);
             }
@@ -475,7 +520,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     }
                     if (dao.id) {
                         try {
-                            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, { $set: { "occupantId": userId } }, { session: res.locals.session });
+                            var result = await database_1.Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: dao.id, occupantId: null }, [{ $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }], { session: res.locals.session });
                             if (result && result.modifiedCount > 0) {
                                 daoresolve({ dao: dao, info: info ? info : undefined });
                             }

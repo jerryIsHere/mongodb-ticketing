@@ -8,15 +8,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Ticket } from '../../interface'
+import { Ticket, ticketConfirmDateString } from '../../interface'
 import { ApiService } from '../../service/api.service';
+import { DatePipe } from '@angular/common';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 
 
 @Component({
   selector: 'app-sold-ticket-list',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatTooltipModule],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatTooltipModule, DatePipe],
   templateUrl: './sold-ticket-list.component.html',
   styleUrl: './sold-ticket-list.component.sass'
 })
@@ -82,6 +83,9 @@ export class SoldTicketListComponent {
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result) this.dataChanged.emit()
     })
+  }
+  ticketConfirmDateString(ticket: Ticket) {
+    return ticketConfirmDateString(ticket)
   }
 
 }

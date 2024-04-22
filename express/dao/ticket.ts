@@ -36,6 +36,9 @@ export class TicketDAO extends BaseDAO {
     private _securedBy: string | null | undefined = null
     public get securedBy() { return this._securedBy }
     public set securedBy(value: string | null | undefined) {
+        if (value && value != this._securedBy) {
+            this.confirmationDate = "$$NOW"
+        }
         this._securedBy = value;
     }
 
@@ -45,8 +48,47 @@ export class TicketDAO extends BaseDAO {
         this._remark = value;
     }
 
+    private _purchaseDate: Date | string | undefined
+    public get purchaseDate() { return this._purchaseDate }
+    public set purchaseDate(value: Date | string | undefined) {
+        if (typeof value == "string") {
+            if (value = "$$NOW") {
+                this._purchaseDate = value
+            }
+            else {
+                try {
+                    this._purchaseDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new RequestError("Cannot parse lastLoginDate parameter of event request"))
+                }
+            }
+        }
+        else if (value instanceof Date) {
+            this._purchaseDate = value;
+        }
+    }
 
-
+    private _confirmationDate: Date | string | undefined
+    public get confirmationDate() { return this._confirmationDate }
+    public set confirmationDate(value: Date | string | undefined) {
+        if (typeof value == "string") {
+            if (value = "$$NOW") {
+                this._confirmationDate = value
+            }
+            else {
+                try {
+                    this._confirmationDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new RequestError("Cannot parse lastLoginDate parameter of event request"))
+                }
+            }
+        }
+        else if (value instanceof Date) {
+            this._confirmationDate = value;
+        }
+    }
 
     private _occupantId?: ObjectId | undefined | null = null
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
@@ -70,7 +112,7 @@ export class TicketDAO extends BaseDAO {
                         Database.mongodb.collection(TicketDAO.collection_name)
                             .updateOne(
                                 { _id: this.id },
-                                { $set: { "occupantId": null, securedBy: null, remark: null } }, { session: this.res.locals.session }
+                                { $set: { "occupantId": null, securedBy: null, remark: null, confirmationDate: null, purchaseDate: null } }, { session: this.res.locals.session }
                             ).then(async (value) => {
                                 if (value.modifiedCount > 0) {
                                     if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
@@ -120,7 +162,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     Database.mongodb.collection(TicketDAO.collection_name)
                         .updateOne(
                             { _id: this.id, occupantId: null },
-                            { $set: { "occupantId": userId } }, { session: this.res.locals.session }
+                            [{ $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }], { session: this.res.locals.session }
                         ).then(async (value) => {
                             if (value.modifiedCount > 0) {
                                 if (originalOccupant && originalOccupant.email) {
@@ -169,6 +211,8 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             this._priceTierId = params.doc.priceTierId
             this._securedBy = params.doc.securedBy
             this._remark = params.doc.remark
+            this._confirmationDate = params.doc.confirmDateparams? params.doc.confirmDateparams : null
+            this._purchaseDate = params.doc.purchaseDate? params.doc.purchaseDate : null
         }
         if (params.securedBy)
             this.securedBy = params.securedBy
@@ -476,7 +520,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                 reject(err)
                 return
             }
-            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, { $set: this.Serialize(true) }, { session: this.res.locals.session })
+            var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne({ _id: new ObjectId(this._id) }, [{ $set: this.Serialize(true) }], { session: this.res.locals.session })
             if (result.modifiedCount > 0) {
                 resolve(this)
             }
@@ -506,7 +550,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             try {
                                 var result = await Database.mongodb.collection(TicketDAO.collection_name).updateOne(
                                     { _id: dao.id, occupantId: null },
-                                    { $set: { "occupantId": userId } }, { session: res.locals.session })
+                                    [{ $set: { "occupantId": userId, "purchaseDate": "$$NOW" } }], { session: res.locals.session })
                                 if (result && result.modifiedCount > 0) {
                                     daoresolve({ dao: dao, info: info ? info : undefined })
                                 }

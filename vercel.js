@@ -35,7 +35,7 @@ async function getFiles(dir) {
         });
         const files = await Promise.all(dirents.map((dirent) => {
             const res = resolve(dir, dirent.name);
-            return dirent.isDirectory() ? getFiles(res) : relative(root, res).replace('\\',"/");
+            return dirent.isDirectory() ? getFiles(res) : relative(root, res).replaceAll('\\',"/");
         }));
         return Array.prototype.concat(...files);
     }
@@ -43,7 +43,7 @@ async function getFiles(dir) {
         var files = await getFiles(root)
         vercel.routes = [...files.map(f => {
             return {
-                "src": "/web/" + encodeURIComponent(f).replace("%2F",'/'),
+                "src": "/web/" + encodeURIComponent(f).replaceAll("%2F",'/'),
                 "dest": "/web/dist/ticketing/browser/" + f
             }
         }), ...vercel.routes]

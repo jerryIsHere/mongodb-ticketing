@@ -65,6 +65,26 @@ class UserDAO extends dao_1.BaseDAO {
     _verificationToken = null;
     get verificationToken() { return this._verificationToken; }
     set verificationToken(value) { this._verificationToken = value; }
+    _lastLoginDate;
+    get lastLoginDate() { return this._lastLoginDate; }
+    set lastLoginDate(value) {
+        if (typeof value == "string") {
+            if (value = "$$NOW") {
+                this._lastLoginDate = value;
+            }
+            else {
+                try {
+                    this._lastLoginDate = new Date(value);
+                }
+                catch (err) {
+                    this.res.locals.RequestErrorList.push(new database_1.RequestError("Cannot parse lastLoginDate parameter of event request"));
+                }
+            }
+        }
+        else if (value instanceof Date) {
+            this._lastLoginDate = value;
+        }
+    }
     constructor(res, params) {
         super(res, params.doc && params.doc._id ? params.doc._id : undefined);
         if (params.doc && params.doc._id) {
@@ -72,10 +92,11 @@ class UserDAO extends dao_1.BaseDAO {
             this._fullname = params.doc.fullname;
             this._email = params.doc.email;
             this._saltedpassword = params.doc.saltedpassword;
-            this._singingPart = params.doc.singingPart;
+            this._singingPart = params.doc.singingPart ? params.doc.singingPart : "";
             this._verified = params.doc.verified ? true : false;
-            this._verificationToken = params.doc.verificationToken;
-            this._resetToken = params.doc.resetToken;
+            this._verificationToken = params.doc.verificationToken ? params.doc.verificationToken : null;
+            this._resetToken = params.doc.resetToken ? params.doc.resetToken : null;
+            this._lastLoginDate = params.doc.lastLoginDate ? params.doc.lastLoginDate : "";
             if (params.doc.isAdmin)
                 this._isAdmin = true;
         }
@@ -167,7 +188,9 @@ class UserDAO extends dao_1.BaseDAO {
                 reject(new database_1.RequestError(`User with username ${username} not found.`));
             }
             else if (user.saltedpassword && await (0, bcrypt_1.compare)(password, user.saltedpassword)) {
-                resolve(user);
+                user.lastLoginDate = "$$NOW";
+                console.log(user.Serialize(true));
+                resolve(user.update());
             }
             else {
                 reject(new database_1.RequestError("Incorrect password"));
@@ -254,8 +277,9 @@ class UserDAO extends dao_1.BaseDAO {
                 reject(new database_1.RequestError(`${this.constructor.name}'s id is not initialized.`));
                 return;
             }
-            console.log(this.Serialize(true));
-            var result = await database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, { $set: this.Serialize(true) });
+            //salted password start with $ sign and mongodb things it is a aggregate pipe operation
+            let escapedSaltedpassword = { ...this.Serialize(true), ...{ saltedpassword: { $literal: this.saltedpassword } } };
+            var result = await database_1.Database.mongodb.collection(UserDAO.collection_name).updateOne({ _id: new mongodb_1.ObjectId(this._id) }, [{ $set: escapedSaltedpassword }]);
             if (result.modifiedCount > 0) {
                 resolve(this);
             }

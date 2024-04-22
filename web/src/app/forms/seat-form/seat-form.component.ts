@@ -46,7 +46,7 @@ export class SeatFormComponent {
   submit() {
     if (this.queryForm.valid) {
       var seats: { row: string, no: number }[] = []
-      var commands: string[] = (this.queryForm.controls["query"].value as string).toLowerCase().replace(" ", "").replace("\t", "").split(/[,\n]/)
+      var commands: string[] = (this.queryForm.controls["query"].value as string).toLowerCase().replaceAll(" ", "").replaceAll("\t", "").split(/[,\n]/)
       commands.forEach((command) => {
         let start = command.split(/[:-]/)[0]
         let end = command.split(/[:-]/)[1]
