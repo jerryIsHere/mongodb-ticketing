@@ -48,9 +48,9 @@ export class TicketDAO extends BaseDAO {
         this._remark = value;
     }
 
-    private _purchaseDate: Date | string | undefined
+    private _purchaseDate: Date | string | undefined | null = null
     public get purchaseDate() { return this._purchaseDate }
-    public set purchaseDate(value: Date | string | undefined) {
+    public set purchaseDate(value: Date | string | undefined | null) {
         if (typeof value == "string") {
             if (value = "$$NOW") {
                 this._purchaseDate = value
@@ -69,9 +69,9 @@ export class TicketDAO extends BaseDAO {
         }
     }
 
-    private _confirmationDate: Date | string | undefined
+    private _confirmationDate: Date | string | undefined | null = null
     public get confirmationDate() { return this._confirmationDate }
-    public set confirmationDate(value: Date | string | undefined) {
+    public set confirmationDate(value: Date | string | undefined | null) {
         if (typeof value == "string") {
             if (value = "$$NOW") {
                 this._confirmationDate = value
@@ -211,8 +211,8 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             this._priceTierId = params.doc.priceTierId
             this._securedBy = params.doc.securedBy
             this._remark = params.doc.remark
-            this._confirmationDate = params.doc.confirmDateparams? params.doc.confirmDateparams : null
-            this._purchaseDate = params.doc.purchaseDate? params.doc.purchaseDate : null
+            this._confirmationDate = params.doc.confirmDateparams ? params.doc.confirmDateparams : null
+            this._purchaseDate = params.doc.purchaseDate ? params.doc.purchaseDate : null
         }
         if (params.securedBy)
             this.securedBy = params.securedBy

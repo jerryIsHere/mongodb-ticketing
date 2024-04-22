@@ -39,7 +39,7 @@ class TicketDAO extends dao_1.BaseDAO {
     set remark(value) {
         this._remark = value;
     }
-    _purchaseDate;
+    _purchaseDate = null;
     get purchaseDate() { return this._purchaseDate; }
     set purchaseDate(value) {
         if (typeof value == "string") {
@@ -59,7 +59,7 @@ class TicketDAO extends dao_1.BaseDAO {
             this._purchaseDate = value;
         }
     }
-    _confirmationDate;
+    _confirmationDate = null;
     get confirmationDate() { return this._confirmationDate; }
     set confirmationDate(value) {
         if (typeof value == "string") {
