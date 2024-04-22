@@ -211,8 +211,8 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             this._priceTierId = params.doc.priceTierId
             this._securedBy = params.doc.securedBy
             this._remark = params.doc.remark
-            this._confirmationDate = params.doc.confirmDate
-            this._purchaseDate = params.doc.purchaseDate
+            this._confirmationDate = params.doc.confirmDateparams? params.doc.confirmDateparams : null
+            this._purchaseDate = params.doc.purchaseDate? params.doc.purchaseDate : null
         }
         if (params.securedBy)
             this.securedBy = params.securedBy
