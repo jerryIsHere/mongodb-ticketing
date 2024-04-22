@@ -11,8 +11,8 @@
   </mat-autocomplete>
 </mat-form-field>
 <br>
-<button mat-button (click)="downloadUserDataCSV()">Export user data</button>
-<button mat-button (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
+<button mat-flat-button (click)="downloadUserDataCSV()">Export user data</button>
+<button mat-flat-button (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>
 @if(summary){
 Ticket baught:
@@ -63,7 +63,7 @@ no data
     <th mat-header-cell *matHeaderCellDef>Ticket verification
     </th>
     <td mat-cell *matCellDef="let element">
-      <button mat-button (click)="openForm(element)">
+      <button mat-flat-button (click)="openForm(element)">
         <mat-icon>receipt_long</mat-icon>
       </button>
     </td>
@@ -72,7 +72,7 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Ticket confirmed with
     </th>
     <td mat-cell *matCellDef="let element">
-      <span mat-button [matTooltip]="ticketConfirmDateString(element)">
+      <span mat-flat-button [matTooltip]="ticketConfirmDateString(element)">
         {{element.securedBy}}
         @if(element.remark){
         &#40;remark: {{element.remark}}&#41;

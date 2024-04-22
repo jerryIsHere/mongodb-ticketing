@@ -36,16 +36,16 @@ no data
   <ng-container matColumnDef="_id">
     <th mat-header-cell *matHeaderCellDef>Manage</th>
     <td mat-cell *matCellDef="let element">
-      <a mat-button [routerLink]="['/event-seats', { id: element._id }]">
+      <a mat-flat-button [routerLink]="['/event-seats', { id: element._id }]">
         <mat-icon>event_seat</mat-icon>
         <mat-icon>edit</mat-icon>
       </a>
-      <button mat-button (click)="openForm({event: element, venues: venues})">Edit</button>
-      <button mat-button (click)="delete(element._id)" color="warn">Delete</button>
+      <button mat-flat-button (click)="openForm({event: element, venues: venues})">Edit</button>
+      <button mat-flat-button (click)="delete(element._id)" color="warn">Delete</button>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="showDataColumn"></tr>
   <tr mat-row *matRowDef="let row; columns: showDataColumn;"></tr>
 </table>
 <mat-paginator [pageSizeOptions]="[10, 25, 100]" aria-label="Select page of users"></mat-paginator>
-<mat-card-actions><button mat-button (click)="openForm({event: {},venues: venues})">Create</button>
+<mat-card-actions><button mat-flat-button (click)="openForm({event: {},venues: venues})">Create</button>
 </mat-card-actions>
