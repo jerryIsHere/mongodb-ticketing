@@ -16,17 +16,17 @@ no data
   <ng-container matColumnDef="_id">
     <th mat-header-cell *matHeaderCellDef>Manage</th>
     <td mat-cell *matCellDef="let element">
-      <a mat-flat-button [routerLink]="['/venue-seats', { id: element._id }]">
+      <a mat-stroked-button color="primary"[routerLink]="['/venue-seats', { id: element._id }]">
         Edit Seating Plan
         <mat-icon>event_seat</mat-icon><mat-icon>edit</mat-icon>
       </a>
-      <button mat-flat-button (click)="openForm(element)">Edit</button>
-      <button mat-flat-button (click)="delete(element._id)" color="warn">Delete</button>
+      <button mat-stroked-button color="primary"(click)="openForm(element)">Edit</button>
+      <button mat-stroked-button color="primary"(click)="delete(element._id)" color="warn">Delete</button>
     </td>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="venueDataColumn"></tr>
   <tr mat-row *matRowDef="let row; columns: venueDataColumn;"></tr>
 </table>
 <mat-paginator [pageSizeOptions]="[10, 25, 100]" aria-label="Select page of users"></mat-paginator>
-<mat-card-actions><button mat-flat-button (click)="openForm()">Create</button>
+<mat-card-actions><button mat-stroked-button color="primary"(click)="openForm()">Create</button>
 </mat-card-actions>

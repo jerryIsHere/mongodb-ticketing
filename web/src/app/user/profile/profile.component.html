@@ -19,7 +19,7 @@
   <mat-checkbox [checked]="userSession.user.verified" (click)="$event.preventDefault();">
     Email Verification</mat-checkbox>
   @if(userSession.user.verified != true){
-  <button mat-flat-button
+  <button mat-stroked-button
     (click)="activicationEmailSent?null:sendActivicationEmail()">{{activicationEmailSent?'activation email sent':'resent activation email'}}</button>
   }
   <br>
@@ -41,7 +41,7 @@
     }
   </mat-form-field>
 </form>
-<button mat-flat-button (click)="updateProfile()">Update Profile</button>
+<button mat-stroked-button color="primary"(click)="updateProfile()">Update Profile</button>
 <form [formGroup]="passwordForm">
   <mat-form-field>
     <mat-label>Password</mat-label>
@@ -63,4 +63,4 @@
     }
   </mat-form-field>
 </form>
-<button mat-flat-button (click)="updatePassword()">Change Password</button>
+<button mat-stroked-button color="primary"(click)="updatePassword()">Change Password</button>

@@ -12,7 +12,7 @@
 @else{
 loading
 }
-<button mat-flat-button (click)="openForm()">Select multiple seats in this section</button>
+<button mat-stroked-button color="primary"(click)="openForm()">Select multiple seats in this section</button>
 
 
 <!-- @if(event && event.eventname){
@@ -22,7 +22,7 @@ loading
   @for (seat of slots; track seat) {
   <mat-grid-tile>
     @if(seat) {
-    <button mat-flat-button [matMenuTriggerFor]="menu"
+    <button mat-stroked-button color="primary"[matMenuTriggerFor]="menu"
       [matMenuTriggerData]="{seat_id: seat._id}">{{seat&&seat.row&&seat.no ? (seat.row + seat.no): ""}}
       :
       {{getTiceket(seat._id)?getBuyer(seat._id)?"sold":getTiceket(seat._id)?.priceTier?.tierName:"not selling"}}
@@ -45,7 +45,7 @@ loading
     }
     }
     @else {
-    <button mat-flat-button mat-menu-item [matMenuTriggerFor]="priceMenu" [matMenuTriggerData]="{seat_id: seat_id}">sell as
+    <button mat-stroked-button color="primary"mat-menu-item [matMenuTriggerFor]="priceMenu" [matMenuTriggerData]="{seat_id: seat_id}">sell as
     </button>
     }
     }
