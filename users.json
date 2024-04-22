@@ -1,0 +1,466 @@
+[
+    {
+        "username": "HazelHon",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": "Hazel Hon",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "WinifredLee",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Winifred Lee",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "IvyWong",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Ivy Wong",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "T.Y.Chen",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": "  T.Y. Chen",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "PauliLai",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Pauli Lai",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "CatherineLi",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": "  Catherine Li",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "WinnieLai",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Winnie Lai",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "CandyChik",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Candy Chik",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "ZoeTang",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Zoe Tang",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "ElaineChan",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": "  Elaine Chan",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "RebeccaSiu",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Rebecca Siu",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "WinnieYau",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Winnie Yau",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "EdenYiu",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Eden Yiu",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "MariaLi",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Maria Li",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "KimmyKam",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Kimmy Kam",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "TracyYeung",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Tracy Yeung",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "StellaLam",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Stella Lam",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "KimWong",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Kim Wong",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "RebeccaHo",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Rebecca Ho",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "SandraTam",
+        "saltedpassword": "$2b$10$UHP2n4fwL.gYRWWU67h5E.hDttCLSUqud3KeiUwm7mFEAUotJHRkW",
+        "fullname": " Sandra Tam",
+        "email": "hkccticketing.S1@gmail.com",
+        "singingPart": "S1",
+        "verified": false
+    },
+    {
+        "username": "MaryChu",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": "Mary Chu",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "OpheliaChan",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": "  Ophelia Chan",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "KarenTang",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Karen Tang",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "AliceYeung",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Alice Yeung",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "StelaNgo",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Stela Ngo",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "MimiHo",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Mimi Ho",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "KKLeung",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " KK Leung",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "AlisonTsang",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Alison Tsang",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "MonitaChow",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Monita Chow",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "CeciliaChan",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Cecilia Chan",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "JaneLai",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Jane Lai",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "LynnZhang",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Lynn Zhang",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "EileenTang",
+        "saltedpassword": "$2b$10$7qq4xe21YJQuCwvS/EvT0OWqqCjTGN3n5cm2MYyg2vJBceZ7NC8ZG",
+        "fullname": " Eileen Tang",
+        "email": "hkccticketing.S2@gmail.com",
+        "singingPart": "S2",
+        "verified": false
+    },
+    {
+        "username": "YabeMakiko",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": "Yabe Makiko",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "GladysLau",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Gladys Lau",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "SueFung",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Sue Fung",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "JoyceChu",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Joyce Chu",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "MelodyZhang",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Melody Zhang",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "AnnaShih",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Anna Shih",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "MayChan",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " May Chan",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "VickiYu",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Vicki Yu",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "AdaWong",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Ada Wong",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "Choi-lingCheung",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Choi-ling Cheung",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "EllaChan",
+        "saltedpassword": "$2b$10$zOS5wWDZE6PmJEpkgyT9ieTfyBXhBBetwxd5/BQ2ICHPcOiLO8YP2",
+        "fullname": " Ella Chan",
+        "email": "hkccticketing.A@gmail.com",
+        "singingPart": "A",
+        "verified": false
+    },
+    {
+        "username": "PatrickLo",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": "Patrick Lo",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "JackLeung",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Jack Leung",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "Charn-wingNg",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Charn-wing Ng",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "TonyKwong",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Tony Kwong",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "AkiraCheung",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Akira Cheung",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "VinsonHo",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Vinson Ho",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "SamSzeto",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Sam Szeto",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "JerrySo",
+        "saltedpassword": "$2b$10$Q2SDtq17N5N/nf4MSbTKHeruIOwcaKjq0k/cyPn/vK0rr7xMWOYN6",
+        "fullname": " Jerry So",
+        "email": "hkccticketing.T@gmail.com",
+        "singingPart": "T",
+        "verified": false
+    },
+    {
+        "username": "LawrenceLau",
+        "saltedpassword": "$2b$10$kXaeBxjeOZyI7KVPQgvyBeOTJtDKq8Tc8DejvNkAOiIVydlC651QK",
+        "fullname": "Lawrence Lau",
+        "email": "hkccticketing.B@gmail.com",
+        "singingPart": "B",
+        "verified": false
+    },
+    {
+        "username": "SamuelLui",
+        "saltedpassword": "$2b$10$kXaeBxjeOZyI7KVPQgvyBeOTJtDKq8Tc8DejvNkAOiIVydlC651QK",
+        "fullname": " Samuel Lui",
+        "email": "hkccticketing.B@gmail.com",
+        "singingPart": "B",
+        "verified": false
+    },
+    {
+        "username": "SamLo",
+        "saltedpassword": "$2b$10$kXaeBxjeOZyI7KVPQgvyBeOTJtDKq8Tc8DejvNkAOiIVydlC651QK",
+        "fullname": " Sam Lo",
+        "email": "hkccticketing.B@gmail.com",
+        "singingPart": "B",
+        "verified": false
+    },
+    {
+        "username": "AlanChan",
+        "saltedpassword": "$2b$10$kXaeBxjeOZyI7KVPQgvyBeOTJtDKq8Tc8DejvNkAOiIVydlC651QK",
+        "fullname": " Alan Chan",
+        "email": "hkccticketing.B@gmail.com",
+        "singingPart": "B",
+        "verified": false
+    },
+    {
+        "username": "GaryWong",
+        "saltedpassword": "$2b$10$kXaeBxjeOZyI7KVPQgvyBeOTJtDKq8Tc8DejvNkAOiIVydlC651QK",
+        "fullname": " Gary Wong",
+        "email": "hkccticketing.B@gmail.com",
+        "singingPart": "B",
+        "verified": false
+    },
+    {
+        "username": "JianSun",
+        "saltedpassword": "$2b$10$kXaeBxjeOZyI7KVPQgvyBeOTJtDKq8Tc8DejvNkAOiIVydlC651QK",
+        "fullname": " Jian Sun",
+        "email": "hkccticketing.B@gmail.com",
+        "singingPart": "B",
+        "verified": false
+    }
+]

@@ -92,11 +92,11 @@ class UserDAO extends dao_1.BaseDAO {
             this._fullname = params.doc.fullname;
             this._email = params.doc.email;
             this._saltedpassword = params.doc.saltedpassword;
-            this._singingPart = params.doc.singingPart;
+            this._singingPart = params.doc.singingPart ? params.doc.singingPart : "";
             this._verified = params.doc.verified ? true : false;
-            this._verificationToken = params.doc.verificationToken;
-            this._resetToken = params.doc.resetToken;
-            this._lastLoginDate = params.doc.lastLoginDate;
+            this._verificationToken = params.doc.verificationToken ? params.doc.verificationToken : null;
+            this._resetToken = params.doc.resetToken ? params.doc.resetToken : null;
+            this._lastLoginDate = params.doc.lastLoginDate ? params.doc.lastLoginDate : "";
             if (params.doc.isAdmin)
                 this._isAdmin = true;
         }
