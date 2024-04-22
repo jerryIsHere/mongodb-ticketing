@@ -39,7 +39,7 @@ no data
     <th mat-header-cell *matHeaderCellDef>Ticket verification
     </th>
     <td mat-cell *matCellDef="let element">
-      <button mat-button (click)="openForm(element)">
+      <button mat-stroked-button color="primary"(click)="openForm(element)">
         <mat-icon>receipt_long</mat-icon>
       </button>
     </td>
@@ -48,7 +48,7 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Ticket confirmed with
     </th>
     <td mat-cell *matCellDef="let element">
-      <span mat-button [matTooltip]="ticketConfirmDateString(element)">
+      <span mat-stroked-button color="primary"[matTooltip]="ticketConfirmDateString(element)">
         {{element.securedBy}}
         @if(element.remark){
         &#40;remark: {{element.remark}}&#41;

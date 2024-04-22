@@ -14,9 +14,9 @@
         }
         @else{
         <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
-          <button mat-button style="pointer-events: none;"></button>
+          <button mat-stroked-button color="primary"style="pointer-events: none;"></button>
           @for(col of cols; track col){
-          <button mat-button style="pointer-events: none;">{{col}}</button>
+          <button mat-stroked-button color="primary"style="pointer-events: none;">{{col}}</button>
           }
         </mat-list-item>
         }
@@ -48,7 +48,7 @@
           @else if(this.selectedSection?.options.seatAlign){
           }
           @else{
-          <button mat-button style="background-color: transparent" cdkDrag [cdkDragDisabled]="seatingPlanEditing"
+          <button mat-stroked-button color="primary"style="background-color: transparent" cdkDrag [cdkDragDisabled]="seatingPlanEditing"
             disabled>
           </button>
           }

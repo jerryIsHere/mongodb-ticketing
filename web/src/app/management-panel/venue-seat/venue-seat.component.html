@@ -6,8 +6,8 @@
 @else{
 loading
 }
-<button mat-button (click)="openCreationForm()">batch create</button>
-<button mat-button (click)="openDeletationForm()">batch delete</button>
+<button mat-stroked-button color="primary"(click)="openCreationForm()">batch create</button>
+<button mat-stroked-button color="primary"(click)="openDeletationForm()">batch delete</button>
 <form [formGroup]="optionForm">
   <mat-form-field>
     <mat-label>Order (ascending)</mat-label>
@@ -46,5 +46,5 @@ loading
       <mat-option value="">Padding</mat-option>
     </mat-select>
   </mat-form-field>
-  <button mat-button (click)="submitSectionOption()">update</button>
+  <button mat-stroked-button color="primary"(click)="submitSectionOption()">update</button>
 </form>

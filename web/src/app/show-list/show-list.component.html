@@ -29,7 +29,7 @@ no data
   <ng-container matColumnDef="_id">
     <th mat-header-cell *matHeaderCellDef> Buy Ticket </th>
     <td mat-cell *matCellDef="let element">
-      <a mat-button [routerLink]="['/buy-ticket', { id: element._id }]">
+      <a mat-stroked-button color="primary"[routerLink]="['/buy-ticket', { id: element._id }]">
         <mat-icon>event_seat</mat-icon>
         <mat-icon>shopping_cart</mat-icon>
       </a>

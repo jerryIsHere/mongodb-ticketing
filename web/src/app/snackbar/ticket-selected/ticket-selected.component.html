@@ -3,14 +3,14 @@
 selected &#40;up to {{limit}}&#41;
 (cost: {{totalCost()}})
 <span matSnackBarActions style="color: white">
-  <button matSnackBarAction style="color: white" mat-button (click)="buy()" [disabled]="doing">
+  <button matSnackBarAction style="color: white" mat-stroked-button color="primary" (click)="buy()" [disabled]="doing">
     @if(doing){
     <mat-spinner></mat-spinner>
     }
     @else{buy
     }
   </button>
-  <button matSnackBarAction color="warning" mat-button (click)="
+  <button matSnackBarAction style="color: red" color="warning" mat-stroked-button (click)="
   snackRef.dismiss()"> cancel
   </button>
 </span>

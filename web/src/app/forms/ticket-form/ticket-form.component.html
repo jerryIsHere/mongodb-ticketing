@@ -28,7 +28,7 @@
   </mat-card-content>
   <mat-card-actions>
     @if(!(ticketForm.controls['securedBy'].value || ticketForm.controls['remark'].value)){
-    <button mat-button color="warn" (click)="voidTicket()">void</button>}
-    <button mat-button (click)="submit()">update</button>
+    <button mat-stroked-button color="warn" (click)="voidTicket()">void</button>}
+    <button mat-stroked-button color="primary"(click)="submit()">update</button>
   </mat-card-actions>
 </mat-card>
