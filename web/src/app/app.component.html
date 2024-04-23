@@ -1,4 +1,5 @@
-<mat-toolbar>HK City Choir Ticketing
+<mat-toolbar>
+  <a mat-stroked-button color="primary" href="/">HK City Choir Ticketing</a>
   <span style="flex: 1 1 auto;"></span>
   <a mat-stroked-button color="primary"*ngIf="userSession.user" [routerLink]="['/']"
     [color]="router.isActive('/', true)?'accent':''">Events</a>
