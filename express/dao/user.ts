@@ -71,9 +71,9 @@ export class UserDAO extends BaseDAO {
     public get verificationToken(): string | undefined | null { return this._verificationToken }
     public set verificationToken(value: string | undefined | null) { this._verificationToken = value; }
 
-    private _lastLoginDate: Date | string | undefined
+    private _lastLoginDate: Date | string | undefined | null = null
     public get lastLoginDate() { return this._lastLoginDate }
-    public set lastLoginDate(value: Date | string | undefined) {
+    public set lastLoginDate(value: Date | string | undefined | null) {
         if (typeof value == "string") {
             if (value = "$$NOW") {
                 this._lastLoginDate = value
