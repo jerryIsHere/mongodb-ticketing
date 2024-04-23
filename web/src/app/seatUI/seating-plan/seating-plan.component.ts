@@ -44,7 +44,7 @@ export class SeatingPlanComponent {
     this._selectedSection = value
     if (this.seats)
       this.render()
-    this.clearSelectedSeat()    
+    this.clearSelectedSeat()
     this.selectedSectionChange.emit(value)
   }
   @Output() selectedSectionChange = new EventEmitter<{ x: number, y: number }>();
@@ -190,10 +190,11 @@ export class SeatingPlanComponent {
     }
     return null
   }
+  // should return null when ticket is not occupied
   getBuyer(rowOrSeatId: string, col?: number) {
     let ticket = this.getTiceket(rowOrSeatId, col)
     if (ticket)
-      return ticket.occupant ? ticket.occupant : ticket.occupied
+      return ticket.occupant ? ticket.occupant : ticket.occupied ? true : null
     return null
   }
 
