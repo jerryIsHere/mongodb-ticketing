@@ -72,6 +72,27 @@ type HttpClientLike = {
   providedIn: 'root'
 })
 export class ApiService {
+  errorHandler(errResponse: HttpErrorResponse) {
+    console.log(errResponse)
+    if (errResponse.error) {
+      if (errResponse.error.reason) {
+        this.snackBar.open(errResponse.error.reason, "ok")
+      }
+      else if (errResponse.error.reasons) {
+        this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
+      }
+      else{
+        this.snackBar.open("Request is not successful. Try again later.", "ok")
+      }
+    }
+    return of([])
+  }
+  successHandler(response: any){
+    if (response && response.success) {
+      this.snackBar.open("Request is successfully made.", "ok")
+    }
+    return response
+  }
   //static readonly endpoint: string = location.origin.includes("localhost") ? "http://localhost:3000" : "https://micro-ticketing-api.vercel.app"
   public user: UserApi
   public request: HttpClientLike
@@ -94,18 +115,7 @@ export class ApiService {
         } | boolean;
       }) => {
         return this.httpClient.get(url, options).pipe(
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          catchError(this.errorHandler)
         )
       },
 
@@ -126,24 +136,8 @@ export class ApiService {
         } | boolean;
       }) => {
         return this.httpClient.post(url, body, options).pipe(
-          map((response: any) => {
-            if (response && response.success) {
-                this.snackBar.open("Request is successfully made.", "ok")
-            }
-            return response
-          }),
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          map(this.successHandler),
+          catchError(this.errorHandler)
         )
       },
 
@@ -161,24 +155,8 @@ export class ApiService {
         withCredentials?: boolean;
       }) => {
         return this.httpClient.patch(url, body, options).pipe(
-          map((response: any) => {
-            if (response && response.success) {
-                this.snackBar.open("Request is successfully made.", "ok")
-            }
-            return response
-          }),
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          map(this.successHandler),
+          catchError(this.errorHandler)
         )
       },
       delete: (url: string, options?: {
@@ -196,24 +174,8 @@ export class ApiService {
         body?: any | null;
       }) => {
         return this.httpClient.delete(url, options).pipe(
-          map((response: any) => {
-            if (response && response.success) {
-                this.snackBar.open("Request is successfully made.", "ok")
-            }
-            return response
-          }),
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          map(this.successHandler),
+          catchError(this.errorHandler)
         )
       }
     }
