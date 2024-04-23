@@ -103,10 +103,10 @@ export class BuyTicketComponent {
       });
     }
     else if (this.actionSnackbarRef && this.seatingPlan) {
-      if(tickets.length == 0){
+      if (tickets.length == 0) {
         this.actionSnackbarRef.dismiss()
       }
-      else{
+      else {
         this.actionSnackbarRef.instance.data.tickets = tickets
         this.actionSnackbarRef.instance.data.seatInfo = seatInfo
       }
