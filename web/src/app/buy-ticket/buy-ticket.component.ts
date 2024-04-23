@@ -95,10 +95,12 @@ export class BuyTicketComponent {
           seatInfo: seatInfo
         }
       });
-      this.actionSnackbarRef.afterDismissed().subscribe(() => {
+      this.actionSnackbarRef.afterDismissed().subscribe((response) => {
         this.actionSnackbarRef = undefined
-        if (this._id)
-          this.loadData(this._id);
+        if (this._id) {
+          // commenting this because this exhause server resources
+          //  this.loadData(this._id);
+        }
         this.seatingPlan?.clearSelectedSeat()
       });
     }

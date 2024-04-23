@@ -127,7 +127,7 @@ export class ApiService {
         } | boolean;
       }) => {
         return this.httpClient.get(url, options).pipe(
-          catchError(errorHandler("Our website is overloaded by excessive traffic. Please refresh page later."))
+          // catchError(errorHandler("Our website is overloaded by excessive traffic. Please refresh page later."))
         )
       },
 
