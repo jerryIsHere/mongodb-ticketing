@@ -3,6 +3,8 @@ import { HttpClient, HttpContext, HttpHeaders, HttpParams, HttpErrorResponse } f
 import { UserSessionService } from './user-session.service';
 import { Observable, catchError, of, map } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { ErrorMessageDialogComponent } from '../dialog/error-message-dialog/error-message-dialog.component';
 
 
 type HttpClientLike = {
@@ -75,7 +77,38 @@ export class ApiService {
   //static readonly endpoint: string = location.origin.includes("localhost") ? "http://localhost:3000" : "https://micro-ticketing-api.vercel.app"
   public user: UserApi
   public request: HttpClientLike
-  constructor(private httpClient: HttpClient, public userSession: UserSessionService, public snackBar: MatSnackBar) {
+  constructor(private httpClient: HttpClient, public userSession: UserSessionService,
+    public snackBar: MatSnackBar, public dialog: MatDialog) {
+    let errorHandler = (defaultMsg: string = "Request failed. Try again later.") => {
+      let handler = (errResponse: HttpErrorResponse) => {
+        console.log(errResponse)
+        if (errResponse.error) {
+          if (errResponse.error.reason) {
+            this.dialog.open(ErrorMessageDialogComponent, {
+              data: { reasons: [errResponse.error.reason] }
+            })
+          }
+          else if (errResponse.error.reasons) {
+            this.dialog.open(ErrorMessageDialogComponent, {
+              data: { reasons: errResponse.error.reasons }
+            })
+          }
+          else {
+            this.dialog.open(ErrorMessageDialogComponent, {
+              data: { reasons: [defaultMsg] }
+            })
+          }
+        }
+        return of([])
+      }
+      return handler
+    }
+    let successHandler = (response: any) => {
+      if (response && response.success) {
+        this.snackBar.open("Request is successfully made.", "ok")
+      }
+      return response
+    }
     this.request = {
       get: (url: string, options?: {
         headers?: HttpHeaders | {
@@ -94,18 +127,7 @@ export class ApiService {
         } | boolean;
       }) => {
         return this.httpClient.get(url, options).pipe(
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          catchError(errorHandler("Our website is overloaded by excessive traffic. Please refresh page later."))
         )
       },
 
@@ -126,24 +148,8 @@ export class ApiService {
         } | boolean;
       }) => {
         return this.httpClient.post(url, body, options).pipe(
-          map((response: any) => {
-            if (response && response.success) {
-                this.snackBar.open("Request is successfully made.", "ok")
-            }
-            return response
-          }),
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          map(successHandler),
+          catchError(errorHandler())
         )
       },
 
@@ -161,24 +167,8 @@ export class ApiService {
         withCredentials?: boolean;
       }) => {
         return this.httpClient.patch(url, body, options).pipe(
-          map((response: any) => {
-            if (response && response.success) {
-                this.snackBar.open("Request is successfully made.", "ok")
-            }
-            return response
-          }),
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          map(successHandler),
+          catchError(errorHandler())
         )
       },
       delete: (url: string, options?: {
@@ -196,24 +186,8 @@ export class ApiService {
         body?: any | null;
       }) => {
         return this.httpClient.delete(url, options).pipe(
-          map((response: any) => {
-            if (response && response.success) {
-                this.snackBar.open("Request is successfully made.", "ok")
-            }
-            return response
-          }),
-          catchError((errResponse: HttpErrorResponse) => {
-            console.log(errResponse)
-            if (errResponse.error) {
-              if (errResponse.error.reason) {
-                this.snackBar.open(errResponse.error.reason, "ok")
-              }
-              else if (errResponse.error.reasons) {
-                this.snackBar.open(errResponse.error.reasons.join('\n'), "ok")
-              }
-            }
-            return of([])
-          })
+          map(successHandler),
+          catchError(errorHandler())
         )
       }
     }

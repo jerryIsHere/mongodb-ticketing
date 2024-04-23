@@ -1,0 +1,11 @@
+<h1 mat-dialog-title style="color: red">
+  <mat-icon>error</mat-icon>Request Failed
+</h1>
+<mat-dialog-content style="color: red">
+  @for(error of errors; track error){
+  <p color="warning">{{error}}</p>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>OK</button>
+</mat-dialog-actions>
