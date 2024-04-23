@@ -65,7 +65,7 @@ class UserDAO extends dao_1.BaseDAO {
     _verificationToken = null;
     get verificationToken() { return this._verificationToken; }
     set verificationToken(value) { this._verificationToken = value; }
-    _lastLoginDate;
+    _lastLoginDate = null;
     get lastLoginDate() { return this._lastLoginDate; }
     set lastLoginDate(value) {
         if (typeof value == "string") {
