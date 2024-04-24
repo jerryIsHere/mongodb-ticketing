@@ -11,8 +11,8 @@ import {
   MatDialogModule
 } from '@angular/material/dialog';
 
-const charCodeOfA = "a".charCodeAt(0)
-const charCodeOfZ = "z".charCodeAt(0)
+const charCodeOfA = "A".charCodeAt(0)
+const charCodeOfZ = "Z".charCodeAt(0)
 
 @Component({
   selector: 'app-seat-form',
@@ -46,13 +46,13 @@ export class SeatFormComponent {
   submit() {
     if (this.queryForm.valid) {
       var seats: { row: string, no: number }[] = []
-      var commands: string[] = (this.queryForm.controls["query"].value as string).toLowerCase().replaceAll(" ", "").replaceAll("\t", "").split(/[,\n]/)
+      var commands: string[] = (this.queryForm.controls["query"].value as string).toUpperCase().replaceAll(" ", "").replaceAll("\t", "").split(/[,\n]/)
       commands.forEach((command) => {
         let start = command.split(/[:-]/)[0]
         let end = command.split(/[:-]/)[1]
-        let startRow = start.match(/[a-z]+/)
+        let startRow = start.match(/[A-Z]+/)
         let startNo = start.match(/[\d]+/)
-        let endRow = end ? end.match(/[a-z]+/) : startRow
+        let endRow = end ? end.match(/[A-Z]+/) : startRow
         let endNo = end ? end.match(/[\d]+/) : startNo
 
         if (startRow && startNo && endRow && endNo && Number.isInteger(Number(startNo[0])) && Number.isInteger(Number(endNo[0]))) {
@@ -67,7 +67,7 @@ export class SeatFormComponent {
             var carryPosition = r.length - 1 - tailZLength
             r = tailZLength < r.length ? (r.substring(0, carryPosition) +
               String.fromCharCode(r.charCodeAt(carryPosition) + 1) +
-              "a".repeat(tailZLength)) : "a".repeat(r.length + 1)
+              "A".repeat(tailZLength)) : "Z".repeat(r.length + 1)
             rows.push(r)
           }
           for (let row of rows) {

@@ -16,7 +16,7 @@ class SeatDAO extends dao_1.BaseDAO {
     static collection_name = "seats";
     _row;
     get row() { return this._row; }
-    set row(value) { this._row = value; }
+    set row(value) { this._row = value ? value.toUpperCase() : undefined; }
     _no;
     get no() { return this._no; }
     set no(value) { this._no = value; }

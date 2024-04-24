@@ -1,37 +1,47 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, Input } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { DatePipe } from '@angular/common';
-import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
-import { Ticket } from '../interface'
-import { ApiService } from '../service/api.service';
 
+import { Ticket } from '../../interface'
+import { ApiService } from '../../service/api.service';
+import { UserSessionService } from '../../service/user-session.service';
+import { PaymentMessageComponent } from '../payment-message/payment-message.component';
 
 @Component({
-  selector: 'app-myticket',
+  selector: 'app-payment-info',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatCheckboxModule
-    , DatePipe, DatetimeOffsetPipe],
-  templateUrl: './myticket.component.html',
-  styleUrl: './myticket.component.sass'
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, PaymentMessageComponent],
+  templateUrl: './payment-info.component.html',
+  styleUrl: './payment-info.component.scss'
 })
-export class MyticketComponent {
+export class PaymentInfoComponent {
   loaded = false
+  summary: { events: Set<string>, price: number, } = { events: new Set<string>(), price: 0, }
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'event.datetime', 'event.duration', 'seat', 'priceTier.tierName', 'priceTier.price', 'securedBy', 'remark'];
-  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  ticketDataColumn = ['seat', 'priceTier.tierName', 'priceTier.price', 'securedBy', 'remark'];
+  _ids?: string[]
+  _userId?: string
+  @Input()
+  set ids(ids: string[]| string) {
+    this._ids = Array.isArray(ids) ? ids : [ids]
+    if (this._ids && this._userId)
+      this.loadData()
+  }
+  @Input()
+  set userId(userId: string) {
+    this._userId = userId
+    if (this._ids && this._userId)
+      this.loadData()
+  }
   @ViewChild(MatSort) sort?: MatSort;
-  constructor(private api: ApiService) {
-    this.loadData()
+  constructor(private api: ApiService, public userSession: UserSessionService) {
   }
   ngAfterViewInit() {
-    if (this.paginator && this.sort && this.ticketDataSource) {
-      this.ticketDataSource.paginator = this.paginator;
+    if (this.sort && this.ticketDataSource) {
       this.ticketDataSource.sort = this.sort;
       let valueAccessor = (data: any, keys: string) => {
         let cursor: any = data;
@@ -66,18 +76,19 @@ export class MyticketComponent {
     }
   }
   loadData() {
-    return this.api.request.get("/ticket?my").toPromise().then((result: any) => {
+    return this.api.request.get(`/ticket?userId=${this._userId}&list=` + encodeURIComponent(JSON.stringify(this._ids))).toPromise().then((result: any) => {
       if (result && result.data) {
         this.loaded = true
         this.ticketDataSource.data = result.data
+        result.data.reduce((obj: { events: Set<string>, price: number, }, ticket: Ticket, ind: number) => {
+          if (ticket.event?.eventname)
+            obj.events.add(ticket.event.eventname)
+          if (ticket.priceTier.price)
+            obj.price += Number(ticket.priceTier.price)
+          return obj
+        }, this.summary)
       }
     })
   }
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    if (this.ticketDataSource) {
-      this.ticketDataSource.filter = filterValue.trim().toLowerCase();
-    }
-  }
-
 }
+

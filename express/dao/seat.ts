@@ -16,7 +16,7 @@ export class SeatDAO extends BaseDAO {
     public static readonly collection_name = "seats"
     private _row: string | undefined
     public get row() { return this._row }
-    public set row(value: string | undefined) { this._row = value; }
+    public set row(value: string | undefined) { this._row = value ? value.toUpperCase() : undefined; }
 
     private _no: number | undefined
     public get no() { return this._no }

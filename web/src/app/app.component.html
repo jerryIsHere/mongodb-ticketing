@@ -3,8 +3,8 @@
   <span style="flex: 1 1 auto;"></span>
   <a mat-stroked-button color="primary"*ngIf="userSession.user" [routerLink]="['/']"
     [color]="router.isActive('/', true)?'accent':''">Events</a>
-  <a mat-stroked-button color="primary"*ngIf="userSession.user" [routerLink]="['/my-ticket']"
-    [color]="router.isActive('/my-ticket', false)?'accent':''">My Ticket</a>
+  <a mat-stroked-button color="primary"*ngIf="userSession.user" [routerLink]="['/event-payment']"
+    [color]="router.isActive('/event-payment', false)?'accent':''">My Ticket</a>
   <a mat-stroked-button color="primary"*ngIf="userSession.user?.hasAdminRight" [routerLink]="['/management']"
     [color]="router.isActive('/management', false)?'accent':''">Management Panel</a>
   <span style="flex: 1 1 auto;"></span>

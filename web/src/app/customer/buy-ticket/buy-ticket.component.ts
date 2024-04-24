@@ -1,16 +1,16 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { ApiService } from '../service/api.service';
+import { ApiService } from '../../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { Show, Venue, Ticket, Seat, PriceTier, isShowSelling, isShowSellingAsFirstRound, isShowSellingAsSecondROund } from '../interface';
-import { SeatFormComponent } from '../forms/seat-form/seat-form.component';
-import { SeatingPlanComponent } from '../seatUI/seating-plan/seating-plan.component';
+import { Show, Venue, Ticket, Seat, PriceTier, isShowSelling, isShowSellingAsFirstRound, isShowSellingAsSecondROund } from '../../interface';
+import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
+import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon'
-import { UserSessionService } from '../service/user-session.service';
-import { TicketSelectedComponent } from '../snackbar/ticket-selected/ticket-selected.component';
+import { UserSessionService } from '../../service/user-session.service';
+import { TicketSelectedComponent } from '../../snackbar/ticket-selected/ticket-selected.component';
 
 const defaultShoppingCartSize = 6
 @Component({

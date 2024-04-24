@@ -18,7 +18,7 @@
       </mat-chip-listbox>
     </div>
     <mat-list>
-      @if(this.selectedSection?.options.seatAlign){
+      @if(this.selectedSection?.options?.seatAlign){
       }
       @else{
       <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
@@ -30,8 +30,8 @@
       }
       @for(row of rows; track row){
       <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
-        [style.text-align]="this.selectedSection?.options.seatAlign">
-        <button mat-button style="pointer-events: none;">{{row.toUpperCase()}}</button>
+        [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlig ? this.selectedSection?.options.seatAlign: 'none'">
+        <button mat-button style="pointer-events: none;">{{row}}</button>
         @for(col of cols; track col){
         @if (getSeat(row,col) && isSeatInSelectSection(row, col)) {
         <button (click)="toggleSelect(getSeat(row,col))" mat-stroked-button
@@ -53,7 +53,7 @@
           }
         </button>
         }
-        @else if(this.selectedSection?.options.seatAlign){
+        @else if(this.selectedSection?.options?.seatAlign){
         }
         @else{
         <button mat-stroked-button color="primary" style="background-color: transparent" cdkDrag
