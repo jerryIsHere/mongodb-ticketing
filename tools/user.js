@@ -23,7 +23,7 @@ Object.keys(usersInSingingPart).forEach(singingPart => {
     singingPart = Object.keys(mixedGroup).includes(singingPart) ? mixedGroup[singingPart] : singingPart
     singingPart = singingPart.toUpperCase()
     emailHost = ['T', 'B', 'A'].includes(singingPart) ? "yahoo.com" : "gmail.com"
-    let saltedpassword = bcrypt.hashSync(`${singingPart}jerry123`, 10)
+    let saltedpassword = bcrypt.hashSync(``, 10)
     users = [...users, ...userFUllNames.map(fullname => {
         return {
             username: fullname.replaceAll(" ", '').replaceAll("-", ""),
