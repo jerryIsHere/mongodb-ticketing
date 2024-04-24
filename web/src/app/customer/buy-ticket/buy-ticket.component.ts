@@ -31,7 +31,7 @@ export class BuyTicketComponent {
   @Input()
   set id(id: string) {
     this._id = id
-    if (id) this.loadData(id)
+    if (id && this.userSession.user) this.loadData(id)
   }
 
   constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService,
