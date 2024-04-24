@@ -1,42 +1,40 @@
-@if(seats && venue && event && priceTiers){
-{{event.eventname}}
-@if(isShowSelling(event)){
-<br>
 @if(userSession.user){
 <span>
   You may pick seat for sale by clicking on:
-  <mat-icon fontIcon="event_seat"></mat-icon>,
-  <br>
+  <mat-icon fontIcon="event_seat"></mat-icon>
   &#9;&#9;
   &#40;
   <mat-icon fontIcon="block"></mat-icon> : Seat not for sale
-  <br>
   <mat-icon fontIcon="airline_seat_recline_normal"></mat-icon> : Seat already sold
   &#41;
 </span>
+@if(seats && venue && event && priceTiers){
+  {{event.eventname}}
+  @if(isShowSelling(event)){
+  <br>
+  <br>
+  <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
+    isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()" (selectedSectionChange)="clearAction()"
+    [(selectedSeatIds)]="sectionSelectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
+  </app-seating-plan>
+  Select seats with text: 
+  <button mat-stroked-button color="primary"(click)="openForm()">seats in this section</button> / 
+  <button mat-stroked-button color="primary"(click)="openForm(false)">any seats</button>
+  }
+  @else {
+  Ticket of this show is not purchasable right now. <br>
+  Sale period:
+  {{event.startFirstRoundSellDate | date : 'short'}} - {{event.endFirstRoundSellDate | date : 'short'}}
+  <br>
+  {{event.startSecondRoundSellDate | date : 'short'}} - {{event.endSecondRoundSellDate | date : 'short'}}
+  }
+  }
+  @else{
+  loading
+  }
 }
 @else{
 You must login before you can start selecting seat for ticketing
-}
-<br>
-<app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()" (selectedSectionChange)="clearAction()"
-  [(selectedSeatIds)]="sectionSelectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
-</app-seating-plan>
-Select seats with text: 
-<button mat-stroked-button color="primary"(click)="openForm()">seats in this section</button> / 
-<button mat-stroked-button color="primary"(click)="openForm(false)">any seats</button>
-}
-@else {
-Ticket of this show is not purchasable right now. <br>
-Sale period:
-{{event.startFirstRoundSellDate | date : 'short'}} - {{event.endFirstRoundSellDate | date : 'short'}}
-<br>
-{{event.startSecondRoundSellDate | date : 'short'}} - {{event.endSecondRoundSellDate | date : 'short'}}
-}
-}
-@else{
-loading
 }
 <!-- @if(event && event.eventname){
     {{event.eventname}}
