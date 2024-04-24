@@ -35,6 +35,7 @@ export class VenueFormComponent {
     const value = (event.value || '').trim().split('-');
     let x = Number(value[0])
     let y = Number(value[1])
+    if (!Array.isArray(this.data.sections)) this.data.sections = []
     if (value && Number.isInteger(x) && Number.isInteger(y) && this.data.sections && this.data.sections.filter(s => s.x == x && s.y == y).length == 0) {
 
       this.data.sections.push({ x: Number(value[0]), y: Number(value[1]) });
