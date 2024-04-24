@@ -13,7 +13,7 @@
       <mat-chip-listbox style="flex: 1">
         @for( priceTier of priceTiers; track priceTier){
         <mat-chip [style.background-color]="priceTier._id?'#'+priceTiersColors.get(priceTier._id):''">
-          {{priceTier.tierName}}:{{priceTier.price}}</mat-chip>
+          {{priceTier.tierName}}:${{priceTier.price}}</mat-chip>
         }
       </mat-chip-listbox>
     </div>
