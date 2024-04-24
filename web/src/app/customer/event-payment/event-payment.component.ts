@@ -37,7 +37,7 @@ import { PaymentMessageComponent } from '../payment-message/payment-message.comp
 export class EventPaymentComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
-  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', '_id', 'securedBy'];
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', 'securedBy'];
   shows: Show[] = [];
   tickets: Ticket[] = []
   @ViewChild(MatPaginator) paginator?: MatPaginator;
