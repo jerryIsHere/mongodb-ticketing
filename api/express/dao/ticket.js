@@ -534,7 +534,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         }
                     }
                 }))).then(async (ticketDaoWithInfo) => {
-                    if (originalOccupant && originalOccupant.email) {
+                    if (originalOccupant && originalOccupant.email && res.locals.RequestErrorList.length == 0) {
                         let notificationDao = new notification_1.NotificationDAO(res, {
                             title: "Ticket Purchased",
                             email: originalOccupant.email,
