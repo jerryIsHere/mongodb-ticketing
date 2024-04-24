@@ -122,6 +122,7 @@ export namespace User {
         res.clearCookie("user");
         next({ success: true });
       } else if (req.query.register != undefined) {
+        return next(new RequestError("New user registration is not avaliable."))
         if (
           req.body.username &&
           req.body.fullname &&

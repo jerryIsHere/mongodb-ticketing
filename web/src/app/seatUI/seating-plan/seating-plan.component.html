@@ -13,7 +13,7 @@
       <mat-chip-listbox style="flex: 1">
         @for( priceTier of priceTiers; track priceTier){
         <mat-chip [style.background-color]="priceTier._id?'#'+priceTiersColors.get(priceTier._id):''">
-          {{priceTier.tierName}}:{{priceTier.price}}</mat-chip>
+          {{priceTier.tierName}}:${{priceTier.price}}</mat-chip>
         }
       </mat-chip-listbox>
     </div>
@@ -30,7 +30,7 @@
       }
       @for(row of rows; track row){
       <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
-        [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlig ? this.selectedSection?.options.seatAlign: 'none'">
+        [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
         <button mat-button style="pointer-events: none;">{{row}}</button>
         @for(col of cols; track col){
         @if (getSeat(row,col) && isSeatInSelectSection(row, col)) {

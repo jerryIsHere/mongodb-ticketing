@@ -9,7 +9,7 @@
     [color]="router.isActive('/management', false)?'accent':''">Management Panel</a>
   <span style="flex: 1 1 auto;"></span>
   <button mat-stroked-button color="primary"[matMenuTriggerFor]="userSession.user?userMenu:null"
-    (click)="userSession.user?null:loginOrRegister()">{{userSession.user?userSession.user.username:'login/register'}}</button>
+    (click)="userSession.user?null:loginOrRegister()">{{userSession.user?userSession.user.username:'login'}}</button>
 </mat-toolbar>
 <mat-menu #userMenu="matMenu">
   <button mat-menu-item (click)="api.user.logout()">Logout</button>
