@@ -31,7 +31,7 @@
       @for(row of rows; track row){
       <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
         [style.text-align]="this.selectedSection?.options.seatAlign">
-        <button mat-button style="pointer-events: none;">{{row.toUpperCase()}}</button>
+        <button mat-button style="pointer-events: none;">{.row()}}</button>
         @for(col of cols; track col){
         @if (getSeat(row,col) && isSeatInSelectSection(row, col)) {
         <button (click)="toggleSelect(getSeat(row,col))" mat-stroked-button

@@ -124,7 +124,7 @@ export class TicketDAO extends BaseDAO {
                                             message:
                                                 `1 ticket that you had purchased is voided. Information of that ticket:
 Event: ${eventDao ? eventDao.eventname : ''}
-Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
+Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row() + seatDao.no : ''}`,
                                             recipientId: originalOccupant.id
                                         })
                                         await notificationDao.create().catch(err => reject(err))
@@ -568,7 +568,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             message:
                                 `Dear ${ticketDaoWithInfo[0].info?.user?.fullname}\n` +
                                 `${ticketDaoWithInfo.length} ticket purchased:\n` +
-                                ticketDaoWithInfo.map(withInfo => withInfo.info?.seat?.row + withInfo.info?.seat?.no).join(", ") +
+                                ticketDaoWithInfo.map(withInfo => withInfo.info?.seat?.row() + withInfo.info?.seat?.no).join(", ") +
                                 `\nFor follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
                                 + ticketDaoWithInfo.map(withInfo => 'ids=' + withInfo.dao._id?.toString()).join('&') + `&userId=${userId}`,
                             recipientId: userId

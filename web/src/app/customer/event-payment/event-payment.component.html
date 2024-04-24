@@ -1,0 +1,83 @@
+
+
+<mat-form-field>
+    <mat-label>Select event</mat-label>
+    <input type="text" matInput [formControl]="showSearch" [matAutocomplete]="auto">
+    <mat-autocomplete (optionSelected)="showSelected($event)" autoActiveFirstOption #auto="matAutocomplete"
+      [displayWith]="displayFn">
+      @for (option of filteredShows | async; track option) {
+      <mat-option [value]="option">{{option.eventname}}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+  @if(summary){
+  Ticket baught:
+  <br>
+  @for(tierCount of summary.tierCount.values(); track tierCount){
+  {{tierCount.tierName}}&#40;{{tierCount.price}}&#41;: {{tierCount.count}}<br>
+  }
+  Total price: {{summary.totalCost}}
+  <app-payment-message></app-payment-message>
+  }
+  <mat-form-field style="width: 100%">
+    <mat-label>Filter (possible to use '+' for combination)</mat-label>
+    <input matInput (keyup)="applyFilter($event)" #input>
+  </mat-form-field>
+  @if (!loaded){
+  loading
+  }
+  @else if(ticketDataSource.data.length == 0){
+  no data
+  }
+  <table mat-table [dataSource]="ticketDataSource" matSort>
+    <ng-container matColumnDef="event.eventname">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
+      <td mat-cell *matCellDef="let element"> {{element.event.eventname}} </td>
+    </ng-container>
+    <ng-container matColumnDef="seat">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Seat </th>
+      <td mat-cell *matCellDef="let element"> {{element.seat.row}}{{element.seat.no}} </td>
+    </ng-container>
+    <ng-container matColumnDef="priceTier.price">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Price </th>
+      <td mat-cell *matCellDef="let element"> {{element.priceTier.price}} </td>
+    </ng-container>
+    <ng-container matColumnDef="priceTier.tierName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Tier </th>
+      <td mat-cell *matCellDef="let element"> {{element.priceTier.tierName}} </td>
+    </ng-container>
+    <ng-container matColumnDef="occupant.fullname">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Buyer </th>
+      <td mat-cell *matCellDef="let element"
+        [matTooltip]="element.occupant.email + '(' + element.occupant.username + ')'"> {{element.occupant.fullname}} </td>
+    </ng-container>
+    <ng-container matColumnDef="purchaseDate">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Purchase date </th>
+      <td mat-cell *matCellDef="let element"> {{element.purchaseDate  | date : 'short'}} </td>
+    </ng-container>
+    <ng-container matColumnDef="_id">
+      <th mat-header-cell *matHeaderCellDef>Ticket verification
+      </th>
+      <td mat-cell *matCellDef="let element">
+        <button mat-stroked-button color="primary"(click)="openForm(element)">
+          <mat-icon>receipt_long</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="securedBy">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Ticket confirmed with
+      </th>
+      <td mat-cell *matCellDef="let element">
+        <span mat-stroked-button color="primary"[matTooltip]="ticketConfirmDateString(element)">
+          {{element.securedBy}}
+          @if(element.remark){
+          &#40;remark: {{element.remark}}&#41;
+          }
+        </span>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="ticketDataColumn"></tr>
+    <tr mat-row *matRowDef="let row; columns: ticketDataColumn;"></tr>
+  </table>
+  <mat-paginator [pageSizeOptions]="[15, 25, 100]" aria-label="Select page of users" MatPaginator></mat-paginator>
+  

@@ -245,7 +245,7 @@ export class CustomerTicketComponent {
           ...this.tickets.map(ticket =>
             [ticket._id,
             ticket?.event?.eventname,
-            ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row.toUpperCase() + ticket.seat?.no : '',
+            ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row() + ticket.seat?.no : '',
             ticket.priceTier.tierName,
             ticket.priceTier.price,
             ticket.occupant.username,
