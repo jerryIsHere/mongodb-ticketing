@@ -111,7 +111,7 @@ export class SeatingPlanComponent {
   @Input() set priceTiers(value: PriceTier[]) {
     this._priceTiers = value.sort(
       (a, b) => a.price && b.price && !Number.isNaN(Number(a.price)) && !Number.isNaN(Number(b.price)) ?
-        Number(a.price) - Number(b.price) : 0)
+        Number(b.price) - Number(a.price) : 0)
     this.priceTiersColors = new Map<string, string>()
     var colors = "" + (' ' + colorshex).slice(1);
     for (let priceTier of value) {
