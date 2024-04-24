@@ -30,7 +30,7 @@
       }
       @for(row of rows; track row){
       <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
-        [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlig ? this.selectedSection?.options.seatAlign: 'none'">
+        [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
         <button mat-button style="pointer-events: none;">{{row}}</button>
         @for(col of cols; track col){
         @if (getSeat(row,col) && isSeatInSelectSection(row, col)) {
