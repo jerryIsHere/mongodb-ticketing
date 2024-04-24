@@ -86,7 +86,7 @@ export class BuyTicketComponent {
     })
     let seatInfo = this.outsideSelectedSeat.map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seatId == seat._id) } })
       .map(seatNticket => { return { ...seatNticket, ...{ priceTier: this.priceTiers?.find(p => p._id == seatNticket.ticket?.priceTierId) } } })
-      .map(info => info.seat.row() + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
+      .map(info => info.seat.row + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
     if (this.actionSnackbarRef == undefined && this.seatingPlan) {
       this.actionSnackbarRef = this._snackBar.openFromComponent(TicketSelectedComponent, {
         data: {
