@@ -26,7 +26,7 @@ export class PaymentInfoComponent {
   _ids?: string[]
   _userId?: string
   @Input()
-  set ids(ids: string[]| string) {
+  set ids(ids: string[] | string) {
     this._ids = Array.isArray(ids) ? ids : [ids]
     if (this._ids && this._userId)
       this.loadData()
@@ -81,6 +81,7 @@ export class PaymentInfoComponent {
         this.loaded = true
         this.ticketDataSource.data = result.data
         result.data.reduce((obj: { events: Set<string>, price: number, }, ticket: Ticket, ind: number) => {
+          if (!(ticket as any).belongsToUser) return obj
           if (ticket.event?.eventname)
             obj.events.add(ticket.event.eventname)
           if (ticket.priceTier.price)
