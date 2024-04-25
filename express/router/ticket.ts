@@ -18,11 +18,11 @@ export namespace Ticket {
 
         ticket.use((req: Request, res: Response, next) => {
             if (req.method == 'PATCH' && req.query.buy != undefined) {
-                next()
+                return next()
             }
             if (req.method == 'PATCH' && (req.query.void != undefined || req.query.verify != undefined) && (req.session["user"] as any)?.isCustomerSupport == true) {
 
-                next()
+                return next()
             }
             else if (req.method != 'GET' && (req.session["user"] as any)?.hasAdminRight != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" })

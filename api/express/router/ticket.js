@@ -15,10 +15,10 @@ var Ticket;
         };
         ticket.use((req, res, next) => {
             if (req.method == 'PATCH' && req.query.buy != undefined) {
-                next();
+                return next();
             }
             if (req.method == 'PATCH' && (req.query.void != undefined || req.query.verify != undefined) && req.session["user"]?.isCustomerSupport == true) {
-                next();
+                return next();
             }
             else if (req.method != 'GET' && req.session["user"]?.hasAdminRight != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" });
