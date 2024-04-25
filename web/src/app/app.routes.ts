@@ -25,6 +25,17 @@ let checkIsAdmin = async (route: ActivatedRouteSnapshot, state: RouterStateSnaps
         return false
     }
 }
+let checkIsAdminOrCustomerSupport = async (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    let userService = inject(UserSessionService)
+    await userService.checkUserSession()
+    if (userService.user?.hasAdminRight == true || userService.user?.isCustomerSupport == true) {
+        return true
+    }
+    else {
+        inject(Router).navigate(['/'])
+        return false
+    }
+}
 
 let checkIsLogined = async (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
     let userService = inject(UserSessionService)
@@ -41,14 +52,14 @@ let checkIsLogined = async (route: ActivatedRouteSnapshot, state: RouterStateSna
 export const routes: Routes = [
     { path: '', component: ShowListComponent },
     { path: 'management', component: ManagementPanelComponent, canActivate: [checkIsAdmin] },
-    { path: 'management/customer-ticket', component: CustomerTicketComponent, canActivate: [checkIsAdmin] },
+    { path: 'management/customer-ticket', component: CustomerTicketComponent, canActivate: [checkIsAdminOrCustomerSupport] },
     { path: 'my-ticket', component: MyticketComponent, canActivate: [checkIsLogined] },
     { path: 'event-payment', component: EventPaymentComponent, canActivate: [checkIsLogined] },
     { path: 'venue-seats', component: VenueSeatComponent, canActivate: [checkIsAdmin] },
-    { path: 'event-seats', component: EventseatComponent, canActivate: [checkIsAdmin]  },
+    { path: 'event-seats', component: EventseatComponent, canActivate: [checkIsAdmin] },
     { path: 'buy-ticket', component: BuyTicketComponent },
     { path: 'payment-info', component: PaymentInfoComponent },
-    { path: 'profile', component: ProfileComponent , canActivate: [checkIsLogined] },
+    { path: 'profile', component: ProfileComponent, canActivate: [checkIsLogined] },
     { path: 'verify/:token', component: VerifyComponent },
     { path: 'reset-password/:token', component: ResetPasswordComponent },
 ];

@@ -11,7 +11,11 @@ export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
     public static readonly saltRounds = 10;
     private _isAdmin: boolean = false;
-    public hasAdminRight: () => boolean = () => { return this._isAdmin };
+    public get hasAdminRight() { return this._isAdmin };
+
+
+    private _isCustomerSupport: boolean = false;
+    public get isCustomerSupport() { return this._isCustomerSupport };
 
     private _username: string | undefined
     public get username() { return this._username }
@@ -115,6 +119,7 @@ export class UserDAO extends BaseDAO {
             this._resetToken = params.doc.resetToken ? params.doc.resetToken : null
             this._lastLoginDate = params.doc.lastLoginDate ? params.doc.lastLoginDate : ""
             if (params.doc.isAdmin) this._isAdmin = true;
+            if (params.doc.isCustomerSupport) this._isCustomerSupport = true;
         }
         else {
             if (params.username)
