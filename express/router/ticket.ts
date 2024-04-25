@@ -4,13 +4,24 @@ import * as Express from "express-serve-static-core"
 import { TicketDAO } from '../dao/ticket'
 import { RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
+import { SessionData } from "express-session";
+
 
 export namespace Ticket {
     export function RouterFactory(): Express.Router {
         var ticket = Router()
+        var shouldShowOccupant = (session?: SessionData) => {
+            if (session && session.user)
+                return session.user.hasAdminRight || session.user.isCustomerSupport
+            return false
+        }
 
         ticket.use((req: Request, res: Response, next) => {
-            if (req.method != 'PATH' && req.query.buy != undefined) {
+            if (req.method != 'PATCH' && req.query.buy != undefined) {
+                next()
+            }
+            if (req.method == 'PATCH' && (req.query.void != undefined || req.query.verify != undefined) && (req.session["user"] as any)?.isCustomerSupport == true) {
+
                 next()
             }
             else if (req.method != 'GET' && (req.session["user"] as any)?.hasAdminRight != true) {
@@ -21,17 +32,17 @@ export namespace Ticket {
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                TicketDAO.listByEventId(req.query.eventId, { showOccupant: (req.session["user"] as any)?.hasAdminRight }).then(result => {
+                TicketDAO.listByEventId(req.query.eventId, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
-                TicketDAO.ofUser((req.session['user'] as any)._id, { showOccupant: (req.session["user"] as any)?.hasAdminRight }).then(result => {
+                TicketDAO.ofUser((req.session['user'] as any)._id, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
             else if (req.query.sold != undefined) {
-                TicketDAO.listSold({ showOccupant: req.session["user"]?.hasAdminRight === true ? true : false }).then(result => {
+                TicketDAO.listSold({ showOccupant: shouldShowOccupant(req.session) }).then(result => {
                     next({ success: true, data: result })
                 }).catch((error) => next(error))
             }
@@ -44,7 +55,7 @@ export namespace Ticket {
                 } catch (e) {
 
                 }
-                if(req.session["user"] != null && req.session["user"]._id  && req.session["user"]._id != req.query.userId) {
+                if (req.session["user"] != null && req.session["user"]._id && req.session["user"]._id != req.query.userId) {
                     next(new RequestError("This reveals information of another user"))
                     return
                 }
@@ -63,7 +74,7 @@ export namespace Ticket {
         })
 
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {
-            TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: (req.session["user"] as any)?.hasAdminRight }).then(result => {
+            TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
                 next({ success: true, data: result })
             }).catch((error) => { next(error) })
         })
@@ -137,8 +148,7 @@ export namespace Ticket {
             }
             if (req.query.verify != undefined &&
                 (req.body.securedBy != undefined || req.body.securedBy == null || typeof req.body.securedBy == "string") &&
-                (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string") &&
-                req.session['user'] && req.session['user'].hasAdminRight) {
+                (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string")) {
                 TicketDAO.getById(res, req.params.ticketId).then(dao => {
                     dao.securedBy = req.body.securedBy;
                     dao.remark = req.body.remark;

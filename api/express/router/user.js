@@ -9,7 +9,7 @@ var User;
     function RouterFactory() {
         var user = (0, express_1.Router)();
         var updateSession = (req, res, dao) => {
-            var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) };
+            var userObj = { _id: dao.id?.toString(), isCustomerSupport: dao.isCustomerSupport, hasAdminRight: dao.hasAdminRight, ...dao.Hydrated({ withCredentials: false }) };
             req.session.user = userObj;
             req.session.save();
         };

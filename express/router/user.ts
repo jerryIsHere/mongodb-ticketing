@@ -4,7 +4,7 @@ import { Database, RequestError } from "../dao/database";
 import { UserDAO } from "../dao/user";
 declare module "express-session" {
   interface SessionData {
-    user?: { hasAdminRight: boolean, _id?: string } | null;
+    user?: { hasAdminRight: boolean, _id?: string, isCustomerSupport: boolean } | null;
     test?: number
   }
 }
@@ -13,7 +13,7 @@ export namespace User {
     var user = Router();
 
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
-      var userObj = { _id: dao.id?.toString(), hasAdminRight: dao.hasAdminRight(), ...dao.Hydrated({ withCredentials: false }) }
+      var userObj = { _id: dao.id?.toString(), isCustomerSupport: dao.isCustomerSupport, hasAdminRight: dao.hasAdminRight, ...dao.Hydrated({ withCredentials: false }) }
       req.session.user = userObj
       req.session.save();
     }

@@ -15,7 +15,11 @@ class UserDAO extends dao_1.BaseDAO {
     static collection_name = "users";
     static saltRounds = 10;
     _isAdmin = false;
-    hasAdminRight = () => { return this._isAdmin; };
+    get hasAdminRight() { return this._isAdmin; }
+    ;
+    _isCustomerSupport = false;
+    get isCustomerSupport() { return this._isCustomerSupport; }
+    ;
     _username;
     get username() { return this._username; }
     set username(value) {
@@ -99,6 +103,8 @@ class UserDAO extends dao_1.BaseDAO {
             this._lastLoginDate = params.doc.lastLoginDate ? params.doc.lastLoginDate : "";
             if (params.doc.isAdmin)
                 this._isAdmin = true;
+            if (params.doc.isCustomerSupport)
+                this._isCustomerSupport = true;
         }
         else {
             if (params.username)
