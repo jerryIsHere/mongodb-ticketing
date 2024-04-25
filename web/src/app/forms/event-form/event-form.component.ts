@@ -51,6 +51,7 @@ export class EventFormComponent {
     if (this.eventForm.valid) {
       let timezone = (new Date()).getTimezoneOffset() * 60000
       let body = this.eventForm.getRawValue()
+      body.datetime = new Date(body.datetime);
       body.startFirstRoundSellDate = new Date(body.startFirstRoundSellDate);
       body.endFirstRoundSellDate = new Date(body.endFirstRoundSellDate);
       body.startSecondRoundSellDate = new Date(body.startSecondRoundSellDate);

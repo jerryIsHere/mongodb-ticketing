@@ -27,5 +27,11 @@ export class AppComponent {
     });
   }
   constructor(public userSession: UserSessionService, public api: ApiService, public dialog: MatDialog, public router: Router) {
+    if (userSession.user) {
+
+    }
+    else {
+      this.loginOrRegister()
+    }
   }
 }
