@@ -1,2 +1,2 @@
 please populate ./credential/.env
-node ./tools/user.js
+node ./tools/user.js N Suffix

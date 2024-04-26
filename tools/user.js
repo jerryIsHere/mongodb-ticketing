@@ -27,12 +27,13 @@ const {
     argv
 } = require('node:process');
 console.log("generating password with length: " + argv[2])
+var suffix = argv[3]? argv[3]: ''
 Object.keys(usersInSingingPart).forEach(singingPart => {
     let userFUllNames = usersInSingingPart[singingPart].trim().split(",")
     singingPart = Object.keys(mixedGroup).includes(singingPart) ? mixedGroup[singingPart] : singingPart
     singingPart = singingPart.toUpperCase()
     emailHost = ['T', 'B', 'A'].includes(singingPart) ? "yahoo.com" : "gmail.com"
-    users = [...users, ...userFUllNames.map(fullname => fullname.replace(/[^a-z]/gi, '').toLowerCase()).map(fullname => {
+    users = [...users, ...userFUllNames.map(fullname => fullname.replace(/[^a-z]/gi, '').toLowerCase() + suffix).map(fullname => {
         let password = randomPassword(Number(argv[2]))
         let saltedpassword = bcrypt.hashSync(`${password}`, 10)
         usersPassword[fullname] = password
@@ -50,8 +51,8 @@ Object.keys(usersInSingingPart).forEach(singingPart => {
 const {
     writeFile
 } = require('fs').promises;
-writeFile('./credential/users.json',
+writeFile(`./credential/users${suffix}.json`,
     JSON.stringify(users), 'utf8', () => {});
 
-writeFile('./credential/password.json',
+writeFile(`./credential/password${suffix}.json`,
     JSON.stringify(usersPassword), 'utf8', () => {});
