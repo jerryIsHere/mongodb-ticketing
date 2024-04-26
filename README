@@ -1,2 +1,43 @@
 please populate ./credential/.env
 node ./tools/user.js N Suffix
+[
+  {
+    $lookup:
+      /**
+       * from: The target collection.
+       * localField: The local join field.
+       * foreignField: The target join field.
+       * as: The name for the results.
+       * pipeline: Optional pipeline to run on the foreign collection.
+       * let: Optional variables to use in the pipeline field stages.
+       */
+      {
+        from: "users",
+        localField: "occupantId",
+        foreignField: "_id",
+        as: "occupant",
+      },
+  },
+  {
+    $set:
+      /**
+       * field: The field name
+       * expression: The expression.
+       */
+      {
+        occupant: {
+          $first: "$occupant",
+        },
+      },
+  },
+  {
+    $match:
+      /**
+       * query: The query in MQL.
+       */
+      {
+        "occupant.email":
+          /S1@gmail|S2@gmail|A@yahoo|T@yahoo|B@yahoo/,
+      },
+  },
+]
