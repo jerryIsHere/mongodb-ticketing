@@ -158,7 +158,7 @@ export namespace Ticket {
                 }).catch((error) => next(error))
             }
             else if (req.query.void != undefined) {
-                TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void()
+                TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void((req.session?.user as any)?.username)
                 ).then((value: TicketDAO) => {
                     next({ success: true })
                 }).catch((error) => next(error))

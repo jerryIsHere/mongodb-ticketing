@@ -92,7 +92,7 @@ export class TicketDAO extends BaseDAO {
 
     private _occupantId?: ObjectId | undefined | null = null
     public get occupantId(): ObjectId | undefined | null { return this._occupantId }
-    public void() {
+    public void(username?: string) {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             if (this.occupantId) {
                 this.res.locals.session.startTransaction()
@@ -118,11 +118,16 @@ export class TicketDAO extends BaseDAO {
                                     if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
                                         let seatDao = await SeatDAO.getById(this.res, this.seatId.toString()).catch(err => console.log(err));
                                         let eventDao = await EventDAO.getById(this.res, this.eventId.toString()).catch(err => console.log(err));
+                                        let customerSupportInfo = username ? ` by ${username}` : ''
+                                        let purchaseDateInfo = this.purchaseDate ? ` (at ${this.purchaseDate.toLocaleString()})` : ''
+                                        let salutation = originalOccupant.fullname ? `Dear ${originalOccupant.fullname}\n` : ""
                                         let notificationDao = new NotificationDAO(this.res, {
                                             email: originalOccupant.email,
                                             title: "Ticket Voided",
                                             message:
-                                                `1 ticket that you had purchased is voided. Information of that ticket:
+                                                salutation +
+                                                `1 ticket that you had purchased${purchaseDateInfo} is voided${customerSupportInfo}.
+Information of that ticket:
 Event: ${eventDao ? eventDao.eventname : ''}
 Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                                             recipientId: originalOccupant.id
