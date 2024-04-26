@@ -1,12 +1,13 @@
-<div>
-  <mat-form-field>
-    <mat-label>Select an payment method</mat-label>
-    <mat-select [(value)]="view">
-      <mat-option value="fps">fps</mat-option>
-      <mat-option value="payme">payme</mat-option>
-      <mat-option value="alipay">alipay</mat-option>
-    </mat-select>
-  </mat-form-field>
+<div style="display: flex; flex-direction: row;">
+  <div>
+    <label>Select a payment method</label>
+    <mat-radio-group [(ngModel)]="view" style=" display: flex;
+    flex-direction: column;">
+      <mat-radio-button value="fps">fps</mat-radio-button>
+      <mat-radio-button value="payme">payme</mat-radio-button>
+      <mat-radio-button value="alipay">alipay</mat-radio-button>
+    </mat-radio-group>
+  </div>
   @if(view=="fps"){
 
   <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;" src="./assets/fps.jpg">
