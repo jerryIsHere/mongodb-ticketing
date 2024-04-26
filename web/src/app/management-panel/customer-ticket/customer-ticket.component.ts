@@ -34,7 +34,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   styleUrl: './customer-ticket.component.sass'
 })
 export class CustomerTicketComponent {
-  loaded = false
+  ticketLoaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', '_id', 'securedBy'];
   users: User[] = [];
@@ -123,19 +123,28 @@ export class CustomerTicketComponent {
           let ticketInd = this.tickets.findIndex(t => t._id == ticket._id)
           if (ticketInd > -1) this.tickets[ticketInd] = ticket
         }
-        this.ticketDataSource.data = this.tickets.slice()
+        if (this.summary?.userId) {
+          this.summarizeUser(this.summary.userId)
+        }
+        else {
+          this.ticketDataSource.data = this.tickets.slice()
+        }
       }
     })
   }
+  userLoaded = false
   loadData() {
     let promises = []
     promises.push(this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
-      if (result && result.data)
+      if (result && result.data) {
+        this.ticketLoaded = true
         this.tickets = result.data
-      this.ticketDataSource.data = this.tickets
+        this.ticketDataSource.data = this.tickets
+      }
     }))
     promises.push(this.api.request.get("/user?list").toPromise().then((result: any) => {
       if (result && result.data) {
+        this.userLoaded = true
         this.users = result.data
         this.filteredUsers = this.userSearch.valueChanges.pipe(
           startWith(''),
@@ -149,9 +158,12 @@ export class CustomerTicketComponent {
     return Promise.all(promises)
   }
   summary: any
+
   userSelected(event: MatAutocompleteSelectedEvent) {
-    console.log(event.option.value._id)
-    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.occupant._id == event.option.value._id)
+    if (event?.option?.value?._id) this.summarizeUser(event?.option?.value?._id)
+  }
+  summarizeUser(userId: string) {
+    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.occupant._id == userId)
     this.summary =
       this.ticketDataSource.data.reduce((summary, ticket, ind) => {
         if (ticket.priceTier.price)
@@ -168,7 +180,7 @@ export class CustomerTicketComponent {
         }
 
         return summary
-      }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0 })
+      }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0, userId: userId })
   }
   ticketConfirmDateString(ticket: Ticket): string {
     return ticketConfirmDateString(ticket)

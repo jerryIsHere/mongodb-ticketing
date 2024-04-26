@@ -1,6 +1,8 @@
-
-
 <mat-form-field>
+  @if (!userLoaded){
+  <mat-spinner></mat-spinner>
+  }
+  @else{
   <mat-label>Select user</mat-label>
   <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="auto">
   <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #auto="matAutocomplete"
@@ -9,10 +11,11 @@
     <mat-option [value]="option">{{option.fullname}}&#40;{{option.username}}&#41;</mat-option>
     }
   </mat-autocomplete>
+  }
 </mat-form-field>
 <br>
-<button mat-stroked-button color="primary"(click)="downloadUserDataCSV()">Export user data</button>
-<button mat-stroked-button color="primary"(click)="downloadSoldTicketDataCSV()">Export ticket data</button>
+<button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
+<button mat-stroked-button color="primary" (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>
 @if(summary){
 Ticket bought:
@@ -27,7 +30,7 @@ Total price: ${{summary.totalCost}}
   <input matInput (keyup)="applyFilter($event)"
     placeholder="For search a specific seat in a event, concat the query with '+', e.g. Amazing event + a1" #input>
 </mat-form-field>
-@if (!loaded){
+@if (!ticketLoaded){
 <mat-spinner></mat-spinner>
 }
 @else if(ticketDataSource.data.length == 0){
@@ -63,7 +66,7 @@ no data
     <th mat-header-cell *matHeaderCellDef>Ticket verification
     </th>
     <td mat-cell *matCellDef="let element">
-      <button mat-stroked-button color="primary"(click)="openForm(element)">
+      <button mat-stroked-button color="primary" (click)="openForm(element)">
         <mat-icon>receipt_long</mat-icon>
       </button>
     </td>
@@ -72,7 +75,7 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Ticket confirmed with
     </th>
     <td mat-cell *matCellDef="let element">
-      <span mat-stroked-button color="primary"[matTooltip]="ticketConfirmDateString(element)">
+      <span mat-stroked-button color="primary" [matTooltip]="ticketConfirmDateString(element)">
         {{element.securedBy}}
         @if(element.remark){
         &#40;remark: {{element.remark}}&#41;
