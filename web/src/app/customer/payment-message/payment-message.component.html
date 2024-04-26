@@ -1,23 +1,21 @@
-<mat-tab-group>
-  <mat-tab>
-    <ng-template mat-tab-label>
-      fps
-    </ng-template>
-    <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;"
-      src="./assets/fps.jpg">
-  </mat-tab>
-  <mat-tab>
-    <ng-template mat-tab-label>
-      payme
-    </ng-template>
-    <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;"
-      src="./assets/payme.jpg">
-  </mat-tab>
-  <mat-tab>
-    <ng-template mat-tab-label>
-      alipay
-    </ng-template>
-    <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;"
-      src="./assets/alipay.jpg">
-  </mat-tab>
-</mat-tab-group>
+<div>
+  <mat-form-field>
+    <mat-label>Select an payment method</mat-label>
+    <mat-select [(value)]="view">
+      <mat-option value="fps">fps</mat-option>
+      <mat-option value="payme">payme</mat-option>
+      <mat-option value="alipay">alipay</mat-option>
+    </mat-select>
+  </mat-form-field>
+  @if(view=="fps"){
+
+  <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;" src="./assets/fps.jpg">
+  }
+  @else if(view=="payme"){
+  <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;" src="./assets/payme.jpg">
+
+  }
+  @else if(view=="alipay"){
+  <img style="margin-left: auto; margin-right: auto; width: 30%; display: block;" src="./assets/alipay.jpg">
+  }
+</div>

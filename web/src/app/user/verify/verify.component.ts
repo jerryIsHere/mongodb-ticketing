@@ -3,11 +3,12 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { ApiService } from '../../service/api.service';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button'
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-verify',
   standalone: true,
-  imports: [MatButtonModule, RouterModule],
+  imports: [MatButtonModule, RouterModule, MatProgressSpinnerModule],
   templateUrl: './verify.component.html',
   styleUrl: './verify.component.sass'
 })

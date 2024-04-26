@@ -382,14 +382,14 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             })
             if (checkQuotaForUserId != undefined) {
                 var count = await Database.mongodb.collection(TicketDAO.collection_name).aggregate([
-                    { $match: { occupantId: checkQuotaForUserId, eventId: this.eventId } }, { $count: "baught" }]).tryNext()
-                if (count != null && Number.isInteger(count.baught)) {
+                    { $match: { occupantId: checkQuotaForUserId, eventId: this.eventId } }, { $count: "bought" }]).tryNext()
+                if (count != null && Number.isInteger(count.bought)) {
                     let quota =
                         (event.startFirstRoundSellDate <= new Date() && event.endFirstRoundSellDate >= new Date()) ?
                             event.firstRoundTicketQuota : (event.startSecondRoundSellDate <= new Date() && event.endSecondRoundSellDate >= new Date()) ?
                                 event.secondRoundTicketQuota :
                                 0
-                    if (quota > -1 && count.baught + purchaseQuantity > quota) {
+                    if (quota > -1 && count.bought + purchaseQuantity > quota) {
                         this.res.locals.RequestErrorList.push(new RequestError(`You have no more ticket quota for this show.`))
                     }
                 }
@@ -469,7 +469,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         else {
                             daoreject(new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`))
                         }
-                    } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
+                    } catch (err) { console.log(err); reject(new RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`)) }
                 })
             )).then(daos => {
                 resolve(daos)
@@ -499,7 +499,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                             else {
                                 daoreject(new RequestError(`Update of ${dao.constructor.name} failed with unknown reason.`))
                             }
-                        } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
+                        } catch (err) { console.log(err); reject(new RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`)) }
                     }
                     else {
                         reject(new RequestError(`One of the ticket's id is not initialized.`))
@@ -557,7 +557,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                                 else {
                                     daoreject(new RequestError(`Ticket with id ${dao.id} is not avaliable.`))
                                 }
-                            } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
+                            } catch (err) { console.log(err); reject(new RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`)) }
                         }
                     })
                 )).then(async (ticketDaoWithInfo: { dao: TicketDAO, info?: TicketInfo }[]) => {
@@ -577,7 +577,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         notificationDao.send().catch(err => console.log(err))
                     }
                     resolve(ticketDaoWithInfo.map(withInfo => withInfo.dao))
-                })
+                }).catch(reason => reject(reason))
             }
             else {
                 if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
@@ -618,7 +618,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         else {
                             daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`))
                         }
-                    } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
+                    } catch (err) { console.log(err); reject(new RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`)) }
                 })
             )).then(daos => {
                 resolve(daos)

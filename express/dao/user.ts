@@ -11,7 +11,11 @@ export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
     public static readonly saltRounds = 10;
     private _isAdmin: boolean = false;
-    public hasAdminRight: () => boolean = () => { return this._isAdmin };
+    public get hasAdminRight() { return this._isAdmin };
+
+
+    private _isCustomerSupport: boolean = false;
+    public get isCustomerSupport() { return this._isCustomerSupport };
 
     private _username: string | undefined
     public get username() { return this._username }
@@ -115,6 +119,7 @@ export class UserDAO extends BaseDAO {
             this._resetToken = params.doc.resetToken ? params.doc.resetToken : null
             this._lastLoginDate = params.doc.lastLoginDate ? params.doc.lastLoginDate : ""
             if (params.doc.isAdmin) this._isAdmin = true;
+            if (params.doc.isCustomerSupport) this._isCustomerSupport = true;
         }
         else {
             if (params.username)
@@ -217,7 +222,7 @@ export class UserDAO extends BaseDAO {
         res: Response, username: string, password: string): Promise<UserDAO> {
         return new Promise<UserDAO>(async (resolve, reject) => {
             var user = await this.fetchByUsernameAndDeserialize(
-                res, username)
+                res, username).catch(reason => reject(reason))
             if (user == null) {
                 reject(new RequestError(`User with username ${username} not found.`))
             }
@@ -257,14 +262,14 @@ export class UserDAO extends BaseDAO {
 
     public async sendResetPasswordEmail(): Promise<UserDAO> {
         return new Promise<UserDAO>(async (resolve, reject) => {
-            if (this.email) {
+            if (this.email && this.username) {
                 try {
                     if (this.resetToken == null || this.resetToken == undefined) {
                         const token = await generateResetToken();
                         this.resetToken = token;
                         await this.update()
                     }
-                    EmailService.singleton.resetPasswordEmail(this.email, this.resetToken);
+                    EmailService.singleton.resetPasswordEmail(this.username, this.email, this.resetToken);
                 }
                 catch (err) {
                     reject(err)

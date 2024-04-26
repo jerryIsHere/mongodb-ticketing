@@ -15,7 +15,7 @@
 <button mat-stroked-button color="primary"(click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>
 @if(summary){
-Ticket baught:
+Ticket bought:
 <br>
 @for(tierCount of summary.tierCount.values(); track tierCount){
 {{tierCount.tierName}}&#40;{{tierCount.price}}&#41;: {{tierCount.count}}<br>
@@ -28,7 +28,7 @@ Total price: ${{summary.totalCost}}
     placeholder="For search a specific seat in a event, concat the query with '+', e.g. Amazing event + a1" #input>
 </mat-form-field>
 @if (!loaded){
-loading
+<mat-spinner></mat-spinner>
 }
 @else if(ticketDataSource.data.length == 0){
 no data

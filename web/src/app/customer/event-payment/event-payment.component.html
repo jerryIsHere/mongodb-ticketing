@@ -11,7 +11,7 @@
     </mat-autocomplete>
   </mat-form-field>
   @if(summary){
-  Ticket baught:
+  Ticket bought:
   <br>
   @for(tierCount of summary.tierCount.values(); track tierCount){
   {{tierCount.tierName}}&#40;{{tierCount.price}}&#41;: {{tierCount.count}}<br>
@@ -24,7 +24,7 @@
     <input matInput (keyup)="applyFilter($event)" #input>
   </mat-form-field>
   @if (!loaded){
-  loading
+  <mat-spinner></mat-spinner>
   }
   @else if(ticketDataSource.data.length == 0){
   no data

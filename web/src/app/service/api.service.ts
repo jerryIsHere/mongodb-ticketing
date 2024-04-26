@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { UserSessionService } from './user-session.service';
-import { Observable, catchError, of, map } from 'rxjs';
+import { Observable, catchError, of, map, finalize } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ErrorMessageDialogComponent } from '../dialog/error-message-dialog/error-message-dialog.component';
@@ -74,12 +74,13 @@ type HttpClientLike = {
   providedIn: 'root'
 })
 export class ApiService {
+  public requestInProgress = 0
   //static readonly endpoint: string = location.origin.includes("localhost") ? "http://localhost:3000" : "https://micro-ticketing-api.vercel.app"
   public user: UserApi
   public request: HttpClientLike
   constructor(private httpClient: HttpClient, public userSession: UserSessionService,
     public snackBar: MatSnackBar, public dialog: MatDialog) {
-    let errorHandler = (defaultMsg: string = "Request failed. Try again later.") => {
+    let errorHandler = (defaultMsg: string = "Server is busy. Please try again later.") => {
       let handler = (errResponse: HttpErrorResponse) => {
         console.log(errResponse)
         if (errResponse.error) {
@@ -108,6 +109,10 @@ export class ApiService {
         this.snackBar.open("Request is successfully made.", "ok")
       }
       return response
+    }
+    let patientSnackBar = () => {
+      this.snackBar.open("Another request made previously is still processing in progress, please be patient.", "ok")
+      throw new Error('request in progress');
     }
     this.request = {
       get: (url: string, options?: {
@@ -146,10 +151,14 @@ export class ApiService {
         transferCache?: {
           includeHeaders?: string[];
         } | boolean;
-      }) => {
+      }, blockedByRequestInProgress = true) => {
+        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
+        this.requestInProgress += 1
+        console.log(this.requestInProgress)
         return this.httpClient.post(url, body, options).pipe(
           map(successHandler),
-          catchError(errorHandler())
+          catchError(errorHandler()),
+          finalize(() => this.requestInProgress -= 1)
         )
       },
 
@@ -165,10 +174,14 @@ export class ApiService {
         reportProgress?: boolean;
         responseType?: 'json';
         withCredentials?: boolean;
-      }) => {
+      }, blockedByRequestInProgress = true) => {
+        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
+        this.requestInProgress += 1
+        console.log(this.requestInProgress)
         return this.httpClient.patch(url, body, options).pipe(
           map(successHandler),
-          catchError(errorHandler())
+          catchError(errorHandler()),
+          finalize(() => this.requestInProgress -= 1)
         )
       },
       delete: (url: string, options?: {
@@ -184,10 +197,14 @@ export class ApiService {
         responseType?: 'json';
         withCredentials?: boolean;
         body?: any | null;
-      }) => {
+      }, blockedByRequestInProgress = true) => {
+        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
+        this.requestInProgress += 1
+        console.log(this.requestInProgress)
         return this.httpClient.delete(url, options).pipe(
           map(successHandler),
-          catchError(errorHandler())
+          catchError(errorHandler()),
+          finalize(() => this.requestInProgress -= 1)
         )
       }
     }

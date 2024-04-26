@@ -10,12 +10,13 @@ import { UserSessionService } from './service/user-session.service';
 import { ApiService } from './service/api.service';
 import { LoginOrRegisterDialogComponent } from './user/login-or-register-dialog/login-or-register-dialog.component';
 import { Router } from '@angular/router';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatMenuModule, MatButtonModule, RouterModule],
+  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatMenuModule, MatButtonModule, RouterModule, MatProgressBarModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.sass'
 })

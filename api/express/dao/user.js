@@ -15,7 +15,11 @@ class UserDAO extends dao_1.BaseDAO {
     static collection_name = "users";
     static saltRounds = 10;
     _isAdmin = false;
-    hasAdminRight = () => { return this._isAdmin; };
+    get hasAdminRight() { return this._isAdmin; }
+    ;
+    _isCustomerSupport = false;
+    get isCustomerSupport() { return this._isCustomerSupport; }
+    ;
     _username;
     get username() { return this._username; }
     set username(value) {
@@ -99,6 +103,8 @@ class UserDAO extends dao_1.BaseDAO {
             this._lastLoginDate = params.doc.lastLoginDate ? params.doc.lastLoginDate : "";
             if (params.doc.isAdmin)
                 this._isAdmin = true;
+            if (params.doc.isCustomerSupport)
+                this._isCustomerSupport = true;
         }
         else {
             if (params.username)
@@ -183,7 +189,7 @@ class UserDAO extends dao_1.BaseDAO {
     }
     static async login(res, username, password) {
         return new Promise(async (resolve, reject) => {
-            var user = await this.fetchByUsernameAndDeserialize(res, username);
+            var user = await this.fetchByUsernameAndDeserialize(res, username).catch(reason => reject(reason));
             if (user == null) {
                 reject(new database_1.RequestError(`User with username ${username} not found.`));
             }
@@ -221,14 +227,14 @@ class UserDAO extends dao_1.BaseDAO {
     }
     async sendResetPasswordEmail() {
         return new Promise(async (resolve, reject) => {
-            if (this.email) {
+            if (this.email && this.username) {
                 try {
                     if (this.resetToken == null || this.resetToken == undefined) {
                         const token = await (0, token_1.generateResetToken)();
                         this.resetToken = token;
                         await this.update();
                     }
-                    email_1.default.singleton.resetPasswordEmail(this.email, this.resetToken);
+                    email_1.default.singleton.resetPasswordEmail(this.username, this.email, this.resetToken);
                 }
                 catch (err) {
                     reject(err);

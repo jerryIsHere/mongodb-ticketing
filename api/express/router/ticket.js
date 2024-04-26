@@ -8,9 +8,17 @@ var Ticket;
 (function (Ticket) {
     function RouterFactory() {
         var ticket = (0, express_1.Router)();
+        var shouldShowOccupant = (session) => {
+            if (session && session.user)
+                return session.user.hasAdminRight || session.user.isCustomerSupport;
+            return false;
+        };
         ticket.use((req, res, next) => {
-            if (req.method != 'PATH' && req.query.buy != undefined) {
-                next();
+            if (req.method == 'PATCH' && req.query.buy != undefined) {
+                return next();
+            }
+            if (req.method == 'PATCH' && (req.query.void != undefined || req.query.verify != undefined) && req.session["user"]?.isCustomerSupport == true) {
+                return next();
             }
             else if (req.method != 'GET' && req.session["user"]?.hasAdminRight != true) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" });
@@ -21,17 +29,17 @@ var Ticket;
         });
         ticket.get("/", async (req, res, next) => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                ticket_1.TicketDAO.listByEventId(req.query.eventId, { showOccupant: req.session["user"]?.hasAdminRight }).then(result => {
+                ticket_1.TicketDAO.listByEventId(req.query.eventId, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
-                ticket_1.TicketDAO.ofUser(req.session['user']._id, { showOccupant: req.session["user"]?.hasAdminRight }).then(result => {
+                ticket_1.TicketDAO.ofUser(req.session['user']._id, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
             else if (req.query.sold != undefined) {
-                ticket_1.TicketDAO.listSold({ showOccupant: req.session["user"]?.hasAdminRight === true ? true : false }).then(result => {
+                ticket_1.TicketDAO.listSold({ showOccupant: shouldShowOccupant(req.session) }).then(result => {
                     next({ success: true, data: result });
                 }).catch((error) => next(error));
             }
@@ -60,7 +68,7 @@ var Ticket;
             }
         });
         ticket.get("/:ticketId", async (req, res, next) => {
-            ticket_1.TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: req.session["user"]?.hasAdminRight }).then(result => {
+            ticket_1.TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
                 next({ success: true, data: result });
             }).catch((error) => { next(error); });
         });
@@ -134,8 +142,7 @@ var Ticket;
             }
             if (req.query.verify != undefined &&
                 (req.body.securedBy != undefined || req.body.securedBy == null || typeof req.body.securedBy == "string") &&
-                (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string") &&
-                req.session['user'] && req.session['user'].hasAdminRight) {
+                (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string")) {
                 ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => {
                     dao.securedBy = req.body.securedBy;
                     dao.remark = req.body.remark;

@@ -155,7 +155,7 @@ export class SeatDAO extends BaseDAO {
                             daoreject(new RequestError(`Creation of ${dao.constructor.name} failed with unknown reason.`))
                             return
                         }
-                    } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
+                    } catch (err) { console.log(err); reject(new RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`)) }
                 })
             )).then(daos => {
                 resolve(daos)
@@ -224,7 +224,7 @@ export class SeatDAO extends BaseDAO {
                         else {
                             daoreject(new RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed with unknown reason.`))
                         }
-                    } catch (err) { console.log(err); reject(new RequestError(`Please reduce the size of your batch request.`)) }
+                    } catch (err) { console.log(err); reject(new RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`)) }
                 })
             )).then(daos => {
                 resolve(daos)

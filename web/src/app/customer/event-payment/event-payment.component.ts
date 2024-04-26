@@ -19,11 +19,13 @@ import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import dateFormat, { masks } from "dateformat";
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-event-payment',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatSortModule, MatPaginatorModule, MatButtonModule,
+    MatProgressSpinnerModule,
     MatTooltipModule,
     FormsModule,
     MatFormFieldModule,
@@ -127,7 +129,7 @@ export class EventPaymentComponent {
   loadData() {
     return this.api.request.get("/ticket?my").toPromise().then((result: any) => {
       if (result && result.data) {
-        this.loaded = true
+        this.loaded = false
         this.ticketDataSource.data = result.data.slice()
         this.tickets = result.data.slice()
         this.shows = [];

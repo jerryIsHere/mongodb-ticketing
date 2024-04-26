@@ -11,10 +11,11 @@ import { ApiService } from '../../service/api.service';
 import { UserSessionService } from '../../service/user-session.service';
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
 
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-payment-info',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, PaymentMessageComponent],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, PaymentMessageComponent, MatProgressSpinnerModule],
   templateUrl: './payment-info.component.html',
   styleUrl: './payment-info.component.scss'
 })
@@ -26,7 +27,7 @@ export class PaymentInfoComponent {
   _ids?: string[]
   _userId?: string
   @Input()
-  set ids(ids: string[]| string) {
+  set ids(ids: string[] | string) {
     this._ids = Array.isArray(ids) ? ids : [ids]
     if (this._ids && this._userId)
       this.loadData()
@@ -81,6 +82,7 @@ export class PaymentInfoComponent {
         this.loaded = true
         this.ticketDataSource.data = result.data
         result.data.reduce((obj: { events: Set<string>, price: number, }, ticket: Ticket, ind: number) => {
+          if (!(ticket as any).belongsToUser) return obj
           if (ticket.event?.eventname)
             obj.events.add(ticket.event.eventname)
           if (ticket.priceTier.price)

@@ -10,10 +10,11 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { Seat } from '../../interface';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-venue-seat',
   standalone: true,
-  imports: [SeatingPlanComponent, MatMenuModule, MatButtonModule, MatSelectModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule],
+  imports: [SeatingPlanComponent, MatMenuModule, MatButtonModule, MatSelectModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatProgressSpinnerModule],
   templateUrl: './venue-seat.component.html',
   styleUrl: './venue-seat.component.sass'
 })

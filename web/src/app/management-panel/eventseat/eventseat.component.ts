@@ -9,10 +9,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon'
 import { SeatSelectedComponent } from '../../snackbar/seat-selected/seat-selected.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-eventseat',
   standalone: true,
-  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, MatIconModule],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './eventseat.component.html',
   styleUrl: './eventseat.component.sass'
 })

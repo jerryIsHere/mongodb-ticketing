@@ -3,7 +3,7 @@
   <input matInput (keyup)="applyFilter($event)" placeholder="Ex. ium" #input>
 </mat-form-field>
 @if (!loaded){
-loading
+<mat-spinner></mat-spinner>
 }
 @else if(venueDataSource.data.length == 0){
 no data

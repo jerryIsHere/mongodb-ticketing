@@ -10,7 +10,8 @@
 
   <mat-form-field>
     <mat-label>Password</mat-label>
-    <input matInput formControlName="password" type="password" required>
+    <input matInput formControlName="password" [type]="passwordVisible?'text':'password'" required>
+    <mat-icon matSuffix (click)="passwordVisible=!passwordVisible">{{passwordVisible?'visibility_off':'visibility'}}</mat-icon>
     @if (loginForm.controls['password'].hasError('required')) {
     <mat-error>This field is required</mat-error>
     }

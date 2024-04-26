@@ -53,9 +53,9 @@ class EmailService {
             };
         }
     }
-    async resetPasswordEmail(to, resetToken) {
+    async resetPasswordEmail(username, to, resetToken) {
         try {
-            await this.sendEmail(to, "Reset Password", `Click the link below to reset your password:\n\nReset Link: ${process.env.BASE_PRODUCTION_URI}/reset-password/${resetToken}`);
+            await this.sendEmail(to, "Reset Password", `Click the link below to reset your (${username}) password:\n\nReset Link: ${process.env.BASE_PRODUCTION_URI}/reset-password/${resetToken}`);
         }
         catch (error) {
             throw error;

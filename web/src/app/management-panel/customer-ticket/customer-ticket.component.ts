@@ -18,12 +18,13 @@ import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.compone
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import dateFormat, { masks } from "dateformat";
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-customer-ticket',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatSortModule, MatPaginatorModule, MatButtonModule,
-    MatTooltipModule,
+    MatTooltipModule, MatProgressSpinnerModule,
     FormsModule,
     MatFormFieldModule,
     MatAutocompleteModule,

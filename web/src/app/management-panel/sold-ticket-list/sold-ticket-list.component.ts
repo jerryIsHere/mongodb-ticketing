@@ -12,12 +12,15 @@ import { Ticket, ticketConfirmDateString } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { DatePipe } from '@angular/common';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 @Component({
   selector: 'app-sold-ticket-list',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatTooltipModule, DatePipe],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatButtonModule, MatTooltipModule, DatePipe,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './sold-ticket-list.component.html',
   styleUrl: './sold-ticket-list.component.sass'
 })

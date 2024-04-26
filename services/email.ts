@@ -51,12 +51,12 @@ export default class EmailService {
       };
     }
   }
-  async resetPasswordEmail(to: string, resetToken: string) {
+  async resetPasswordEmail(username: string, to: string, resetToken: string) {
     try {
       await this.sendEmail(
         to,
         "Reset Password",
-        `Click the link below to reset your password:\n\nReset Link: ${process.env.BASE_PRODUCTION_URI}/reset-password/${resetToken}`
+        `Click the link below to reset your (${username}) password:\n\nReset Link: ${process.env.BASE_PRODUCTION_URI}/reset-password/${resetToken}`
       );
     } catch (error) {
       throw error;
