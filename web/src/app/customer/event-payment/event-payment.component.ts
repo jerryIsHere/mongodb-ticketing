@@ -129,7 +129,7 @@ export class EventPaymentComponent {
   loadData() {
     return this.api.request.get("/ticket?my").toPromise().then((result: any) => {
       if (result && result.data) {
-        this.loaded = false
+        this.loaded = true
         this.ticketDataSource.data = result.data.slice()
         this.tickets = result.data.slice()
         this.shows = [];

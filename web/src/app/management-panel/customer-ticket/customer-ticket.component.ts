@@ -34,7 +34,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   styleUrl: './customer-ticket.component.sass'
 })
 export class CustomerTicketComponent {
-  loaded = false
+  ticketLoaded = false
   ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', '_id', 'securedBy'];
   users: User[] = [];
@@ -132,15 +132,19 @@ export class CustomerTicketComponent {
       }
     })
   }
+  userLoaded = false
   loadData() {
     let promises = []
     promises.push(this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
-      if (result && result.data)
+      if (result && result.data) {
+        this.ticketLoaded = true
         this.tickets = result.data
-      this.ticketDataSource.data = this.tickets
+        this.ticketDataSource.data = this.tickets
+      }
     }))
     promises.push(this.api.request.get("/user?list").toPromise().then((result: any) => {
       if (result && result.data) {
+        this.userLoaded = true
         this.users = result.data
         this.filteredUsers = this.userSearch.valueChanges.pipe(
           startWith(''),
@@ -151,7 +155,7 @@ export class CustomerTicketComponent {
         );
       }
     }))
-    return Promise.all(promises).then(_ => { this.loaded = true })
+    return Promise.all(promises)
   }
   summary: any
 
