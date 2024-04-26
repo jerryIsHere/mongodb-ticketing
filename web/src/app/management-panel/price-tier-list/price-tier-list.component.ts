@@ -1,4 +1,4 @@
-import { Component, ViewChild, Input , Output, EventEmitter} from '@angular/core';
+import { Component, ViewChild, Input, Output, EventEmitter } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'
 import { MatSort, MatSortModule } from '@angular/material/sort';
@@ -12,12 +12,13 @@ import { MatCardModule } from '@angular/material/card';
 import { PriceTier } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { PriceTierFormComponent } from '../../forms/price-tier-form/price-tier-form.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-price-tier-list',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule,
-    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule],
+    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './price-tier-list.component.html',
   styleUrl: './price-tier-list.component.sass'
 })
@@ -84,7 +85,7 @@ export class PriceTierListComponent {
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      if(result)this.dataChanged.emit()
+      if (result) this.dataChanged.emit()
     })
   }
   delete(id: string) {

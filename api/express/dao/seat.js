@@ -137,7 +137,7 @@ class SeatDAO extends dao_1.BaseDAO {
                 }
                 catch (err) {
                     console.log(err);
-                    reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
+                    reject(new database_1.RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`));
                 }
             }))).then(daos => {
                 resolve(daos);
@@ -213,7 +213,7 @@ class SeatDAO extends dao_1.BaseDAO {
                 }
                 catch (err) {
                     console.log(err);
-                    reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
+                    reject(new database_1.RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`));
                 }
             }))).then(daos => {
                 resolve(daos);

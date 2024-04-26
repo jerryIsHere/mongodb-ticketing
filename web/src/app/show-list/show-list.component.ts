@@ -12,11 +12,12 @@ import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../pipes/datetime-timezone.pipe';
 import { Show } from '../interface'
 import { ApiService } from '../service/api.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-show-list',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule,
-    RouterModule, MatButtonModule, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe],
+    RouterModule, MatButtonModule, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe, MatProgressSpinnerModule],
   templateUrl: './show-list.component.html',
   styleUrl: './show-list.component.sass'
 })

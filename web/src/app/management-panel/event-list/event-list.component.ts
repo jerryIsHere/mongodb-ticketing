@@ -17,13 +17,14 @@ import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
 import { Show, Venue, isShowSelling, showSellingString } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { EventFormComponent } from '../../forms/event-form/event-form.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 
 @Component({
   selector: 'app-event-list',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, MatTooltipModule,
-    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe],
+    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe, MatProgressSpinnerModule],
   templateUrl: './event-list.component.html',
   styleUrl: './event-list.component.sass'
 })

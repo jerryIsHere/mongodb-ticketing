@@ -25,6 +25,8 @@ export class TicketSelectedComponent {
       tickets: Ticket[],
       limit: number,
       seatInfo?: string[],
+      success: boolean,
+      reload: boolean,
     }, private api: ApiService, private router: Router, private userSession: UserSessionService) {
     this.limit = data.limit;
     router.events.subscribe((_) => {
@@ -46,9 +48,24 @@ export class TicketSelectedComponent {
         }
       }).then(result => {
         this.snackRef.dismiss();
+      }).catch(errResponse => {
+        console.log(errResponse)
+        let isReasonOccupied = (reason: string) => reason.includes("is not avaliable")
+        if (errResponse.error) {
+          if (errResponse.error.reason) {
+            if (isReasonOccupied(errResponse.error.reason))
+              this.data.reload = true
+
+          }
+          else if (errResponse.error.reasons) {
+            if (errResponse.error.reasons.findIndex(isReasonOccupied) > -1)
+              this.data.reload = true
+          }
+        }
       })
-      this.doing = true
     }
+    this.doing = true
   }
+
   doing: boolean = false;
 }

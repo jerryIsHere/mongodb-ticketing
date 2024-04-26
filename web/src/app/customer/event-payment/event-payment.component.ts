@@ -19,11 +19,13 @@ import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import dateFormat, { masks } from "dateformat";
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-event-payment',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatSortModule, MatPaginatorModule, MatButtonModule,
+    MatProgressSpinnerModule,
     MatTooltipModule,
     FormsModule,
     MatFormFieldModule,

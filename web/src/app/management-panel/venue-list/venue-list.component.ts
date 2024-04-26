@@ -12,12 +12,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { Venue } from '../../interface'
 import { ApiService } from '../../service/api.service';
 import { VenueFormComponent } from '../../forms/venue-form/venue-form.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-venue-list',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule,
-    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule],
+    MatPaginatorModule, RouterModule, MatCardModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './venue-list.component.html',
   styleUrl: './venue-list.component.sass'
 })

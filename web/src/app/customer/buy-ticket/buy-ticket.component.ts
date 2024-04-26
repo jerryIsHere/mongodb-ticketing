@@ -11,12 +11,13 @@ import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon'
 import { UserSessionService } from '../../service/user-session.service';
 import { TicketSelectedComponent } from '../../snackbar/ticket-selected/ticket-selected.component';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 const defaultShoppingCartSize = 6
 @Component({
   selector: 'app-buy-ticket',
   standalone: true,
-  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe, MatIconModule],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './buy-ticket.component.html',
   styleUrl: './buy-ticket.component.sass'
 })
@@ -87,19 +88,22 @@ export class BuyTicketComponent {
     let seatInfo = this.outsideSelectedSeat.map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seatId == seat._id) } })
       .map(seatNticket => { return { ...seatNticket, ...{ priceTier: this.priceTiers?.find(p => p._id == seatNticket.ticket?.priceTierId) } } })
       .map(info => info.seat.row + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
+    let action = {
+      tickets: tickets,
+      limit: this.shoppingCartSize,
+      seatInfo: seatInfo,
+      success: false,
+      reload: false,
+    }
     if (this.actionSnackbarRef == undefined && this.seatingPlan) {
       this.actionSnackbarRef = this._snackBar.openFromComponent(TicketSelectedComponent, {
-        data: {
-          tickets: tickets,
-          limit: this.shoppingCartSize,
-          seatInfo: seatInfo
-        }
+        data: action
       });
       this.actionSnackbarRef.afterDismissed().subscribe((response) => {
         this.actionSnackbarRef = undefined
         if (this._id) {
           // commenting this because this exhause server resources
-          //  this.loadData(this._id);
+           if(!action.success)this.loadData(this._id);
         }
         this.seatingPlan?.clearSelectedSeat()
       });

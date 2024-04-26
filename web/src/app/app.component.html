@@ -1,3 +1,6 @@
+@if(api.requestInProgress>1){
+<mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
 <mat-toolbar>
   <a mat-stroked-button color="primary" href="/">HK City Choir Ticketing</a>
   <span style="flex: 1 1 auto;"></span>
@@ -8,7 +11,8 @@
   <a mat-stroked-button color="primary" *ngIf="userSession.user?.hasAdminRight" [routerLink]="['/management']"
     [color]="router.isActive('/management', false)?'accent':''">Management Panel</a>
 
-  <a mat-stroked-button color="primary"  *ngIf="userSession.user?.isCustomerSupport"  [routerLink]="['/management/customer-ticket', ]">
+  <a mat-stroked-button color="primary" *ngIf="userSession.user?.isCustomerSupport"
+    [routerLink]="['/management/customer-ticket', ]">
     Manage Ticketing
   </a>
   <span style="flex: 1 1 auto;"></span>

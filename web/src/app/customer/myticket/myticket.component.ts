@@ -10,13 +10,13 @@ import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { Ticket } from '../../interface'
 import { ApiService } from '../../service/api.service';
-
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-myticket',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatPaginatorModule, MatCheckboxModule
-    , DatePipe, DatetimeOffsetPipe],
+    , DatePipe, DatetimeOffsetPipe, MatProgressSpinnerModule],
   templateUrl: './myticket.component.html',
   styleUrl: './myticket.component.sass'
 })

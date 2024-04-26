@@ -11,10 +11,11 @@ import { ApiService } from '../../service/api.service';
 import { UserSessionService } from '../../service/user-session.service';
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
 
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-payment-info',
   standalone: true,
-  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, PaymentMessageComponent],
+  imports: [MatIconModule, MatTableModule, MatInputModule, MatFormFieldModule, MatSortModule, MatCheckboxModule, PaymentMessageComponent, MatProgressSpinnerModule],
   templateUrl: './payment-info.component.html',
   styleUrl: './payment-info.component.scss'
 })

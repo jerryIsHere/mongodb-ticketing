@@ -349,14 +349,14 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
             });
             if (checkQuotaForUserId != undefined) {
                 var count = await database_1.Database.mongodb.collection(TicketDAO.collection_name).aggregate([
-                    { $match: { occupantId: checkQuotaForUserId, eventId: this.eventId } }, { $count: "baught" }
+                    { $match: { occupantId: checkQuotaForUserId, eventId: this.eventId } }, { $count: "bought" }
                 ]).tryNext();
-                if (count != null && Number.isInteger(count.baught)) {
+                if (count != null && Number.isInteger(count.bought)) {
                     let quota = (event.startFirstRoundSellDate <= new Date() && event.endFirstRoundSellDate >= new Date()) ?
                         event.firstRoundTicketQuota : (event.startSecondRoundSellDate <= new Date() && event.endSecondRoundSellDate >= new Date()) ?
                         event.secondRoundTicketQuota :
                         0;
-                    if (quota > -1 && count.baught + purchaseQuantity > quota) {
+                    if (quota > -1 && count.bought + purchaseQuantity > quota) {
                         this.res.locals.RequestErrorList.push(new database_1.RequestError(`You have no more ticket quota for this show.`));
                     }
                 }
@@ -438,7 +438,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                 }
                 catch (err) {
                     console.log(err);
-                    reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
+                    reject(new database_1.RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`));
                 }
             }))).then(daos => {
                 resolve(daos);
@@ -470,7 +470,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     }
                     catch (err) {
                         console.log(err);
-                        reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
+                        reject(new database_1.RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`));
                     }
                 }
                 else {
@@ -530,7 +530,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         }
                         catch (err) {
                             console.log(err);
-                            reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
+                            reject(new database_1.RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`));
                         }
                     }
                 }))).then(async (ticketDaoWithInfo) => {
@@ -549,7 +549,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                         notificationDao.send().catch(err => console.log(err));
                     }
                     resolve(ticketDaoWithInfo.map(withInfo => withInfo.dao));
-                });
+                }).catch(reason => reject(reason));
             }
             else {
                 if (originalOccupant instanceof Object && originalOccupant.email == undefined) {
@@ -594,7 +594,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                 }
                 catch (err) {
                     console.log(err);
-                    reject(new database_1.RequestError(`Please reduce the size of your batch request.`));
+                    reject(new database_1.RequestError(`Server is busy. Please retry later and perhaps reduce the size of your request..`));
                 }
             }))).then(daos => {
                 resolve(daos);
