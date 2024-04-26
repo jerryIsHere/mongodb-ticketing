@@ -110,6 +110,10 @@ export class ApiService {
       }
       return response
     }
+    let patientSnackBar = () => {
+      this.snackBar.open("Another request made previously is still processing in progress, please be patient.", "ok")
+      throw new Error('request in progress');
+    }
     this.request = {
       get: (url: string, options?: {
         headers?: HttpHeaders | {
@@ -148,7 +152,7 @@ export class ApiService {
           includeHeaders?: string[];
         } | boolean;
       }, blockedByRequestInProgress = true) => {
-        if (this.requestInProgress > 0 && blockedByRequestInProgress) throw new Error('request in progress');
+        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
         this.requestInProgress += 1
         console.log(this.requestInProgress)
         return this.httpClient.post(url, body, options).pipe(
@@ -171,7 +175,7 @@ export class ApiService {
         responseType?: 'json';
         withCredentials?: boolean;
       }, blockedByRequestInProgress = true) => {
-        if (this.requestInProgress > 0 && blockedByRequestInProgress) throw new Error('request in progress');
+        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
         this.requestInProgress += 1
         console.log(this.requestInProgress)
         return this.httpClient.patch(url, body, options).pipe(
@@ -194,7 +198,7 @@ export class ApiService {
         withCredentials?: boolean;
         body?: any | null;
       }, blockedByRequestInProgress = true) => {
-        if (this.requestInProgress > 0 && blockedByRequestInProgress) throw new Error('request in progress');
+        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
         this.requestInProgress += 1
         console.log(this.requestInProgress)
         return this.httpClient.delete(url, options).pipe(
