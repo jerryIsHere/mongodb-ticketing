@@ -29,16 +29,16 @@ const {
 console.log("generating password with length: " + argv[2])
 var suffix = argv[3]? argv[3]: ''
 Object.keys(usersInSingingPart).forEach(singingPart => {
-    let userFUllNames = usersInSingingPart[singingPart].trim().split(",")
+    let userFUllNames = usersInSingingPart[singingPart].replaceAll('#','').trim().split(",")
     singingPart = Object.keys(mixedGroup).includes(singingPart) ? mixedGroup[singingPart] : singingPart
     singingPart = singingPart.toUpperCase()
     emailHost = ['T', 'B', 'A'].includes(singingPart) ? "yahoo.com" : "gmail.com"
-    users = [...users, ...userFUllNames.map(fullname => fullname.replace(/[^a-z]/gi, '').toLowerCase() + suffix).map(fullname => {
+    users = [...users, ...userFUllNames.map(fullname => fullname.trim()).map(fullname => {
         let password = randomPassword(Number(argv[2]))
         let saltedpassword = bcrypt.hashSync(`${password}`, 10)
         usersPassword[fullname] = password
         return {
-            username: fullname.replaceAll(" ", '').replaceAll("-", ""),
+            username: fullname.replace(/[^a-z]/gi, '').toLowerCase() + suffix,
             saltedpassword: saltedpassword,
             fullname: fullname,
             email: `hkccticketing.${singingPart}@${emailHost}`,
