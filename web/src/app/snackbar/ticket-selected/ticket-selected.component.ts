@@ -42,7 +42,7 @@ export class TicketSelectedComponent {
     if (this.data.tickets.length > 0) {
       this.api.request.patch(`/ticket?batch&buy`, {
         ticketIds: this.data.tickets.map(t => t._id)
-      },).toPromise().then((result: any) => {
+      }, {}, { showSuccessHandler: false }).toPromise().then((result: any) => {
         if (result && result.success) {
           this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: Ticket) => ticket._id), userId: this.userSession.user._id } })
         }

@@ -152,7 +152,7 @@ var Ticket;
                 }).catch((error) => next(error));
             }
             else if (req.query.void != undefined) {
-                ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void()).then((value) => {
+                ticket_1.TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void(req.session?.user?.username)).then((value) => {
                     next({ success: true });
                 }).catch((error) => next(error));
             }

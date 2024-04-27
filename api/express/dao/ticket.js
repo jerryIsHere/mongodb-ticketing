@@ -81,7 +81,7 @@ class TicketDAO extends dao_1.BaseDAO {
     }
     _occupantId = null;
     get occupantId() { return this._occupantId; }
-    void() {
+    void(username) {
         return new Promise(async (resolve, reject) => {
             if (this.occupantId) {
                 this.res.locals.session.startTransaction();
@@ -104,10 +104,15 @@ class TicketDAO extends dao_1.BaseDAO {
                                 if (this.seatId && this.eventId && originalOccupant && originalOccupant.email) {
                                     let seatDao = await seat_1.SeatDAO.getById(this.res, this.seatId.toString()).catch(err => console.log(err));
                                     let eventDao = await event_1.EventDAO.getById(this.res, this.eventId.toString()).catch(err => console.log(err));
+                                    let customerSupportInfo = username ? ` by ${username}` : '';
+                                    let purchaseDateInfo = this.purchaseDate ? ` (at ${this.purchaseDate.toLocaleString()})` : '';
+                                    let salutation = originalOccupant.fullname ? `Dear ${originalOccupant.fullname}\n` : "";
                                     let notificationDao = new notification_1.NotificationDAO(this.res, {
                                         email: originalOccupant.email,
                                         title: "Ticket Voided",
-                                        message: `1 ticket that you had purchased is voided. Information of that ticket:
+                                        message: salutation +
+                                            `1 ticket that you had purchased${purchaseDateInfo} is voided${customerSupportInfo}.
+Information of that ticket:
 Event: ${eventDao ? eventDao.eventname : ''}
 Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                                         recipientId: originalOccupant.id

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { UserSessionService } from './user-session.service';
-import { Observable, catchError, of, map, finalize } from 'rxjs';
+import { Observable, catchError, of, map, finalize, identity } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ErrorMessageDialogComponent } from '../dialog/error-message-dialog/error-message-dialog.component';
@@ -23,7 +23,7 @@ type HttpClientLike = {
     transferCache?: {
       includeHeaders?: string[];
     } | boolean;
-  }) => Observable<Object>,
+  }, serviceOption?: any) => Observable<Object>,
 
   post: (url: string, body: any | null, options?: {
     headers?: HttpHeaders | {
@@ -40,7 +40,7 @@ type HttpClientLike = {
     transferCache?: {
       includeHeaders?: string[];
     } | boolean;
-  }) => Observable<Object>,
+  }, serviceOption?: any) => Observable<Object>,
 
   patch: (url: string, body: any | null, options?: {
     headers?: HttpHeaders | {
@@ -54,7 +54,7 @@ type HttpClientLike = {
     reportProgress?: boolean;
     responseType?: 'json';
     withCredentials?: boolean;
-  }) => Observable<Object>,
+  }, serviceOption?: any) => Observable<Object>,
   delete: (url: string, options?: {
     headers?: HttpHeaders | {
       [header: string]: string | string[];
@@ -68,7 +68,7 @@ type HttpClientLike = {
     responseType?: 'json';
     withCredentials?: boolean;
     body?: any | null;
-  }) => Observable<Object>
+  }, serviceOption?: any) => Observable<Object>
 }
 @Injectable({
   providedIn: 'root'
@@ -104,7 +104,7 @@ export class ApiService {
       }
       return handler
     }
-    let successHandler = (response: any) => {
+    let successSnackbar = (response: any) => {
       if (response && response.success) {
         this.snackBar.open("Request is successfully made.", "ok")
       }
@@ -130,7 +130,7 @@ export class ApiService {
         transferCache?: {
           includeHeaders?: string[];
         } | boolean;
-      }) => {
+      }, option?: {}) => {
         return this.httpClient.get(url, options).pipe(
           // catchError(errorHandler("Our website is overloaded by excessive traffic. Please refresh page later."))
         )
@@ -151,12 +151,12 @@ export class ApiService {
         transferCache?: {
           includeHeaders?: string[];
         } | boolean;
-      }, blockedByRequestInProgress = true) => {
-        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
+      }, option?: { showSuccessHandler?: boolean, blockedByRequestInProgress?: boolean }) => {
+        if (this.requestInProgress > 0 && (option?.blockedByRequestInProgress == undefined || option?.blockedByRequestInProgress)) patientSnackBar();
         this.requestInProgress += 1
         console.log(this.requestInProgress)
         return this.httpClient.post(url, body, options).pipe(
-          map(successHandler),
+          (option?.showSuccessHandler == undefined || option?.showSuccessHandler) ? map(successSnackbar) : identity,
           catchError(errorHandler()),
           finalize(() => this.requestInProgress -= 1)
         )
@@ -174,12 +174,12 @@ export class ApiService {
         reportProgress?: boolean;
         responseType?: 'json';
         withCredentials?: boolean;
-      }, blockedByRequestInProgress = true) => {
-        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
+      }, option?: { showSuccessHandler?: boolean, blockedByRequestInProgress?: boolean }) => {
+        if (this.requestInProgress > 0 && (option?.blockedByRequestInProgress == undefined || option?.blockedByRequestInProgress)) patientSnackBar();
         this.requestInProgress += 1
         console.log(this.requestInProgress)
         return this.httpClient.patch(url, body, options).pipe(
-          map(successHandler),
+          (option?.showSuccessHandler == undefined || option?.showSuccessHandler) ? map(successSnackbar) : identity,
           catchError(errorHandler()),
           finalize(() => this.requestInProgress -= 1)
         )
@@ -197,12 +197,12 @@ export class ApiService {
         responseType?: 'json';
         withCredentials?: boolean;
         body?: any | null;
-      }, blockedByRequestInProgress = true) => {
-        if (this.requestInProgress > 0 && blockedByRequestInProgress) patientSnackBar();
+      }, option?: { showSuccessHandler?: boolean, blockedByRequestInProgress?: boolean }) => {
+        if (this.requestInProgress > 0 && (option?.blockedByRequestInProgress == undefined || option?.blockedByRequestInProgress)) patientSnackBar();
         this.requestInProgress += 1
         console.log(this.requestInProgress)
         return this.httpClient.delete(url, options).pipe(
-          map(successHandler),
+          (option?.showSuccessHandler == undefined || option?.showSuccessHandler) ? map(successSnackbar) : identity,
           catchError(errorHandler()),
           finalize(() => this.requestInProgress -= 1)
         )
