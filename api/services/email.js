@@ -25,6 +25,7 @@ class EmailService {
         this.transporter = nodemailer_1.default.createTransport(this.option);
     }
     async sendEmail(to, subject, text) {
+        to = to.toLowerCase();
         const isValidEmail = regex_1.REGEX.EMAIL.test(to);
         if (!isValidEmail)
             throw {

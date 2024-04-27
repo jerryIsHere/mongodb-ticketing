@@ -24,6 +24,7 @@ export default class EmailService {
   }
 
   async sendEmail(to: string, subject: string, text: string) {
+    to = to.toLowerCase()
     const isValidEmail = REGEX.EMAIL.test(to);
     if (!isValidEmail)
       throw {
