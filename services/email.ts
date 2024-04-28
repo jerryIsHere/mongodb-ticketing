@@ -9,7 +9,7 @@ export default class EmailService {
   option: SMTPTransport.Options;
   constructor() {
     this.option = {
-      service: process.env.EMAIL_SERVICE || "yahoo",
+      service: process.env.EMAIL_SERVICE || "Yahoo",
       host: process.env.EMAIL_SERVICE_HOST || "smtp.mail.yahoo.com",
       port: 465,
       secure: true,
