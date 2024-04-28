@@ -375,7 +375,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     return instance;
                 });
             }
-            return { seat: seatDoc, user: userDoc };
+            return { seat: seatDoc, user: userDoc, event: event };
         }
         else {
             if (event == null)
@@ -540,11 +540,12 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
                     }
                 }))).then(async (ticketDaoWithInfo) => {
                     if (originalOccupant && originalOccupant.email && res.locals.RequestErrorList.length == 0) {
+                        let eventInfoString = ticketDaoWithInfo[0].info?.event?.eventname ? ` for event ${ticketDaoWithInfo[0].info?.event?.eventname} ` : '';
                         let notificationDao = new notification_1.NotificationDAO(res, {
                             title: "Ticket Purchased",
                             email: originalOccupant.email,
                             message: `Dear ${ticketDaoWithInfo[0].info?.user?.fullname}\n` +
-                                `${ticketDaoWithInfo.length} ticket purchased:\n` +
+                                `${ticketDaoWithInfo.length} ticket${ticketDaoWithInfo.length > 1 ? 's' : ''}${eventInfoString} is  purchased:\n` +
                                 ticketDaoWithInfo.map(withInfo => withInfo.info?.seat?.row + withInfo.info?.seat?.no).join(", ") +
                                 `\nFor follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
                                 + ticketDaoWithInfo.map(withInfo => 'ids=' + withInfo.dao._id?.toString()).join('&') + `&userId=${userId}`,
