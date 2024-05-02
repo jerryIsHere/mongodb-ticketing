@@ -117,7 +117,8 @@ var User;
                 next({ success: true });
             }
             else if (req.query.register != undefined) {
-                return next(new database_1.RequestError("New user registration is not avaliable."));
+                if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true")
+                    return next(new database_1.RequestError("New user registration is not avaliable."));
                 if (req.body.username &&
                     req.body.fullname &&
                     req.body.email &&

@@ -22,11 +22,11 @@ export namespace User {
     }
     user.get("/", async (req: Request, res: Response, next) => {
       if (req.query.list != undefined) {
-          UserDAO.listAll(res).then(result => {
-            next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false }))  })
+        UserDAO.listAll(res).then(result => {
+          next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false })) })
         }).catch((error) => next(error))
       }
-  })
+    })
     user.post(
       "/forget-password",
       async (req: Request, res: Response, next): Promise<any> => {
@@ -122,7 +122,7 @@ export namespace User {
         res.clearCookie("user");
         next({ success: true });
       } else if (req.query.register != undefined) {
-        return next(new RequestError("New user registration is not avaliable."))
+        if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true") return next(new RequestError("New user registration is not avaliable."))
         if (
           req.body.username &&
           req.body.fullname &&
