@@ -32,6 +32,19 @@ export class SeatingPlanComponent {
     if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
       this.selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
     }
+    else if (value.sections && Array.isArray(value.sections) && this.tickets) {
+      this.selectedSection = value.sections[0]
+      for (let section of value.sections) {
+        if (this.tickets.findIndex(ticket =>
+          ticket.occupantId == null && ticket.seat &&
+          ticket.seat.coord.sectX == section.x &&
+          ticket.seat.coord.sectX == section.x) > -1) {
+          this.selectedSection = section
+          break
+        }
+
+      }
+    }
     else if (value.sections) {
       this.selectedSection = value.sections[0]
     }
