@@ -56,6 +56,13 @@ export class SeatingPlanComponent {
 
   @Input({ transform: booleanAttribute }) reservedSeatDisabled: boolean = false;
 
+  _ticketIrrelavent: boolean = false;
+  @Input({ transform: booleanAttribute })
+  set ticketIrrelavent(value: boolean) {
+    this._ticketIrrelavent = value
+    if (value) this.tickets = []
+  }
+
   @Output() selectedSeatIdsChange = new EventEmitter<Set<string>>();
   toggleSelect(seat: Seat | null) {
     if (seat) {
