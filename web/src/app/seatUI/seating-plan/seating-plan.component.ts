@@ -27,17 +27,8 @@ export class SeatingPlanComponent {
   get venue() { return this._venue }
   @Input() set venue(value: Venue) {
     this._venue = value
-    let sectionParam = this.activatedRoute.snapshot.queryParamMap.get('section')
-    let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
-    if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
-      this.selectedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
-    }
-    else if (value.sections) {
-      this.selectedSection = value.sections[0]
-    }
-
+    this.tryInitialSectionSelection()
   }
-  @Input()
   _selectedSection?: { x: number, y: number, options?: any }
   get selectedSection(): undefined | { x: number, y: number, options?: any } { return this._selectedSection }
   set selectedSection(value: { x: number, y: number, options?: any }) {
@@ -103,7 +94,12 @@ export class SeatingPlanComponent {
     if (this.selectedSection)
       this.render()
   }
-  @Input() tickets: Ticket[] = []
+  _tickets: Ticket[] = []
+  get tickets(): Ticket[] { return this._tickets }
+  @Input() set tickets(value: Ticket[]) {
+    this._tickets = value
+    this.tryInitialSectionSelection()
+  }
   @Input({ transform: booleanAttribute }) seatingPlanEditing: boolean = false;
   @Input({ transform: booleanAttribute }) isTicketPlanning: boolean = false;
   _priceTiers: PriceTier[] = []
@@ -222,5 +218,50 @@ export class SeatingPlanComponent {
           queryParamsHandling: 'merge', // remove to replace all query params by provided
         }
       );
+  }
+  tryInitialSectionSelection() {
+    if (
+      this.selectedSection === undefined &&
+      !this.trySelectSectionWithQuery() &&
+      !this.trySelectSectionWithMostTicket() &&
+      this.venue && this.venue.sections &&
+      Array.isArray(this.venue.sections) &&
+      this.venue.sections.length > 0
+    ) {
+      this.selectedSection = this.venue.sections[0]
+    }
+  }
+  trySelectSectionWithQuery(): boolean {
+    let sectionParam = this.activatedRoute.snapshot.queryParamMap.get('section')
+    let section = { x: Number(sectionParam?.split("-")[0]), y: Number(sectionParam?.split("-")[1]) }
+    if (Number.isInteger(section.x) && Number.isInteger(section.y)) {
+      let queriedSection = (this.venue.sections as Array<any>).find(s => s.x == section.x && s.y == section.y)
+      if (queriedSection) {
+        this.selectedSection = queriedSection
+        return true;
+      }
+    }
+    return false
+  }
+  trySelectSectionWithMostTicket(): boolean {
+    if (this.venue && this.venue.sections && Array.isArray(this.venue.sections) && this.tickets) {
+      let sortedSection = this.venue.sections.slice()
+      let isTicketFromSection = (section: { x: number, y: number }) => {
+        return (ticket: Ticket) => {
+          return ticket.occupantId == null && ticket.seat &&
+            ticket.seat.coord.sectX == section.x &&
+            ticket.seat.coord.sectY == section.y
+        }
+
+      }
+      this.selectedSection =
+        this.venue.sections.sort((sectionA, sectionB) =>
+          this.tickets.filter(isTicketFromSection(sectionB)).length -
+          this.tickets.filter(isTicketFromSection(sectionA)).length
+
+        )[0]
+      return true;
+    }
+    return false
   }
 }
