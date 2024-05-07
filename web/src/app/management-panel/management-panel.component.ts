@@ -1,9 +1,11 @@
 import { Component, ViewChild, viewChild, } from '@angular/core';
 import { Show, Venue, PriceTier, Ticket } from '../interface'
 import { EventListComponent } from './event-list/event-list.component';
+import { MatDialog } from '@angular/material/dialog';
 import { VenueListComponent } from './venue-list/venue-list.component';
 import { PriceTierListComponent } from './price-tier-list/price-tier-list.component';
 import { SoldTicketListComponent } from './sold-ticket-list/sold-ticket-list.component';
+import { RegisterFormComponent } from '../user/register-form/register-form.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +19,7 @@ interface IDataListControl {
 @Component({
   selector: 'app-management-panel',
   standalone: true,
-  imports: [EventListComponent, VenueListComponent, PriceTierListComponent, SoldTicketListComponent, MatCardModule,
+  imports: [EventListComponent, RegisterFormComponent, VenueListComponent, PriceTierListComponent, SoldTicketListComponent, MatCardModule,
     MatButtonModule, RouterModule, MatIconModule],
   templateUrl: './management-panel.component.html',
   styleUrl: './management-panel.component.sass'
@@ -70,9 +72,12 @@ export class ManagementPanelComponent {
       },
     },
   }
-  constructor(private api: ApiService) {
+  constructor(private api: ApiService, public dialog: MatDialog) {
     for (let key in this.dataListControls) {
       this.dataListControls[key].loadData()
     }
+  }
+  createUser() {
+    const dialogRef = this.dialog.open(RegisterFormComponent);
   }
 }
