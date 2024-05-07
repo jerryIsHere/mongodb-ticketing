@@ -94,8 +94,8 @@ export class SeatingPlanComponent {
     if (this.selectedSection)
       this.render()
   }
-  _tickets: Ticket[] = []
-  get tickets(): Ticket[] { return this._tickets }
+  _tickets?: Ticket[]
+  get tickets(): Ticket[] | undefined { return this._tickets }
   @Input() set tickets(value: Ticket[]) {
     this._tickets = value
     this.tryInitialSectionSelection()
@@ -179,7 +179,7 @@ export class SeatingPlanComponent {
     else {
       seatId = rowOrSeatId
     }
-    if (seatId) {
+    if (seatId && this.tickets) {
       let search = this.tickets.filter(es => es.seatId == seatId)
       if (search.length > 0)
         return search[0]
@@ -221,12 +221,13 @@ export class SeatingPlanComponent {
   }
   tryInitialSectionSelection() {
     if (
-      this.selectedSection === undefined &&
-      !this.trySelectSectionWithQuery() &&
-      !this.trySelectSectionWithMostTicket() &&
       this.venue && this.venue.sections &&
       Array.isArray(this.venue.sections) &&
-      this.venue.sections.length > 0
+      this.venue.sections.length > 0 &&
+      this.tickets &&
+      this.selectedSection === undefined &&
+      !this.trySelectSectionWithQuery() &&
+      !this.trySelectSectionWithMostTicket()
     ) {
       this.selectedSection = this.venue.sections[0]
     }
@@ -246,18 +247,17 @@ export class SeatingPlanComponent {
   trySelectSectionWithMostTicket(): boolean {
     if (this.venue && this.venue.sections && Array.isArray(this.venue.sections) && this.tickets) {
       let sortedSection = this.venue.sections.slice()
-      let isTicketFromSection = (section: { x: number, y: number }) => {
+      let isTicketAvaliableNFromSection = (section: { x: number, y: number }) => {
         return (ticket: Ticket) => {
           return ticket.occupantId == null && ticket.seat &&
             ticket.seat.coord.sectX == section.x &&
             ticket.seat.coord.sectY == section.y
         }
-
       }
       this.selectedSection =
         this.venue.sections.sort((sectionA, sectionB) =>
-          this.tickets.filter(isTicketFromSection(sectionB)).length -
-          this.tickets.filter(isTicketFromSection(sectionA)).length
+          (this.tickets ? this.tickets.filter(isTicketAvaliableNFromSection(sectionB)).length : 0) -
+          (this.tickets ? this.tickets.filter(isTicketAvaliableNFromSection(sectionA)).length : 0)
 
         )[0]
       return true;
