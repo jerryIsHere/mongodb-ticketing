@@ -1,58 +1,65 @@
-<form [formGroup]="registerForm">
-  <mat-form-field>
-    <mat-label>Username (for login)</mat-label>
-    <input matInput formControlName="username" required>
-    @if (registerForm.controls['username'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-  <br>
+<button mat-icon-button style="margin-left: auto" (click)="close()">
+  <mat-icon>close</mat-icon>
+</button>
+<mat-dialog-content>
+  <form [formGroup]="registerForm">
+    <mat-form-field>
+      <mat-label>Username (for login)</mat-label>
+      <input matInput formControlName="username" required>
+      @if (registerForm.controls['username'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
 
-  <mat-form-field>
-    <mat-label>Password</mat-label>
-    <input matInput formControlName="password" type="password" required>
-    @if (registerForm.controls['password'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-  <br>
+    <mat-form-field>
+      <mat-label>Password</mat-label>
+      <input matInput formControlName="password" type="password" required>
+      @if (registerForm.controls['password'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
 
-  <mat-form-field>
-    <mat-label>Confirm Password</mat-label>
-    <input matInput formControlName="confirmPassword" type="password" required>
-    @if (registerForm.controls['confirmPassword'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-    @if (registerForm.controls['confirmPassword'].hasError('confirmPasswordMissmatch')) {
-    <mat-error>This does not match with the password</mat-error>
-    }
-  </mat-form-field>
-  <br>
+    <mat-form-field>
+      <mat-label>Confirm Password</mat-label>
+      <input matInput formControlName="confirmPassword" type="password" required>
+      @if (registerForm.controls['confirmPassword'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+      @if (registerForm.controls['confirmPassword'].hasError('confirmPasswordMissmatch')) {
+      <mat-error>This does not match with the password</mat-error>
+      }
+    </mat-form-field>
+    <br>
 
-  <mat-form-field>
-    <mat-label>Email</mat-label>
-    <input matInput formControlName="email" required>
-    @if (registerForm.controls['email'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-  <br>
+    <mat-form-field>
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" required>
+      @if (registerForm.controls['email'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
 
-  <mat-form-field>
-    <mat-label>Full name</mat-label>
-    <input matInput formControlName="fullname" required>
-    @if (registerForm.controls['fullname'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-  <br>
+    <mat-form-field>
+      <mat-label>Full name</mat-label>
+      <input matInput formControlName="fullname" required>
+      @if (registerForm.controls['fullname'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
 
-  <mat-form-field>
-    <mat-label>SingingPart</mat-label>
-    <input matInput formControlName="singingPart">
-    @if (registerForm.controls['singingPart'].hasError('required')) {
-    <mat-error>This field is required</mat-error>
-    }
-  </mat-form-field>
-</form>
-<button mat-stroked-button color="primary"(click)="register()">Register</button>
+    <mat-form-field>
+      <mat-label>SingingPart</mat-label>
+      <input matInput formControlName="singingPart">
+      @if (registerForm.controls['singingPart'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-stroked-button color="primary" (click)="register()">Register</button>
+</mat-dialog-actions>

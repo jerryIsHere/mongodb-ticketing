@@ -8,6 +8,14 @@ var User;
 (function (User) {
     function RouterFactory() {
         var user = (0, express_1.Router)();
+        user.use((req, res, next) => {
+            if (req.method == 'POST' && req.query.register != undefined && req.session["user"]?.hasAdminRight != true) {
+                res.status(401).json({ success: false, reason: "Unauthorized access" });
+            }
+            else {
+                next();
+            }
+        });
         var updateSession = (req, res, dao) => {
             var userObj = { _id: dao.id?.toString(), isCustomerSupport: dao.isCustomerSupport, hasAdminRight: dao.hasAdminRight, ...dao.Hydrated({ withCredentials: false }) };
             req.session.user = userObj;
@@ -117,7 +125,7 @@ var User;
                 next({ success: true });
             }
             else if (req.query.register != undefined) {
-                return next(new database_1.RequestError("New user registration is not avaliable."));
+                // if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true") return next(new RequestError("New user registration is not avaliable."))
                 if (req.body.username &&
                     req.body.fullname &&
                     req.body.email &&

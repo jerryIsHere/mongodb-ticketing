@@ -11,6 +11,12 @@ declare module "express-session" {
 export namespace User {
   export function RouterFactory(): Express.Router {
     var user = Router();
+    user.use((req: Request, res: Response, next) => {
+      if (req.method == 'POST' && req.query.register != undefined && (req.session["user"] as any)?.hasAdminRight != true) {
+        res.status(401).json({ success: false, reason: "Unauthorized access" })
+      }
+      else { next() }
+    })
 
     var updateSession = (req: Request, res: Response, dao: UserDAO) => {
       var userObj = { _id: dao.id?.toString(), isCustomerSupport: dao.isCustomerSupport, hasAdminRight: dao.hasAdminRight, ...dao.Hydrated({ withCredentials: false }) }
@@ -22,11 +28,11 @@ export namespace User {
     }
     user.get("/", async (req: Request, res: Response, next) => {
       if (req.query.list != undefined) {
-          UserDAO.listAll(res).then(result => {
-            next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false }))  })
+        UserDAO.listAll(res).then(result => {
+          next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false })) })
         }).catch((error) => next(error))
       }
-  })
+    })
     user.post(
       "/forget-password",
       async (req: Request, res: Response, next): Promise<any> => {
@@ -122,7 +128,7 @@ export namespace User {
         res.clearCookie("user");
         next({ success: true });
       } else if (req.query.register != undefined) {
-        return next(new RequestError("New user registration is not avaliable."))
+        // if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true") return next(new RequestError("New user registration is not avaliable."))
         if (
           req.body.username &&
           req.body.fullname &&

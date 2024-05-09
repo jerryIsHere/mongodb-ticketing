@@ -3,13 +3,15 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 
 import { ApiService } from '../../service/api.service';
 
 @Component({
   selector: 'app-register-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatDialogModule, MatIconModule],
   templateUrl: './register-form.component.html',
   styleUrl: './register-form.component.sass'
 })
@@ -26,7 +28,7 @@ export class RegisterFormComponent {
     singingPart: new FormControl('',),
   });
   @Output() logined = new EventEmitter<void>();
-  constructor(private api: ApiService, private _formBuilder: FormBuilder) { }
+  constructor(private api: ApiService, private _formBuilder: FormBuilder, public dialogRef: MatDialogRef<RegisterFormComponent>,) { }
   register() {
     if (this.registerForm.valid) {
       this.api.user.register({
@@ -37,10 +39,13 @@ export class RegisterFormComponent {
         singingPart: this.registerForm.controls["singingPart"].value,
       }).then((result) => {
         if (result && result.success) {
-          this.logined.emit();
+          this.dialogRef.close()
         }
       })
     }
+  }
+  close() {
+    this.dialogRef.close();
   }
 
 }
