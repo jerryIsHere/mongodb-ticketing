@@ -127,7 +127,7 @@ export class UserDAO extends BaseDAO {
             if (params.fullname)
                 this.fullname = params.fullname
             if (params.email)
-                this.email = params.email
+                this.email = params.email.toLowerCase()
             if (params.singingPart)
                 this.singingPart = params.singingPart
         }
@@ -294,11 +294,12 @@ export class UserDAO extends BaseDAO {
         return new Promise<UserDAO>((resolve, reject) => {
             if (this.id)
                 reject(new RequestError(`Trying to create instantiated document ${this.id}`))
+            this.res.locals.session.startTransaction()
             Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(async (instance) => {
                 if (instance == null) {
                     return await Database.mongodb.collection(UserDAO.collection_name)
                         .insertOne(
-                            this.Serialize(true)
+                            this.Serialize(true) , { session: this.res.locals.session }
                         )
                 }
                 else {
