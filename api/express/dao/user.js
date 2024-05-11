@@ -112,7 +112,7 @@ class UserDAO extends dao_1.BaseDAO {
             if (params.fullname)
                 this.fullname = params.fullname;
             if (params.email)
-                this.email = params.email;
+                this.email = params.email.toLowerCase();
             if (params.singingPart)
                 this.singingPart = params.singingPart;
         }
@@ -261,7 +261,7 @@ class UserDAO extends dao_1.BaseDAO {
             database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(async (instance) => {
                 if (instance == null) {
                     return await database_1.Database.mongodb.collection(UserDAO.collection_name)
-                        .insertOne(this.Serialize(true));
+                        .insertOne(this.Serialize(true), { session: this.res.locals.session });
                 }
                 else {
                     reject(new database_1.RequestError(`User with username ${this.username} already exists.`));

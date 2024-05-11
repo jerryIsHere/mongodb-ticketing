@@ -147,7 +147,6 @@ export namespace User {
             .then((dao) => dao.create())
             .then(async (dao) => {
               if (dao.id) {
-                updateSession(req, res, dao)
                 next({
                   success: true,
                   user: req.session.user,

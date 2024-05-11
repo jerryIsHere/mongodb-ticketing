@@ -127,7 +127,7 @@ export class UserDAO extends BaseDAO {
             if (params.fullname)
                 this.fullname = params.fullname
             if (params.email)
-                this.email = params.email
+                this.email = params.email.toLowerCase()
             if (params.singingPart)
                 this.singingPart = params.singingPart
         }
@@ -298,7 +298,7 @@ export class UserDAO extends BaseDAO {
                 if (instance == null) {
                     return await Database.mongodb.collection(UserDAO.collection_name)
                         .insertOne(
-                            this.Serialize(true)
+                            this.Serialize(true) , { session: this.res.locals.session }
                         )
                 }
                 else {
