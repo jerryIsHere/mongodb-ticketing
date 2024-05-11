@@ -258,6 +258,7 @@ class UserDAO extends dao_1.BaseDAO {
         return new Promise((resolve, reject) => {
             if (this.id)
                 reject(new database_1.RequestError(`Trying to create instantiated document ${this.id}`));
+            this.res.locals.session.startTransaction();
             database_1.Database.mongodb.collection(UserDAO.collection_name).findOne({ username: this.username }).then(async (instance) => {
                 if (instance == null) {
                     return await database_1.Database.mongodb.collection(UserDAO.collection_name)
