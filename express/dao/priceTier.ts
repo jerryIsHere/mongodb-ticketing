@@ -1,5 +1,5 @@
 import { WithId, Document, ObjectId } from "mongodb";
-import { Database, RequestError } from "./database";
+import { Database, RequestError } from "../database";
 import { BaseDAO } from "./dao";
 import { TicketDAO } from "./ticket";
 import { Response } from "express";

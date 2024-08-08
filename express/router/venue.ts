@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
-import { Database, RequestError } from "../dao/database";
+import { Database, RequestError } from "../database";
 import { VenueDAO, sectionType, sectionTypeCheck } from "../dao/venue";
 import { UserDAO } from "../dao/user";
 export namespace Venue {
