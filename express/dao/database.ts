@@ -1,4 +1,5 @@
 import { ClientSession, Db, MongoClient, } from "mongodb";
+import { connect } from 'mongoose';
 
 declare namespace process {
     namespace env {
@@ -19,13 +20,14 @@ export abstract class Database {
     public static mongodb: Db;
 
     public static async init() {
+        console.log("Database init")
         await this.mongo.connect();
         // Send a ping to confirm a successful connection
         await this.mongo.db("admin").command({ ping: 1 });
 
-
+        await connect(Database.uri)
         this.mongodb = this.mongo.db(this.db_name)
-
+        console.log("Database init completed")
     }
 
 }

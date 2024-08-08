@@ -48,7 +48,6 @@ app.use('/web/*', function (_, res: Response) {
 });
 
 app.use('*', async function (req, res: Response, next) {
-  await Database.init()
   res.locals.RequestErrorList = new Array<RequestError>();
 
   res.locals.session = Database.mongo.startSession();
@@ -115,5 +114,13 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
   }
 })
 
-app.listen(port, () => { console.log("Server ready!"); });
+
+Promise.all([Database.init()])
+  .catch(e => {
+    console.error(e)
+  })
+  .finally(() => {
+    app.listen(port, () => { console.log("Server ready!"); });
+  })
+
 export default app;

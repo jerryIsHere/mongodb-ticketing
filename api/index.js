@@ -38,7 +38,6 @@ app.use('/web/*', function (_, res) {
     res.sendFile(fileName, options);
 });
 app.use('*', async function (req, res, next) {
-    await database_1.Database.init();
     res.locals.RequestErrorList = new Array();
     res.locals.session = database_1.Database.mongo.startSession();
     next();
@@ -93,5 +92,11 @@ app.use(async (output, req, res, next) => {
         next();
     }
 });
-app.listen(port, () => { console.log("Server ready!"); });
+Promise.all([database_1.Database.init()])
+    .catch(e => {
+    console.error(e);
+})
+    .finally(() => {
+    app.listen(port, () => { console.log("Server ready!"); });
+});
 exports.default = app;
