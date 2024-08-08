@@ -1,4 +1,7 @@
 please populate ./credential/.env
+node version: v20.11.1
+please run npm install in both `./` and `./web`
+frontend is also served by express
 node ./tools/user.js N Suffix
 [
   {
