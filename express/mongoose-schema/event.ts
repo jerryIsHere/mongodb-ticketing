@@ -1,6 +1,6 @@
 import { Schema, model, Types, Model, HydratedDocument, QueryWithHelpers, Query } from 'mongoose';
 import { IVenue, singular_name as Venue, venueModel } from "./venue";
-import { tickerModel } from './ticket';
+import { ticketModel } from './ticket';
 import { collection_name as seat_collection__name } from './seat';
 export interface IPriceTier {
     tierName: string;
@@ -135,7 +135,7 @@ export const eventSchema =
     })
 eventSchema.path('venueId').validate(async function (val) {
     let eventId = this.get("_id")
-    let tickerFromOtherVenue = await tickerModel.aggregate([
+    let tickerFromOtherVenue = await ticketModel.aggregate([
         { $match: { eventId: eventId } },
         {
             $lookup:
