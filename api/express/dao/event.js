@@ -91,7 +91,7 @@ class EventDAO extends dao_1.BaseDAO {
     get duration() { return this._duration; }
     set duration(value) {
         if (value && value < 0) {
-            this.res.locals.RequestErrorList.push(new database_1.RequestError('Duration must be greater then 0.'));
+            this.res.locals.RequestErrorList.push(new database_1.RequestError('Duration must be greater than 0.'));
         }
         else {
             this._duration = value;

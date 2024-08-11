@@ -16,7 +16,7 @@ export class PriceTierDAO extends BaseDAO {
     public get price() { return this._price }
     public set price(value: number | undefined) {
         if (value && value < 0) {
-            this.res.locals.RequestErrorList.push(new RequestError('Price must be greater then 0.'))
+            this.res.locals.RequestErrorList.push(new RequestError('Price must be greater than 0.'))
         }
         else {
             this._price = value;

@@ -94,7 +94,7 @@ export class EventDAO extends BaseDAO {
     public get duration() { return this._duration }
     public set duration(value: number | undefined) {
         if (value && value < 0) {
-            this.res.locals.RequestErrorList.push(new RequestError('Duration must be greater then 0.'))
+            this.res.locals.RequestErrorList.push(new RequestError('Duration must be greater than 0.'))
         }
         else {
             this._duration = value;

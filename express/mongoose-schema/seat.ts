@@ -1,5 +1,5 @@
 
-import { Schema, model, Types, Model, HydratedDocument } from 'mongoose';
+import { Schema, model, Types, Model, HydratedDocument, QueryWithHelpers } from 'mongoose';
 import { ISection, singular_name as Venue, venueModel } from "./venue";
 export interface Icoord { sectX: number; sectY: number; orderInRow: number; }
 export const coordSchema = new Schema<Icoord>(
@@ -20,10 +20,17 @@ export interface ISeat {
 export interface ISeatMethod {
 
 }
-export interface SeatModel extends Model<ISeat, {}, ISeatMethod> {
+interface SeatQueryHelpers {
+    findByVenueId(venueId: string): QueryWithHelpers<
+        HydratedDocument<ISeat>[],
+        HydratedDocument<ISeat>,
+        SeatQueryHelpers
+    >
+}
+export interface SeatModel extends Model<ISeat, SeatQueryHelpers, ISeatMethod> {
     listByVenueId(venueId: string): Promise<HydratedDocument<ISeat, ISeatMethod>>
 }
-export const seatSchema = new Schema<ISeat, SeatModel, ISeatMethod>({
+export const seatSchema = new Schema<ISeat, SeatModel, ISeatMethod, SeatQueryHelpers>({
     coord: {
         type: coordSchema, required: true,
         validate: {
@@ -44,9 +51,15 @@ export const seatSchema = new Schema<ISeat, SeatModel, ISeatMethod>({
     no: { type: Number, required: true, },
     venueId: { type: Schema.Types.ObjectId, ref: Venue, required: true },
 }, {
-    statics: {
-        async listByVenueId(venueId: string) {
-            return this.find({ venueId: new Schema.Types.ObjectId(venueId) }).then()
+    query: {
+        findByVenueId(venueId: string) {
+            
+            let query = (this as QueryWithHelpers<
+                HydratedDocument<ISeat>[],
+                HydratedDocument<ISeat>,
+                SeatQueryHelpers
+            >)
+            return query.find({ venueId: new Schema.Types.ObjectId(venueId) })
         },
     },
 })

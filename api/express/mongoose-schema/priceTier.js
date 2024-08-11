@@ -14,7 +14,7 @@ class PriceTierDAO extends dao_1.BaseDAO {
     get price() { return this._price; }
     set price(value) {
         if (value && value < 0) {
-            this.res.locals.RequestErrorList.push(new database_1.RequestError('Price must be greater then 0.'));
+            this.res.locals.RequestErrorList.push(new database_1.RequestError('Price must be greater than 0.'));
         }
         else {
             this._price = value;
