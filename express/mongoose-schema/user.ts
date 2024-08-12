@@ -29,7 +29,8 @@ export interface IUser {
 }
 export interface IUserMethod {
   discloseUser(): IDclosableUser;
-  sendResetPasswordEmail(): void;
+  sendResetPasswordEmail(): Promise<void>;
+  setSaltedPassword(password: string): Promise<void>;
 }
 export interface UserModel extends Model<IUser, {}, IUserMethod> {
   verify(verificationToken: string): HydratedDocument<IUser>;
@@ -39,7 +40,16 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
   {
     username: { type: String, required: true, unique: true },
     fullname: { type: String, required: true },
-    email: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      validate: {
+        validator(val: string) {
+          return REGEX.EMAIL.test(val);
+        },
+        message: "User email is not in a valid format.",
+      },
+    },
     singingPart: { type: String },
     saltedpassword: { type: String, required: true },
     verified: { type: Boolean, required: true },
@@ -51,6 +61,15 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
   },
   {
     methods: {
+      setSaltedPassword(password: string) {
+        return new Promise<void>((resolve, reject) =>
+          hash(password, saltRounds, async (err, hash) => {
+            this.saltedpassword = hash;
+            await this.save();
+            resolve();
+          })
+        );
+      },
       discloseUser() {
         return {
           username: this.username,
@@ -63,7 +82,30 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
           isCustomerSupport: this._isCustomerSupport == true,
         };
       },
-      sendResetPasswordEmail() {},
+      sendResetPasswordEmail() {
+        return new Promise(async (resolve, reject) => {
+          if (this.email && this.username) {
+            try {
+              if (this.resetToken == null || this.resetToken == undefined) {
+                const token = await generateResetToken();
+                this.resetToken = token;
+                await this.save();
+              }
+              EmailService.singleton.resetPasswordEmail(
+                this.username,
+                this.email,
+                this.resetToken
+              );
+            } catch (err) {
+              reject(err);
+            }
+            resolve();
+          } else {
+            if (this.email == undefined)
+              reject(`Email of user ${this.username} is not initialized`);
+          }
+        });
+      },
     },
   }
 );
@@ -94,6 +136,13 @@ userSchema.static(
     throw new Error(`User with user name ${username} not found.`);
   }
 );
+userSchema.path("email").validate(async function(val) {
+  const token = await generateResetToken();
+  this.verificationToken = token;
+  //currently disabled as we don't allow user to change email in front end?
+  //this.sendActivationEmail()
+
+});
 export const collection_name = "users";
 export const singular_name = "User";
 export const userModel = model<IUser, UserModel>(

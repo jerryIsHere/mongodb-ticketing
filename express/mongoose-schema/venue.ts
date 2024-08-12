@@ -1,6 +1,5 @@
 import { Schema, model, Types, HydratedDocument, Model } from "mongoose";
 import { ISeat, seatModel } from "./seat";
-import { RequestError } from "../dao/database";
 import { eventModel, IEvent } from "./event";
 export interface ISection {
   x: number;
@@ -71,7 +70,7 @@ venueSchema.pre(
     const seat = await this.findOneSeatAssociate();
     if (seat != null)
       next(
-        new RequestError(
+        new Error(
           `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
             `as seat with id ${seat.id} depends on it.`
         )
@@ -79,7 +78,7 @@ venueSchema.pre(
     const event = await this.findOneEventAssociate();
     if (event != null)
       next(
-        new RequestError(
+        new Error(
           `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
             `as event with id ${event.id} depends on it.`
         )
