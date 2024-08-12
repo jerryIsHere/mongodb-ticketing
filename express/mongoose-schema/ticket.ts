@@ -1,4 +1,4 @@
-import { eventModel, IPriceTier, priceTierSchema } from "./event";
+import { eventModel, IEvent, IPriceTier, priceTierSchema } from "./event";
 import {
   Schema,
   model,
@@ -8,20 +8,30 @@ import {
   UpdateQuery,
   HydratedDocument,
   QueryWithHelpers,
+  ObjectId,
 } from "mongoose";
-import { singular_name as Seat, seatModel } from "./seat";
-import { singular_name as Event } from "./event";
+import { ISeat, singular_name as Seat, seatModel } from "./seat";
+import { singular_name as EventName } from "./event";
 import { singular_name as User, userModel } from "./user";
 import { notificationModel } from "./notification";
 export interface IPurchaseInfo {
-  purchaseDate?: Date;
-  purchaserId?: Types.ObjectId;
+  purchaseDate: Date;
+  purchaserId: Types.ObjectId;
 }
 
 export interface IPaymentInfo {
   confirmedBy: Types.ObjectId;
   remark: string;
   confirmationDate: Date;
+}
+export interface IDisclosableTicket {
+  event: IEvent | null;
+  seat: ISeat | null;
+  priceTier: IPriceTier;
+  purchased: boolean;
+}
+export interface IClientTicket extends IDisclosableTicket {
+  belongsToUser: boolean;
 }
 export interface ITicket {
   eventId: Types.ObjectId;
@@ -41,6 +51,8 @@ interface ITicketMethod {
     priceTier: IPriceTier | HydratedDocument<IPriceTier>
   ): Promise<HydratedDocument<ITicket>[]>;
   voidPurchased(operatorName: string): Promise<HydratedDocument<ITicket>>;
+  checkOwner(userId: Types.ObjectId): Promise<IClientTicket>;
+  disclose(): Promise<IDisclosableTicket>;
 }
 interface TickerQueryHelpers {
   findlByEventId(
@@ -71,6 +83,7 @@ export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
   purchaserId: {
     type: Schema.Types.ObjectId,
     ref: User,
+    requried: true,
     validate: {
       validator: async (val: Schema.Types.ObjectId) => {
         return (await userModel.findById(val)) != null;
@@ -109,7 +122,7 @@ export const tickerSchema = new Schema<
   {
     eventId: {
       type: Schema.Types.ObjectId,
-      ref: Event,
+      ref: EventName,
       required: true,
       validate: {
         validator: async function (val: Types.ObjectId) {
@@ -252,8 +265,10 @@ export const tickerSchema = new Schema<
           let purchaser = await userModel
             .findById(purchaseInfo.purchaserId)
             .then();
+          let event = await eventModel.findById(this.eventId).then();
+          let seat = await seatModel.findById(this.seatId).then();
           await this.save();
-          if (purchaser != null) {
+          if (purchaser != null && event != null && seat != null) {
             let salutation = purchaser.fullname
               ? `Dear ${purchaser.fullname}\n`
               : "";
@@ -267,7 +282,10 @@ export const tickerSchema = new Schema<
               title: "Ticket Voided",
               message:
                 salutation +
-                `1 ticket that you had purchased${purchaseDateInfo} is voided by${customerSupportInfo}.`,
+                `1 ticket that you had purchased${purchaseDateInfo} is voided by${customerSupportInfo}.\n` +
+                `Information of that ticket:\n` +
+                `Event: ${event.eventname}\n` +
+                `Seat: ${seat.row + seat.no}\n`,
             });
             await notification.save();
             await notification.send();
@@ -275,6 +293,30 @@ export const tickerSchema = new Schema<
           return this;
         }
         throw new Error(`Ticker with id ${this._id} has not been sold yet.`);
+      },
+      async checkOwner(userId: Types.ObjectId) {
+        let disclosable = await this.disclose();
+        return {
+          event: disclosable.event,
+          seat: disclosable.seat,
+          priceTier: this.priceTier,
+          purchased: this.purchaseInfo != undefined,
+          belongsToUser:
+            this.purchaseInfo != undefined &&
+            this.purchaseInfo.purchaserId == userId,
+        };
+      },
+      async disclose() {
+        let populated = await this.populate<IDisclosableTicket>([
+          { path: "eventId", model: EventName },
+          { path: "seatId", model: Seat },
+        ]);
+        return {
+          event: populated.event,
+          seat: populated.seat,
+          priceTier: this.priceTier,
+          purchased: this.purchaseInfo != undefined,
+        };
       },
     },
     query: {
