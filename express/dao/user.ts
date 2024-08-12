@@ -1,5 +1,5 @@
 import { ObjectId, WithId, Document, InsertOneResult } from "mongodb";
-import { Database, RequestError } from "./database";
+import { Database, RequestError } from "../database";
 import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
 import { REGEX } from "../../utils/regex";

@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationDAO = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("./database");
+const database_1 = require("../database");
 const dao_1 = require("./dao");
 const user_1 = require("./user");
 const email_1 = __importDefault(require("../../services/email"));

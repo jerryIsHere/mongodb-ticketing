@@ -15,7 +15,6 @@ export default class EmailService {
       secure: true,
       logger: true,
       auth: {
-        // TODO: replace `user` and `pass` values from <https://forwardemail.net>
         user: process.env.EMAIL_SERVICE_ADDRESS || "",
         pass: process.env.EMAIL_SERVICE_PASSWORD || "",
       },

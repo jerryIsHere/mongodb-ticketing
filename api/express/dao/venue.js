@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VenueDAO = exports.sectionTypeCheck = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("./database");
+const database_1 = require("../database");
 const dao_1 = require("./dao");
 const seat_1 = require("./seat");
 const event_1 = require("./event");

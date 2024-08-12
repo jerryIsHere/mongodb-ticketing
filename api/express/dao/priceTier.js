@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PriceTierDAO = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("./database");
+const database_1 = require("../database");
 const dao_1 = require("./dao");
 const ticket_1 = require("./ticket");
 class PriceTierDAO extends dao_1.BaseDAO {
