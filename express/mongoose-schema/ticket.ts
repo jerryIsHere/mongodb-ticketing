@@ -86,7 +86,7 @@ export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
     requried: true,
     validate: {
       validator: async (val: Schema.Types.ObjectId) => {
-        return (await userModel.findById(val)) != null;
+        return (await userModel.findById(val).select({ _id: 1 }).lean()) != null;
       },
       message: `${User} with id {VALUE} doesn't exists.`,
     },
@@ -146,7 +146,7 @@ export const tickerSchema = new Schema<
       required: true,
       validate: {
         validator: async function (val: Types.ObjectId) {
-          let seat = await seatModel.findById(val);
+          let seat = await seatModel.findById(val).select({ _id: 1 }).lean();
           if (seat == null)
             throw new Error(`Seat with id ${val} doesn't exists.`);
 

@@ -106,7 +106,7 @@ export const eventSchema = new Schema<
       required: true,
       validate: {
         validator: async (val: Schema.Types.ObjectId) =>
-          (await venueModel.findById(val)) != null,
+          (await venueModel.findById(val).select({ _id: 1 }).lean()) != null,
         message: `${Venue} with id {VALUE} doesn't exists.`,
       },
     },
