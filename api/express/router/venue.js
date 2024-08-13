@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Venue = void 0;
 const express_1 = require("express");
-const database_1 = require("../dao/database");
+const database_1 = require("../database");
 const venue_1 = require("../dao/venue");
 var Venue;
 (function (Venue) {

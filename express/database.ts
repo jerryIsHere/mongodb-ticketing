@@ -25,7 +25,7 @@ export abstract class Database {
         // Send a ping to confirm a successful connection
         await this.mongo.db("admin").command({ ping: 1 });
 
-        await connect(Database.uri)
+        await connect(Database.uri, {dbName: this.db_name})
         this.mongodb = this.mongo.db(this.db_name)
         console.log("Database init completed")
     }

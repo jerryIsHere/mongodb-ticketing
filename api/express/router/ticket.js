@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Ticket = void 0;
 const express_1 = require("express");
 const ticket_1 = require("../dao/ticket");
-const database_1 = require("../dao/database");
+const database_1 = require("../database");
 var Ticket;
 (function (Ticket) {
     function RouterFactory() {

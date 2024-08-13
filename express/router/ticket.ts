@@ -2,7 +2,7 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { TicketDAO } from '../dao/ticket'
-import { RequestError } from "../dao/database";
+import { RequestError } from "../database";
 import { UserDAO } from "../dao/user";
 import { SessionData } from "express-session";
 
