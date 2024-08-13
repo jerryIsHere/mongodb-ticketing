@@ -1,6 +1,6 @@
 
 import { ObjectId, WithId, Document } from "mongodb";
-import { Database, RequestError } from "../database";
+import { Database, RequestError } from "~/express/database/database";
 import { BaseDAO } from "./dao";
 import { EventDAO } from './event';
 import { PriceTierDAO } from "./priceTier";

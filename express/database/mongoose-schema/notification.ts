@@ -1,4 +1,4 @@
-import EmailService from "../../services/email";
+import EmailService from "~/services/email";
 import { Schema, model, Types, Model, HydratedDocument } from "mongoose";
 import { singular_name as User } from "./user";
 

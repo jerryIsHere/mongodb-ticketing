@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
-import { Database, RequestError } from "../database";
+import { Database, RequestError } from "../database/database";
 import { UserDAO } from "../dao/user";
 declare module "express-session" {
   interface SessionData {

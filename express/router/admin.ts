@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
-import { Database } from "../database";
+import { Database } from "../database/database";
 import { UserDAO } from "../dao/user";
 import { EventDAO } from "../dao/event";
 import { SeatDAO } from "../dao/seat";

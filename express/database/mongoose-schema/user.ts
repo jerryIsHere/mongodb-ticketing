@@ -1,7 +1,7 @@
 import { hash, compare } from "bcrypt";
-import { REGEX } from "../../utils/regex";
-import { generateResetToken } from "../../utils/token";
-import EmailService from "../../services/email";
+import { REGEX } from "~/utils/regex";
+import { generateResetToken } from "~/utils/token";
+import EmailService from "~/services/email";
 import { Schema, model, Types, Model, HydratedDocument } from "mongoose";
 const saltRounds = 10;
 export type IDclosableUser = {

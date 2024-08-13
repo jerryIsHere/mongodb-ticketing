@@ -1,6 +1,6 @@
 import express, { Express, Request, Response, NextFunction, Send } from "express";
 import session from 'express-session';
-import { Database, RequestError } from "./express/database";
+import { Database, RequestError } from "./express/database/database";
 var MongoDBStore = require('connect-mongodb-session')(session);
 
 

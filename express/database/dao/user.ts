@@ -1,11 +1,11 @@
 import { ObjectId, WithId, Document, InsertOneResult } from "mongodb";
-import { Database, RequestError } from "../database";
+import { Database, RequestError } from "~/express/database/database";
 import { BaseDAO } from "./dao";
 import { hash, compare } from 'bcrypt'
-import { REGEX } from "../../utils/regex";
+import { REGEX } from "~/utils/regex";
 import { Response } from "express";
-import { generateResetToken } from "../../utils/token";
-import EmailService from "../../services/email";
+import { generateResetToken } from "~/utils/token";
+import EmailService from "~/services/email";
 
 export class UserDAO extends BaseDAO {
     public static readonly collection_name = "users"
