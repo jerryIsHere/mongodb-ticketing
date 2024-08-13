@@ -31,17 +31,18 @@ export interface IEvent {
   priceTiers: IPriceTier[];
   saleInfos: ISaleInfo[];
 }
-export interface IEventMethod {}
+export interface IEventMethod { }
+interface HydratedEvent extends HydratedDocument<IEvent, IEventMethod, EventQueryHelpers> { }
 interface EventQueryHelpers {
   findSelling(): QueryWithHelpers<
-    HydratedDocument<IEvent>[],
-    HydratedDocument<IEvent>,
+    HydratedEvent[],
+    HydratedEvent,
     EventQueryHelpers
   >;
 }
 
 export interface EventModel
-  extends Model<IEvent, EventQueryHelpers, IEventMethod> {}
+  extends Model<IEvent, EventQueryHelpers, IEventMethod> { }
 export const saleInfoSchema = new Schema<ISaleInfo>({
   start: {
     type: Date,
@@ -137,8 +138,8 @@ export const eventSchema = new Schema<
     query: {
       findSelling() {
         let query = this as QueryWithHelpers<
-          HydratedDocument<IEvent>[],
-          HydratedDocument<IEvent>,
+          HydratedEvent[],
+          HydratedEvent,
           EventQueryHelpers
         >;
         let now = new Date();
@@ -171,7 +172,7 @@ eventSchema.path("venueId").validate(async function (val) {
   if (tickerFromOtherVenue != null)
     throw new Error(
       `Update of ${singular_name} with id ${eventId} failed ` +
-        `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`
+      `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`
     );
   return true;
 });

@@ -40,30 +40,32 @@ export interface ITicket {
   purchaseInfo?: IPurchaseInfo;
   paymentInfo?: IPaymentInfo;
 }
-
 interface ITicketMethod {
   voidPurchased(operatorName: string): Promise<HydratedDocument<ITicket>>;
-  checkOwner(userId: Types.ObjectId): Promise<IClientTicket>;
+  discloseToClient(userId: Types.ObjectId): Promise<IClientTicket>;
   disclose(): Promise<IDisclosableTicket>;
+  fullyPopulate(): Promise<ITicket>
 }
+
+interface HydratedTicket extends HydratedDocument<ITicket, ITicketMethod, TickerQueryHelpers> { }
 interface TickerQueryHelpers {
   findByEventId(
     eventId: string
   ): QueryWithHelpers<
-    HydratedDocument<ITicket>[],
-    HydratedDocument<ITicket>,
+    HydratedTicket[],
+    HydratedTicket,
     TickerQueryHelpers
   >;
   findSold(): QueryWithHelpers<
-    HydratedDocument<ITicket>[],
-    HydratedDocument<ITicket>,
+    HydratedTicket[],
+    HydratedTicket,
     TickerQueryHelpers
   >;
   findByPurchaser(
     userId: string
   ): QueryWithHelpers<
-    HydratedDocument<ITicket>[],
-    HydratedDocument<ITicket>,
+    HydratedTicket[],
+    HydratedTicket,
     TickerQueryHelpers
   >;
 }
@@ -73,11 +75,11 @@ export interface TicketModel
   bulkPurchase(
     userId: string,
     ticketIds: string[]
-  ): Promise<HydratedDocument<ITicket>[]>;
+  ): Promise<HydratedTicket[]>;
   batchUpdatePriceTier(
     ticketIds: string[],
-    priceTier: IPriceTier | HydratedDocument<IPriceTier>
-  ): Promise<HydratedDocument<ITicket>[]>;
+    tierName: string,
+  ): Promise<HydratedTicket[]>;
 }
 export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
   purchaseDate: { type: Date, requried: true },
@@ -160,18 +162,18 @@ export const tickerSchema = new Schema<
     paymentInfo: { type: paymentInfoSchema },
   },
   {
-    statics:{
+    statics: {
 
       async bulkPurchase(userId: string, ticketIds: string[]) {
         let ticketObjectIds = ticketIds.map(
           (id) => new Schema.Types.ObjectId(id)
         );
         let tickets = await ticketModel
-          .find({ _id: ticketObjectIds })
+          .find({ _id: { $in: ticketObjectIds } })
           .lean()
           .exec();
         let events = await eventModel
-          .find({ _id: tickets.map((t) => t.eventId) })
+          .find({ _id: { $in: tickets.map((t) => t.eventId) } })
           .lean()
           .exec();
         if (events.length != 1)
@@ -221,17 +223,17 @@ export const tickerSchema = new Schema<
       },
       async batchUpdatePriceTier(
         ticketIds: string[],
-        priceTier: IPriceTier | HydratedDocument<IPriceTier>
+        tierName: string,
       ) {
         let ticketObjectIds = ticketIds.map(
           (id) => new Schema.Types.ObjectId(id)
         );
         let tickets = await ticketModel
-          .find({ _id: ticketObjectIds })
+          .find({ _id: { $in: ticketObjectIds } })
           .lean()
           .exec();
         let events = await eventModel
-          .find({ _id: tickets.map((t) => t.eventId) })
+          .find({ _id: { $in: tickets.map((t) => t.eventId) } })
           .lean()
           .exec();
         if (events.length != 1)
@@ -241,7 +243,7 @@ export const tickerSchema = new Schema<
 
         let event = events[0];
         let match = event.priceTiers.find((p) => {
-          p.tierName == priceTier.tierName && p.price == priceTier.price;
+          p.tierName == tierName
         });
         if (match == null)
           throw new Error(
@@ -249,9 +251,7 @@ export const tickerSchema = new Schema<
           );
         return ticketModel
           .updateMany(
-            {
-              _id: ticketObjectIds,
-            },
+            { _id: { $in: ticketObjectIds } },
             {
               $set: {
                 priceTier: match,
@@ -298,7 +298,7 @@ export const tickerSchema = new Schema<
         }
         throw new Error(`Ticker with id ${this._id} has not been sold yet.`);
       },
-      async checkOwner(userId: Types.ObjectId) {
+      async discloseToClient(userId: Types.ObjectId) {
         let disclosable = await this.disclose();
         return {
           event: disclosable.event,
@@ -322,12 +322,21 @@ export const tickerSchema = new Schema<
           purchased: this.purchaseInfo != undefined,
         };
       },
+      async fullyPopulate() {
+        return await this.populate<ITicket>([
+          { path: "eventId", model: EventName },
+          { path: "seatId", model: Seat },
+          { path: "purchaseInfo.purchaserId", model: User },
+          { path: "paymentInfo.confirmedBy", model: User },
+        ]);
+
+      },
     },
     query: {
       findByEventId(eventId: string) {
         let query = this as QueryWithHelpers<
-          HydratedDocument<ITicket>[],
-          HydratedDocument<ITicket>,
+          HydratedTicket[],
+          HydratedTicket,
           TickerQueryHelpers
         >;
         return query.where({
@@ -336,18 +345,18 @@ export const tickerSchema = new Schema<
       },
       findSold() {
         let query = this as QueryWithHelpers<
-          HydratedDocument<ITicket>[],
-          HydratedDocument<ITicket>,
+          HydratedTicket[],
+          HydratedTicket,
           TickerQueryHelpers
-        >;
+        >
         return query.find({
           purchaseInfo: { $ne: null },
         });
       },
       findByPurchaser(userId: string) {
         let query = this as QueryWithHelpers<
-          HydratedDocument<ITicket>[],
-          HydratedDocument<ITicket>,
+          HydratedTicket[],
+          HydratedTicket,
           TickerQueryHelpers
         >;
         return query.find({

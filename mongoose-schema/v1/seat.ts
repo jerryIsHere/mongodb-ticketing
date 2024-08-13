@@ -27,13 +27,14 @@ export interface ISeat {
   no: number;
   venueId: Types.ObjectId;
 }
-export interface ISeatMethod {}
+export interface ISeatMethod { }
+interface HydratedSeat extends HydratedDocument<ISeat, ISeatMethod, SeatQueryHelpers> { }
 interface SeatQueryHelpers {
   findByVenueId(
     venueId: string
   ): QueryWithHelpers<
-    HydratedDocument<ISeat>[],
-    HydratedDocument<ISeat>,
+    HydratedSeat[],
+    HydratedSeat,
     SeatQueryHelpers
   >;
 }
@@ -75,8 +76,8 @@ export const seatSchema = new Schema<
     query: {
       findByVenueId(venueId: string) {
         let query = this as QueryWithHelpers<
-          HydratedDocument<ISeat>[],
-          HydratedDocument<ISeat>,
+          HydratedSeat[],
+          HydratedSeat,
           SeatQueryHelpers
         >;
         return query.find({ venueId: new Schema.Types.ObjectId(venueId) });

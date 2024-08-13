@@ -4,7 +4,8 @@ import { generateResetToken } from "~/utils/token";
 import EmailService from "~/services/email";
 import { Schema, model, Types, Model, HydratedDocument } from "mongoose";
 const saltRounds = 10;
-export type IDclosableUser = {
+export type IDisclosableUser = {
+  _id: string;
   username: string;
   fullname: string;
   email: string;
@@ -28,13 +29,14 @@ export interface IUser {
   _isCustomerSupport: boolean;
 }
 export interface IUserMethod {
-  discloseUser(): IDclosableUser;
-  sendResetPasswordEmail(): Promise<void>;
-  setSaltedPassword(password: string): Promise<void>;
+  disclose(): IDisclosableUser;
+  sendResetPasswordEmail(): Promise<HydratedUser>;
+  setSaltedPassword(password: string): Promise<HydratedUser>;
 }
+interface HydratedUser extends HydratedDocument<IUser, IUserMethod> { }
 export interface UserModel extends Model<IUser, {}, IUserMethod> {
-  verify(verificationToken: string): HydratedDocument<IUser>;
-  login(username: string, password: string): HydratedDocument<IUser>;
+  verify(verificationToken: string): Promise<HydratedUser>;
+  login(username: string, password: string): Promise<HydratedUser>;
 }
 export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
   {
@@ -62,16 +64,17 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
   {
     methods: {
       setSaltedPassword(password: string) {
-        return new Promise<void>((resolve, reject) =>
+        return new Promise<HydratedUser>((resolve, reject) =>
           hash(password, saltRounds, async (err, hash) => {
             this.saltedpassword = hash;
             await this.save();
-            resolve();
+            resolve(this);
           })
         );
       },
-      discloseUser() {
+      disclose() {
         return {
+          _id: this._id.toString(),
           username: this.username,
           fullname: this.fullname,
           email: this.email,
@@ -99,7 +102,7 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
             } catch (err) {
               reject(err);
             }
-            resolve();
+            resolve(this);
           } else {
             if (this.email == undefined)
               reject(`Email of user ${this.username} is not initialized`);
@@ -136,7 +139,7 @@ userSchema.static(
     throw new Error(`User with user name ${username} not found.`);
   }
 );
-userSchema.path("email").validate(async function(val) {
+userSchema.path("email").validate(async function (val) {
   const token = await generateResetToken();
   this.verificationToken = token;
   //currently disabled as we don't allow user to change email in front end?

@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { Database, RequestError } from "../database/database";
 import { v1 } from '~/mongoose-schema/schema'
+import { venueModel } from "~/mongoose-schema/v1/venue";
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()
@@ -15,49 +16,41 @@ export namespace Venue {
 
         venue.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
-                VenueDAO.listAll(res, ).then(result => {
-                    next({ success: true, data: result.map(dao => dao.Hydrated()) })
-                }).catch((error) => next(error))
+                next({ success: true, data: await venueModel.find().lean().exec() })
             }
         })
         venue.get("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            VenueDAO.getById(res, req.params.venueId).then(result => {
-                if (result) next({ success: true, data: result.Hydrated() });
-            }).catch((error) => next(error))
+            next({ success: true, data: await venueModel.findById(req.params.venueId).lean().exec() })
         })
 
         venue.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.create != undefined && req.body.venuename && req.body.sections) {
-                if (req.body.sections.filter((s: sectionType) => !sectionTypeCheck(s)).length > 0)
-                    return next(new RequestError("Requested sections is not in correct format"))
-                var dao = new VenueDAO(res, {
+                var eventDoc = new venueModel({
                     venuename: req.body.venuename,
                     sections: req.body.sections
-                })
-                dao.create().then((value) => {
-                    next({ success: true })
-                }).catch((error) => next(error))
+                });
+                await eventDoc.save().catch((err) => next(err))
+                next({ success: true })
             }
         })
 
         venue.patch("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            if (req.body.venuename) {
-                if (req.body.sections.filter((s: sectionType) => !sectionTypeCheck(s)).length > 0)
-                    return next(new RequestError("Requested sections is not in correct format"))
-                VenueDAO.getById(res, req.params.venueId).then(dao => {
-                    dao.venuename = req.body.venuename
-                    dao.sections = req.body.sections
-                    return dao.update()
-                }).then((value) => {
-                    next({ success: true })
-                }).catch((error) => next(error))
+            if (req.body.venuename && req.body.sections) {
+                let eventDoc = await venueModel.findByIdAndUpdate(req.params.venueId, req.body
+                    , { returnDocument: "after", lean: true }).exec().catch((err) => next(err))
+                next({ success: true, data: eventDoc })
             }
         })
 
         venue.delete("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            VenueDAO.getById(res, req.params.venueId).then(dao => dao.delete()).then((value) => {
+            let deleteResult = await venueModel.findByIdAndDelete(req.params.eventId,
+                { includeResultMetadata: true }).exec().catch((err) => next(err))
+            if (deleteResult && deleteResult.ok)  {
                 next({ success: true })
-            }).catch((error) => next(error))
+            }
+            else {
+                next({ success: false })
+            }
         })
         return venue
     };

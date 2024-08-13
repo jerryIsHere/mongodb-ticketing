@@ -4,6 +4,9 @@ import * as Express from "express-serve-static-core"
 import { v1 } from '~/mongoose-schema/schema'
 import { RequestError } from "../database/database";
 import { SessionData } from "express-session";
+import { ObjectId } from "mongodb";
+import { IPaymentInfo, ITicket, ticketModel } from "~/mongoose-schema/v1/ticket";
+import { eventModel } from "~/mongoose-schema/v1/event";
 
 
 export namespace Ticket {
@@ -30,155 +33,175 @@ export namespace Ticket {
         })
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
+            let x = (await ticketModel.find({}).then())
+            x?.map(y => y.disclose())
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                next({
-                    success: true, data:
-                        (await v1.Ticket.ticketModel.find().findByEventId(req.query.eventId).exec()).
-                            map(doc => doc.disclose())
-                })
+                ticketModel.find().findByEventId(req.query.eventId).
+                    then(doc =>
+                        next({
+                            success: true, data: doc?.map(doc => doc.disclose())
+                        })).
+                    catch((err) => next(err))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
-                TicketDAO.ofUser((req.session['user'] as any)._id, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
-                    next({ success: true, data: result })
-                }).catch((error) => next(error))
+                let userId = (req.session['user'] as any)._id
+                ticketModel.find().findByPurchaser(userId).
+                    then(doc =>
+                        next({
+                            success: true,
+                            data: doc?.map(doc => doc.discloseToClient(userId))
+                        })).
+                    catch((err) => next(err))
             }
             else if (req.query.sold != undefined) {
-                TicketDAO.listSold({ showOccupant: shouldShowOccupant(req.session) }).then(result => {
-                    next({ success: true, data: result })
-                }).catch((error) => next(error))
+                let showOccupant = shouldShowOccupant(req.session)
+                ticketModel.find().findSold().
+                    then(doc =>
+                        next({
+                            success: true,
+                            data: doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose())
+                        })).
+                    catch((err) => next(err))
             }
             else if (req.query.list != undefined && req.query.userId && typeof req.query.userId === "string") {
                 let ids: string[] | undefined
                 try {
-
                     ids = (JSON.parse(req.query.list as string)).filter((value: any) => typeof value == "string")
-
                 } catch (e) {
-
                 }
                 if (req.session["user"] != null && req.session["user"]._id && req.session["user"]._id != req.query.userId) {
                     next(new RequestError("This reveals information of another user"))
                     return
                 }
-                if (ids) {
-                    TicketDAO.listByIds(ids, {
-                        showOccupant: false,
-                        checkIfBelongsToUser: req.query.userId
-                    }).then(result => {
-                        next({ success: true, data: result })
-                    }).catch((error) => next(error))
-                }
                 else {
-                    next(new RequestError("unregconized list query"))
+                    let userId = (req.session["user"] as any)._id
+                    if (ids) {
+                        ticketModel.find({ _id: { $in: ids.map(id => new ObjectId(id)) } }).
+                            then(docs =>
+                                next({
+                                    sucess: true,
+                                    data: docs.map(doc => doc.discloseToClient(userId))
+                                }));
+                    }
+                    else {
+                        next(new RequestError("unregconized list query"))
+                    }
                 }
             }
         })
 
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {
-            TicketDAO.getWithDetailsById(req.params.ticketId, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
-                next({ success: true, data: result })
-            }).catch((error) => { next(error) })
-        })
+            let showOccupant = shouldShowOccupant(req.session)
+            ticketModel.findById(req.params.eventId).
+                then(doc => next({
+                    success: true,
+                    data: showOccupant ? doc?.fullyPopulate() : doc?.disclose()
+                })).
+                catch((err) => next(err))
+        }
+        )
         ticket.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.create != undefined) {
                 if (req.query.batch != undefined && req.body.tickets && Array.isArray(req.body.tickets)) {
-                    var daos: TicketDAO[] = req.body.tickets.map((t: any) => {
-                        var dao = new TicketDAO(res, {})
-                        dao.eventId = t.eventId
-                        dao.seatId = t.seatId
-                        dao.priceTierId = t.priceTierId
-                        dao.securedBy = ""
-                        return dao;
-                    })
-                    TicketDAO.batchCreate(res, daos).then((tickets: TicketDAO[]) => {
-                        next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
-                    }).catch((error) => next(error))
+                    return ticketModel.startSession().
+                        then(_session => {
+                            res.locals.session = _session;
+                            res.locals.session.startTransaction();
+                            return ticketModel.create(req.body.tickets as ITicket[])
+                        }).
+                        then(docs => docs.map(doc => doc.fullyPopulate())).
+                        then(json => { return { success: true, data: json } })
                 }
                 else if (
                     req.body.eventId && typeof req.body.eventId == "string" &&
                     req.body.seatId && typeof req.body.seatId == "string" &&
                     req.body.priceTierId && typeof req.body.priceTierId == "string"
                 ) {
-                    var dao = new TicketDAO(res, {});
-                    dao.securedBy = ""
-                    var promises: Promise<any>[] = []
-                    dao.eventId = req.body.eventId
-                    dao.seatId = req.body.seatId
-                    dao.priceTierId = req.body.priceTierId
-                    dao.create().then((value) => {
-                        next({ success: true })
-                    }).catch((error) => next(error))
+                    var ticketDoc = new ticketModel(req.body);
+                    await ticketDoc.save().catch((err) => next(err))
+                    next({ success: true })
 
                 }
             }
         })
         ticket.patch("", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.batch != undefined && req.body.ticketIds && Array.isArray(req.body.ticketIds)) {
+                let ids: string[] = req.body.ticketIds
                 if (req.query.buy != undefined) {
                     if (req.session['user'] && (req.session['user'] as any)._id) {
-                        TicketDAO.getByIds(res, req.body.ticketIds).then(daos => TicketDAO.batchClaim(res, daos, (req.session['user'] as any)._id)).then((tickets: TicketDAO[]) => {
-                            next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
-                        }).catch((error) => next(error))
+                        let userId = (req.session['user'] as any)._id
+                        return ticketModel.startSession().
+                            then(_session => {
+                                res.locals.session = _session;
+                                res.locals.session.startTransaction();
+                                return ticketModel.bulkPurchase(userId, ids)
+                            }).
+                            then(docs => next({ success: true })).
+                            catch(err => next(err))
                     }
                     else { next(new RequestError("Buying ticket requires a user login")) }
                 }
-                else if (typeof req.query.priceTier === "string") {
-                    TicketDAO.getByIds(res, req.body.ticketIds).then(daos => {
-                        if (typeof req.query.priceTier === "string") {
-                            return TicketDAO.batchUdatePriceTier(res, daos, req.query.priceTier)
-                        }
-                        else {
-                            next(new RequestError(`${req.query.priceTier} is not of type string`))
-                            return []
-                        }
-                    }
-                    ).then((tickets: TicketDAO[]) => {
-                        next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
-                    }).catch((error) => next(error))
+                else if (typeof req.query.tierName == "string") {
+                    let tierName = req.query.tierName
+                    return ticketModel.startSession().
+                        then(_session => {
+                            res.locals.session = _session;
+                            res.locals.session.startTransaction();
+                            return ticketModel.batchUpdatePriceTier(ids, tierName)
+                        }).
+                        then(docs => docs.map(doc => doc.fullyPopulate())).
+                        then(json => { return { success: true, data: json } })
                 }
             }
         })
         ticket.patch("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
-            if (req.query.buy != undefined) {
-                if (req.session['user'] && (req.session['user'] as any)._id) {
-                    TicketDAO.getById(res, req.params.ticketId).then(dao => dao.claim((req.session['user'] as any)._id)).then((value: TicketDAO) => {
-                        next({ success: true })
-                    }).catch((error) => next(error))
-                }
-                else { next(new RequestError("Buying ticket requires a user login")) }
-            }
             if (req.query.verify != undefined &&
-                (req.body.securedBy != undefined || req.body.securedBy == null || typeof req.body.securedBy == "string") &&
+                (req.body.confirmedBy != undefined || req.body.confirmedBy == null || typeof req.body.confirmedBy == "string") &&
                 (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string")) {
-                TicketDAO.getById(res, req.params.ticketId).then(dao => {
-                    dao.securedBy = req.body.securedBy;
-                    dao.remark = req.body.remark;
-                    return dao.update()
-                }).then((value: TicketDAO) => {
-                    next({ success: true })
-                }).catch((error) => next(error))
+                let info: IPaymentInfo = {
+                    confirmedBy: req.body.securedBy,
+                    remark: req.body.remark,
+                    confirmationDate: new Date()
+                }
+                ticketModel.findByIdAndUpdate(req.params.ticketId, { paymentInfo: info },
+                    { returnDocument: 'after' }
+                ).
+                    then(doc => next({ success: true, data: doc?.fullyPopulate() })).
+                    catch((err) => next(err))
             }
             else if (req.query.void != undefined) {
-                TicketDAO.getById(res, req.params.ticketId).then(dao => dao.void((req.session?.user as any)?.username)
-                ).then((value: TicketDAO) => {
-                    next({ success: true })
-                }).catch((error) => next(error))
+                let username = (req.session?.user as any)?.username
+                ticketModel.findById(req.params.ticketId).
+                    then(doc => doc?.voidPurchased(username)).
+                    then(doc => next({ success: true })).
+                    catch((err) => next(err))
 
             }
         })
 
         ticket.delete("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.batch != undefined && req.body.ticketIds && Array.isArray(req.body.ticketIds)) {
-                TicketDAO.getByIds(res, req.body.ticketIds).then(daos => TicketDAO.batchDelete(res, daos)).then((tickets: TicketDAO[]) => {
-                    next({ success: true, data: tickets.map(ticket => ticket.Hydrated()) })
-                }).catch((error) => next(error))
+                let ids: string[] = req.body.ticketIds
+                ticketModel.startSession().
+                    then(_session => {
+                        res.locals.session = _session;
+                        res.locals.session.startTransaction();
+                        return ticketModel.deleteMany({ _id: { $in: ids.map(id => new ObjectId(id)) } }, ids)
+                    }).
+                    then(docs => next({ success: true })).
+                    catch(err => next(err))
             }
         })
 
         ticket.delete("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
-            TicketDAO.getById(res, req.params.ticketId).then(dao => dao.delete()).then((value) => {
+            let deleteResult = await ticketModel.findByIdAndDelete(req.params.ticketId,
+                { includeResultMetadata: true }).exec().catch((err) => next(err))
+            if (deleteResult && deleteResult.ok)  {
                 next({ success: true })
-            }).catch((error) => { next(error) })
+            }
+            else {
+                next({ success: false })
+            }
         })
         return ticket
     };

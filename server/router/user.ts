@@ -2,9 +2,10 @@ import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../database/database";
 import { v1 } from '~/mongoose-schema/schema'
+import { IDisclosableUser, userModel } from "~/mongoose-schema/v1/user";
 declare module "express-session" {
   interface SessionData {
-    user?: { hasAdminRight: boolean, _id?: string, isCustomerSupport: boolean } | null;
+    user?: IDisclosableUser | null;
     test?: number
   }
 }
@@ -18,9 +19,8 @@ export namespace User {
       else { next() }
     })
 
-    var updateSession = (req: Request, res: Response, dao: UserDAO) => {
-      var userObj = { _id: dao.id?.toString(), isCustomerSupport: dao.isCustomerSupport, hasAdminRight: dao.hasAdminRight, ...dao.Hydrated({ withCredentials: false }) }
-      req.session.user = userObj
+    var updateSession = (req: Request, res: Response, user: IDisclosableUser) => {
+      req.session.user = user
       req.session.save();
     }
     var clearSession = (req: Request, res: Response) => {
@@ -28,9 +28,7 @@ export namespace User {
     }
     user.get("/", async (req: Request, res: Response, next) => {
       if (req.query.list != undefined) {
-        UserDAO.listAll(res).then(result => {
-          next({ success: true, data: result.map(dao => dao.Hydrated({ withCredentials: false })) })
-        }).catch((error) => next(error))
+        next({ success: true, data: await userModel.find().then(docs => docs.map(doc => doc.disclose())) })
       }
     })
     user.post(
@@ -41,13 +39,15 @@ export namespace User {
         // Generate a password reset token and save it in the user in the database
         const validUser =
           req.body.email != undefined ?
-            await UserDAO.findByEmail(res, req.body.email) :
-            await UserDAO.fetchByUsernameAndDeserialize(res, req.body.username);
+            await userModel.findOne({ email: req.body.email }).exec() :
+            await userModel.findOne({ username: req.body.username }).exec();
         if (!validUser) {
           next(new RequestError("User not found."));
           // Send the password reset email containing the reset token
-        } else { await validUser.sendResetPasswordEmail(); }
-        next({ success: true, message: "Password reset email sent." });
+        } else {
+          await validUser.sendResetPasswordEmail();
+          next({ success: true, message: "Password reset email sent." });
+        }
       }
     );
 
@@ -56,13 +56,13 @@ export namespace User {
       const newPassword = req.body.newPassword;
 
       if (resetToken && newPassword) {
-        const validUser = await UserDAO.findByResetToken(res, resetToken);
+        const validUser = await userModel.findOne({ resetToken: resetToken }).exec();
         if (!validUser) return next(new RequestError("Invalid or expired reset token."));
         // Reset the user's password and clear the reset token
         try {
-          await validUser.setPassword(newPassword);
-          validUser.resetToken = null;
-          await validUser.update();
+          await validUser.setSaltedPassword(newPassword);
+          validUser.resetToken = undefined;
+          await validUser.save();
         }
         catch (err) {
           next(err)
@@ -82,21 +82,28 @@ export namespace User {
     user.patch("/:username", async (req: Request, res: Response, next) => {
       if (req.params.username && typeof req.params.username == "string") {
         if (req.query.profile != undefined) {
-          UserDAO.fetchByUsernameAndDeserialize(res, req.params.username).then((dao) => {
-            dao.email = req.body.email
-            dao.fullname = req.body.fullname
-            dao.singingPart = req.body.singingPart
-            return dao.update()
-          }).then((dao) => {
-            updateSession(req, res, dao)
-            next({ success: true, data: req.session.user })
+          userModel.findOneAndUpdate({ username: req.body.username },
+            req.body
+          ).then((doc) => {
+            if (doc) {
+              updateSession(req, res, doc?.disclose())
+              next({ success: true, data: req.session.user })
+            }
           }).catch((error) => next(error))
         }
         else if (req.query.password != undefined) {
-          UserDAO.fetchByUsernameAndDeserialize(res, req.params.username)
-            .then((dao) => dao.setPassword(req.body.password)).then((dao) => dao.update())
-            .then((dao) => {
-              next({ success: true, data: dao.Hydrated({ withCredentials: false }) })
+          userModel.findOne({ username: req.body.username },
+            req.body
+          ).
+            then(async doc => {
+              await doc?.setSaltedPassword(req.body.password)
+              return doc
+            }).
+            then((doc) => {
+              if (doc) {
+                updateSession(req, res, doc?.disclose())
+                next({ success: true, data: req.session.user })
+              }
             }).catch((error) => next(error))
         }
       }
@@ -106,18 +113,19 @@ export namespace User {
 
     user.post("/verify/:verificationToken", async (req: Request, res: Response, next: NextFunction) => {
       if (!req.params.verificationToken) next(new RequestError("Verification token is required."));
-
-      UserDAO.VerifyWithToken(res, req.params.verificationToken).then((dao) => {
-        updateSession(req, res, dao)
-        next({ success: true, data: req.session.user })
-      }).catch((error) => next(error))
+      userModel.verify(req.params.verificationToken).
+        then(user => {
+          updateSession(req, res, user.disclose());
+          next({ success: true, data: req.session.user })
+        }).
+        catch((err) => next(err))
     })
 
     user.post("/", async (req: Request, res: Response, next): Promise<any> => {
       if (req.query.login != undefined) {
         if (req.body.password) {
-          UserDAO.login(res, req.body.username, req.body.password).then(dao => {
-            updateSession(req, res, dao)
+          userModel.login(req.body.username, req.body.password).then(user => {
+            updateSession(req, res, user.disclose())
             next({ success: true, data: req.session.user })
           }).catch((error) => next(error))
         } else {
@@ -128,49 +136,37 @@ export namespace User {
         res.clearCookie("user");
         next({ success: true });
       } else if (req.query.register != undefined) {
-        // if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true") return next(new RequestError("New user registration is not avaliable."))
+        if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true")
+          return next(new RequestError("New user registration is not avaliable."))
         if (
           req.body.username &&
           req.body.fullname &&
           req.body.email &&
           req.body.password
         ) {
-          var dao = new UserDAO(res, {
+          var user = new userModel(res, {
             username: req.body.username,
             fullname: req.body.fullname,
             email: req.body.email,
             singingPart: req.body.singingPart,
           });
 
-          dao
-            .setPassword(req.body.password)
-            .then((dao) => dao.create())
-            .then(async (dao) => {
-              if (dao.id) {
-                next({
-                  success: true,
-                  user: req.session.user,
-                });
-              }
-              return dao
-            })
-            .then(async (dao) => {
-            })
-            .catch((error) => next(error));
-        }
-      } else if (req.query.resendVerification != undefined) {
-        if (req.session['user'] && (req.session['user'] as any)._id) {
-          UserDAO.getById(res, (req.session['user'] as any)._id)
-            .then(dao => dao.sendActivationEmail())
-            .then(async (dao) => {
+          await user.setSaltedPassword(req.body.password).
+            then(user => user.save()).
+            then(user =>
               next({
                 success: true,
-                user: dao.Hydrated({ withCredentials: false }),
-              });
-            })
-            .catch((error) => next(error));
+                user: user.disclose(),
+              }))
         }
       }
+      // else if (req.query.resendVerification != undefined) {
+      //   if (req.session['user'] && (req.session['user'] as any)._id) {
+      //     let userId = (req.session['user'] as any)._id
+      //     userModel.findById(userId)
+      //     // TODO
+      //   }
+      // }
     });
     return user;
   }
