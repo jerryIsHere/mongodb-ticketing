@@ -1,18 +1,17 @@
 import express, { Express, Request, Response, NextFunction, Send } from "express";
 import session from 'express-session';
-import { Database, RequestError } from "./express/database/database";
+import { Database, RequestError } from "./server/database/database";
 var MongoDBStore = require('connect-mongodb-session')(session);
+import mongoose from 'mongoose';
 
 
 const port = process.env.PORT || 3000;
 const app: Express = express();
-import { ClientSession } from "mongodb";
-import { UserDAO } from './express/dao/user';
 declare global {
   namespace Express {
     interface Locals {
       RequestErrorList: RequestError[]
-      session: ClientSession
+      session: mongoose.ClientSession
     }
   }
 }
@@ -49,33 +48,25 @@ app.use('/web/*', function (_, res: Response) {
 
 app.use('*', async function (req, res: Response, next) {
   res.locals.RequestErrorList = new Array<RequestError>();
-
-  res.locals.session = Database.mongo.startSession();
   next()
 });
 app.use(express.json())
 
-import { User } from './express/router/user';
+import { User } from './server/router/user';
 app.use('/user', User.RouterFactory());
 
-import { Event } from './express/router/event';
+import { Event } from './server/router/event';
 app.use('/event', Event.RouterFactory());
 
-import { Seat } from './express/router/seat';
+import { Seat } from './server/router/seat';
 app.use('/seat', Seat.RouterFactory());
 
-import { Venue } from './express/router/venue';
+import { Venue } from './server/router/venue';
 app.use('/venue', Venue.RouterFactory());
 
-import { PriceTier } from './express/router/priceTier';
-app.use('/priceTier', PriceTier.RouterFactory());
-
-import { Ticket } from './express/router/ticket';
+import { Ticket } from './server/router/ticket';
 app.use('/ticket', Ticket.RouterFactory());
 
-import { Admin } from './express/router/admin';
-import { BaseDAO } from "./express/dao/dao";
-app.use('/admin', Admin.RouterFactory());
 
 app.use('/*', function (_, res: Response) {
   res.redirect("/web/")

@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { RequestError } from "~/express/database/database";
+import { RequestError } from "~/server/database/database";
 import { Response } from "express";
 
 export abstract class BaseDAO {

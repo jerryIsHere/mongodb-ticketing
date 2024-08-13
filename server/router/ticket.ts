@@ -1,9 +1,8 @@
 
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
-import { TicketDAO } from '../dao/ticket'
+import { v1 } from '~/mongoose-schema/schema'
 import { RequestError } from "../database/database";
-import { UserDAO } from "../dao/user";
 import { SessionData } from "express-session";
 
 
@@ -32,9 +31,11 @@ export namespace Ticket {
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
-                TicketDAO.listByEventId(req.query.eventId, { showOccupant: shouldShowOccupant(req.session) }).then(result => {
-                    next({ success: true, data: result })
-                }).catch((error) => next(error))
+                next({
+                    success: true, data:
+                        (await v1.Ticket.ticketModel.find().findByEventId(req.query.eventId).exec()).
+                            map(doc => doc.disclose())
+                })
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 TicketDAO.ofUser((req.session['user'] as any)._id, { showOccupant: shouldShowOccupant(req.session) }).then(result => {

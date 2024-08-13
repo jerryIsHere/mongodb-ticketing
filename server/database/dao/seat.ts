@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId, WithId, Document, InsertOneResult } from "mongodb";
-import { Database, RequestError } from "~/express/database/database";
+import { Database, RequestError } from "~/server/database/database";
 import { BaseDAO } from "./dao";
 import { VenueDAO } from "./venue";
 import { TicketDAO } from "./ticket";

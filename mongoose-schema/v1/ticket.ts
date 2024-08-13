@@ -42,20 +42,12 @@ export interface ITicket {
 }
 
 interface ITicketMethod {
-  bulkPurchase(
-    userId: string,
-    ticketIds: string[]
-  ): Promise<HydratedDocument<ITicket>[]>;
-  batchUpdatePriceTier(
-    ticketIds: string[],
-    priceTier: IPriceTier | HydratedDocument<IPriceTier>
-  ): Promise<HydratedDocument<ITicket>[]>;
   voidPurchased(operatorName: string): Promise<HydratedDocument<ITicket>>;
   checkOwner(userId: Types.ObjectId): Promise<IClientTicket>;
   disclose(): Promise<IDisclosableTicket>;
 }
 interface TickerQueryHelpers {
-  findlByEventId(
+  findByEventId(
     eventId: string
   ): QueryWithHelpers<
     HydratedDocument<ITicket>[],
@@ -77,7 +69,16 @@ interface TickerQueryHelpers {
 }
 
 export interface TicketModel
-  extends Model<ITicket, TickerQueryHelpers, ITicketMethod> {}
+  extends Model<ITicket, TickerQueryHelpers, ITicketMethod> {
+  bulkPurchase(
+    userId: string,
+    ticketIds: string[]
+  ): Promise<HydratedDocument<ITicket>[]>;
+  batchUpdatePriceTier(
+    ticketIds: string[],
+    priceTier: IPriceTier | HydratedDocument<IPriceTier>
+  ): Promise<HydratedDocument<ITicket>[]>;
+}
 export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
   purchaseDate: { type: Date, requried: true },
   purchaserId: {
@@ -159,7 +160,8 @@ export const tickerSchema = new Schema<
     paymentInfo: { type: paymentInfoSchema },
   },
   {
-    methods: {
+    statics:{
+
       async bulkPurchase(userId: string, ticketIds: string[]) {
         let ticketObjectIds = ticketIds.map(
           (id) => new Schema.Types.ObjectId(id)
@@ -181,7 +183,7 @@ export const tickerSchema = new Schema<
         if (ticketIds.length > event.shoppingCartSize)
           throw new Error(
             `Event with id ${event._id} have a shopping cart size limit at` +
-              ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`
+            ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`
           );
         let now = new Date();
         let saleInfo = event.saleInfos.find((info) => {
@@ -197,7 +199,7 @@ export const tickerSchema = new Schema<
         if (baughtTicketCount >= saleInfo.ticketQuota)
           throw new Error(
             `You have no more ticket quota (${saleInfo.ticketQuota})` +
-              ` for event with id ${event._id}.`
+            ` for event with id ${event._id}.`
           );
         let purchaseInfo = new purchaseInfoMode({
           purchaserId: userId,
@@ -258,6 +260,8 @@ export const tickerSchema = new Schema<
           )
           .then();
       },
+    },
+    methods: {
       async voidPurchased(operatorName: string) {
         let purchaseInfo = this.purchaseInfo;
         if (purchaseInfo) {
@@ -320,7 +324,7 @@ export const tickerSchema = new Schema<
       },
     },
     query: {
-      findlByEventId(eventId: string) {
+      findByEventId(eventId: string) {
         let query = this as QueryWithHelpers<
           HydratedDocument<ITicket>[],
           HydratedDocument<ITicket>,

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../database/database";
-import { UserDAO } from "../dao/user";
+import { v1 } from '~/mongoose-schema/schema'
 declare module "express-session" {
   interface SessionData {
     user?: { hasAdminRight: boolean, _id?: string, isCustomerSupport: boolean } | null;

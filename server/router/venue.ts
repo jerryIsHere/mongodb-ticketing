@@ -1,8 +1,7 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { Database, RequestError } from "../database/database";
-import { VenueDAO, sectionType, sectionTypeCheck } from "../dao/venue";
-import { UserDAO } from "../dao/user";
+import { v1 } from '~/mongoose-schema/schema'
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()
