@@ -4,7 +4,6 @@ import { ModifyResult, Document } from "mongoose";
 import { v1 } from '~/mongoose-schema/schema'
 import { eventModel, IEvent } from "~/mongoose-schema/v1/event";
 
-
 export namespace Event {
     export function RouterFactory(): Express.Router {
         var event = Router()
@@ -56,7 +55,7 @@ export namespace Event {
         event.delete("/:eventId", async (req: Request, res: Response, next): Promise<any> => {
             let deleteResult = await eventModel.findByIdAndDelete(req.params.eventId,
                 { includeResultMetadata: true }).exec().catch((err) => next(err))
-            if (deleteResult && deleteResult.ok)  {
+            if (deleteResult && deleteResult.ok) {
                 next({ success: true })
             }
             else {

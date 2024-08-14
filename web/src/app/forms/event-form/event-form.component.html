@@ -31,54 +31,80 @@
       <mat-error>This field is required</mat-error>
       }
       @if (eventForm.controls['duration'].hasError('min')) {
-      <mat-error>Price should be positive</mat-error>
+      <mat-error>Duration should be positive</mat-error>
       }
       @if (eventForm.controls['duration'].hasError('pattern')) {
-      <mat-error>Price should be a number</mat-error>
+      <mat-error>Duration should be a number</mat-error>
       }
     </mat-form-field>
     <br>
-    @for(saleInfoControls of eventForm.controls['saleInfos'].controls; track saleInfoControls; let idx = $index){
-    {{ idx }} - round
-    <mat-form-field>
-      <mat-label>Start selling ticket at</mat-label>
-      <input matInput type="datetime-local" formControlName="start" required>
-      @if (saleInfoControls.controls['start'].hasError('required')) {
-      @if(saleInfoControls.controls["start"].value == null){
-      <mat-error>This field is required</mat-error>
-      }
-      @else{
-      <mat-error>Invalid date / time</mat-error>
-      }
-      }
-    </mat-form-field>
-    <br>
-    <mat-form-field>
-      <mat-label>End selling at</mat-label>
-      <input matInput type="datetime-local" formControlName="end" required>
-      @if (saleInfoControls.controls['end'].hasError('required')) {
-      @if(saleInfoControls.controls["end"].value == null){
-      <mat-error>This field is required</mat-error>
-      }
-      @else{
-      <mat-error>Invalid date / time</mat-error>
-      }
-      }
-    </mat-form-field>
-    <br>
-    <mat-form-field>
-      <mat-label>Ticket quota</mat-label>
-      <input matInput formControlName="ticketQuota" required>
-      @if (saleInfoControls.controls['ticketQuota'].hasError('required')) {
-      <mat-error>This field is required</mat-error>
-      }
-      @if (saleInfoControls.controls['ticketQuota'].hasError('pattern')) {
-      <mat-error>Quota should be a number</mat-error>
-      }
-    </mat-form-field>
-    <br>
+    @for(priceTierForm of eventForm.controls['priceTiers'].controls; track priceTierForm){
+    <form [formGroup]="priceTierForm">
+      <mat-form-field>
+        <mat-label>Tier Name</mat-label>
+        <input matInput formControlName="tierName" required>
+        @if (priceTierForm.controls['tierName'].hasError('required')) {
+        <mat-error>This field is required</mat-error>
+        }
+      </mat-form-field>
+      <br>
+      <mat-form-field>
+        <mat-label>Price</mat-label>
+        <input matInput formControlName="price" required>
+        @if (priceTierForm.controls['price'].hasError('required')) {
+        <mat-error>This field is required</mat-error>
+        }
+        @if (priceTierForm.controls['price'].hasError('min')) {
+        <mat-error>Price should be positive</mat-error>
+        }
+        @if (priceTierForm.controls['price'].hasError('pattern')) {
+        <mat-error>Price should be a number</mat-error>
+        }
+      </mat-form-field>
+    </form>
     }
+    @for(saleInfoForm of eventForm.controls['saleInfos'].controls; track saleInfoForm; let idx = $index){
+    <form [formGroup]="saleInfoForm">
 
+      {{ idx }} - round
+      <mat-form-field>
+        <mat-label>Start selling ticket at</mat-label>
+        <input matInput type="datetime-local" formControlName="start" required>
+        @if (saleInfoForm.controls['start'].hasError('required')) {
+        @if(saleInfoForm.controls["start"].value == null){
+        <mat-error>This field is required</mat-error>
+        }
+        @else{
+        <mat-error>Invalid date / time</mat-error>
+        }
+        }
+      </mat-form-field>
+      <br>
+      <mat-form-field>
+        <mat-label>End selling at</mat-label>
+        <input matInput type="datetime-local" formControlName="end" required>
+        @if (saleInfoForm.controls['end'].hasError('required')) {
+        @if(saleInfoForm.controls["end"].value == null){
+        <mat-error>This field is required</mat-error>
+        }
+        @else{
+        <mat-error>Invalid date / time</mat-error>
+        }
+        }
+      </mat-form-field>
+      <br>
+      <mat-form-field>
+        <mat-label>Ticket quota</mat-label>
+        <input matInput formControlName="ticketQuota" required>
+        @if (saleInfoForm.controls['ticketQuota'].hasError('required')) {
+        <mat-error>This field is required</mat-error>
+        }
+        @if (saleInfoForm.controls['ticketQuota'].hasError('pattern')) {
+        <mat-error>Quota should be a number</mat-error>
+        }
+      </mat-form-field>
+    </form>
+    }
     <mat-form-field>
       <mat-label>Shopping cart size</mat-label>
       <input matInput formControlName="shoppingCartSize" required>

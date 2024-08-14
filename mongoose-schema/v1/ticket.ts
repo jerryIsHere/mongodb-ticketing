@@ -18,7 +18,7 @@ export interface IPurchaseInfo {
   purchaseDate: Date;
   purchaserId: Types.ObjectId;
 }
-export interface IPopulatedPurchaseInfou{
+export interface IPopulatedPurchaseInfou {
   purchaseDate: Date;
   purchaser: HydratedDocument<IUser> | null;
 }
@@ -34,18 +34,18 @@ export interface IPopulatedPaymentInfo {
   confirmationDate: Date;
 }
 
-export interface IPopulatedTicket {
-  event: HydratedDocument<IEvent> | null;
-  seat: HydratedDocument<ISeat> | null;
+export interface IPopulatedTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>,> {
+  event: TEvent | null;
+  seat: TSeat | null;
   priceTier: IPriceTier;
 }
-export interface IDisclosableTicket extends IPopulatedTicket {
+export interface IDisclosableTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IPopulatedTicket<TEvent, TSeat> {
   purchased: boolean;
 }
-export interface IClientTicket extends IDisclosableTicket {
+export interface IClientTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IDisclosableTicket<TEvent, TSeat> {
   belongsToUser: boolean;
 }
-export interface IFullyPopulatedTicket extends IPopulatedTicket {
+export interface IFullyPopulatedTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IPopulatedTicket<TEvent, TSeat> {
   purchaseInfo?: IPopulatedPurchaseInfou;
   paymentInfo?: IPopulatedPaymentInfo;
 }
@@ -56,9 +56,6 @@ export interface ITicket {
   priceTier: IPriceTier;
   purchaseInfo?: IPurchaseInfo;
   paymentInfo?: IPaymentInfo;
-}
-export interface IPopulatedTicket {
-
 }
 interface ITicketMethod {
   voidPurchased(operatorName: string): Promise<HydratedDocument<ITicket>>;

@@ -22,20 +22,23 @@ export function showSellingString(saleInfos: ISaleInfo[]): string {
         join("\n")
 
 }
-export function ticketConfirmDateString(ticket: AdminTicket): string {
+export function ticketConfirmDateString(ticket: AdminTicket<ShowAPIObject, SeatAPIObject>): string {
     return ticket.paymentInfo ? 'Ticket confirmed at ' + new Date(ticket.paymentInfo.confirmationDate).toLocaleDateString() : ''
 }
-export function ticketPurchaseDateString(ticket: AdminTicket): string {
+export function ticketPurchaseDateString(ticket: AdminTicket<ShowAPIObject, SeatAPIObject>): string {
     return ticket.purchaseInfo ? new Date(ticket.purchaseInfo.purchaseDate).toLocaleDateString() : ''
 }
 export interface WithId {
     _id: string
 }
-export function getPurchaserIfAny(ticket: TicketAPIObject){
+export function getPurchaserIfAny(ticket: TicketAPIObject) {
     return "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser : "purchased" in ticket ? ticket.purchased : null
 }
 type ShowAPIObject = Show & WithId
-type TicketAPIObject = (IDisclosableTicket & WithId) | (IClientTicket & WithId) | (AdminTicket & WithId)
+type TicketAPIObject =
+    (IDisclosableTicket<ShowAPIObject, SeatAPIObject> & WithId) |
+    (IClientTicket<ShowAPIObject, SeatAPIObject> & WithId) |
+    (AdminTicket<ShowAPIObject, SeatAPIObject> & WithId)
 type SeatAPIObject = Seat & WithId
 type UserAPIObject = User & WithId
 type VenueAPIObject = Venue & WithId

@@ -21,9 +21,3 @@
   <app-venue-list #venueListComp [venues]="venues" (dataChanged)="dataListControls['venues'].loadData()">
   </app-venue-list>
 </mat-card>
-<mat-card>
-  <mat-card-title>Price Tiers</mat-card-title>
-  <app-price-tier-list #priceTierListComp [priceTiers]="priceTiers"
-    (dataChanged)="dataListControls['priceTiers'].loadData()">
-  </app-price-tier-list>
-</mat-card>

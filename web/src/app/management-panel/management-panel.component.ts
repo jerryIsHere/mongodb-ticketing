@@ -3,7 +3,6 @@ import { ShowAPIObject, VenueAPIObject, IPriceTier, TicketAPIObject } from '../.
 import { EventListComponent } from './event-list/event-list.component';
 import { MatDialog } from '@angular/material/dialog';
 import { VenueListComponent } from './venue-list/venue-list.component';
-import { PriceTierListComponent } from './price-tier-list/price-tier-list.component';
 import { SoldTicketListComponent } from './sold-ticket-list/sold-ticket-list.component';
 import { RegisterFormComponent } from '../user/register-form/register-form.component';
 import { MatCardModule } from '@angular/material/card';
@@ -19,7 +18,7 @@ interface IDataListControl {
 @Component({
   selector: 'app-management-panel',
   standalone: true,
-  imports: [EventListComponent, RegisterFormComponent, VenueListComponent, PriceTierListComponent, SoldTicketListComponent, MatCardModule,
+  imports: [EventListComponent, RegisterFormComponent, VenueListComponent, SoldTicketListComponent, MatCardModule,
     MatButtonModule, RouterModule, MatIconModule],
   templateUrl: './management-panel.component.html',
   styleUrl: './management-panel.component.sass'
@@ -32,7 +31,6 @@ export class ManagementPanelComponent {
   @ViewChild("soldTicketListComp") soldTicketListComp?: SoldTicketListComponent
   @ViewChild("eventListComp") eventListComp?: EventListComponent
   @ViewChild("venueListComp") venueListComp?: VenueListComponent
-  @ViewChild("priceTierListComp") priceTierListComp?: PriceTierListComponent
 
   public dataListControls: { [name: string]: IDataListControl } = {
     venues: {
