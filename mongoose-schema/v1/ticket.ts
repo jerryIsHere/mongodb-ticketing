@@ -12,11 +12,15 @@ import {
 } from "mongoose";
 import { ISeat, singular_name as Seat, seatModel } from "./seat";
 import { singular_name as EventName } from "./event";
-import { singular_name as User, userModel } from "./user";
+import { IUser, singular_name as User, userModel } from "./user";
 import { notificationModel } from "./notification";
 export interface IPurchaseInfo {
   purchaseDate: Date;
   purchaserId: Types.ObjectId;
+}
+export interface IPopulatedPurchaseInfou{
+  purchaseDate: Date;
+  purchaser: HydratedDocument<IUser> | null;
 }
 
 export interface IPaymentInfo {
@@ -24,15 +28,28 @@ export interface IPaymentInfo {
   remark: string;
   confirmationDate: Date;
 }
-export interface IDisclosableTicket {
-  event: IEvent | null;
-  seat: ISeat | null;
+export interface IPopulatedPaymentInfo {
+  confirmedBy: IUser | null;
+  remark: string;
+  confirmationDate: Date;
+}
+
+export interface IPopulatedTicket {
+  event: HydratedDocument<IEvent> | null;
+  seat: HydratedDocument<ISeat> | null;
   priceTier: IPriceTier;
+}
+export interface IDisclosableTicket extends IPopulatedTicket {
   purchased: boolean;
 }
 export interface IClientTicket extends IDisclosableTicket {
   belongsToUser: boolean;
 }
+export interface IFullyPopulatedTicket extends IPopulatedTicket {
+  purchaseInfo?: IPopulatedPurchaseInfou;
+  paymentInfo?: IPopulatedPaymentInfo;
+}
+
 export interface ITicket {
   eventId: Types.ObjectId;
   seatId: Types.ObjectId;
@@ -40,11 +57,14 @@ export interface ITicket {
   purchaseInfo?: IPurchaseInfo;
   paymentInfo?: IPaymentInfo;
 }
+export interface IPopulatedTicket {
+
+}
 interface ITicketMethod {
   voidPurchased(operatorName: string): Promise<HydratedDocument<ITicket>>;
   discloseToClient(userId: Types.ObjectId): Promise<IClientTicket>;
   disclose(): Promise<IDisclosableTicket>;
-  fullyPopulate(): Promise<ITicket>
+  fullyPopulate(): Promise<IFullyPopulatedTicket>
 }
 
 interface HydratedTicket extends HydratedDocument<ITicket, ITicketMethod, TickerQueryHelpers> { }
@@ -323,7 +343,7 @@ export const tickerSchema = new Schema<
         };
       },
       async fullyPopulate() {
-        return await this.populate<ITicket>([
+        return await this.populate<IFullyPopulatedTicket>([
           { path: "eventId", model: EventName },
           { path: "seatId", model: Seat },
           { path: "purchaseInfo.purchaserId", model: User },

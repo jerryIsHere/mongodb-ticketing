@@ -4,13 +4,13 @@
 <mat-card>
   <mat-card-header>{{ticket.event?.eventname}} {{ticket.seat?.row}}{{ticket.seat?.no}}</mat-card-header>
   <mat-card-content>
-    {{ticket.occupant?.fullname}} ({{ticket.occupant?.username}})
+    {{ticket.purchaseInfo?.purchaser?.fullname}} ({{ticket.purchaseInfo?.purchaser?.username}})
     <br>
-    Email: {{ticket.occupant?.email}}
+    Email: {{ticket.purchaseInfo?.purchaser?.email}}
     <form [formGroup]="ticketForm">
       <div>
         <mat-label>Ticket confirmed by:</mat-label>
-        <mat-radio-group formControlName="securedBy">
+        <mat-radio-group formControlName="confirmedBy">
           <mat-radio-button [checked]="" value="">&#40;unconfirmed&#41;</mat-radio-button>
           <mat-radio-button value="fps">FPS</mat-radio-button>
           <mat-radio-button value="payme">PayMe</mat-radio-button>
@@ -27,7 +27,7 @@
     </form>
   </mat-card-content>
   <mat-card-actions>
-    @if(!(ticketForm.controls['securedBy'].value || ticketForm.controls['remark'].value)){
+    @if(!(ticketForm.controls['confirmedBy'].value || ticketForm.controls['remark'].value)){
     <button mat-stroked-button color="warn" (click)="voidTicket()">void</button>}
     <button mat-stroked-button color="primary"(click)="submit()">update</button>
   </mat-card-actions>

@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { Ticket } from '../../interface';
+import { TicketAPIObject } from '../../../../../mongoose-schema/interface_util';
 import {
   MAT_SNACK_BAR_DATA,
   MatSnackBarRef,
@@ -22,7 +22,7 @@ export class TicketSelectedComponent {
   constructor(
     public snackRef: MatSnackBarRef<TicketSelectedComponent>,
     @Inject(MAT_SNACK_BAR_DATA) public data: {
-      tickets: Ticket[],
+      tickets: TicketAPIObject[],
       limit: number,
       seatInfo?: string[],
       success: boolean,
@@ -32,7 +32,7 @@ export class TicketSelectedComponent {
     router.events.subscribe((_) => {
       snackRef.dismiss()
     })
-    this.data.tickets = this.data.tickets.filter(t => t.occupant == null || t.occupant == undefined || t.occupied)
+    this.data.tickets = this.data.tickets.filter(t => !("purchaseInfo" in t))
   }
   totalCost() {
 
@@ -44,7 +44,7 @@ export class TicketSelectedComponent {
         ticketIds: this.data.tickets.map(t => t._id)
       }, {}, { showSuccessHandler: false }).toPromise().then((result: any) => {
         if (result && result.success) {
-          this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: Ticket) => ticket._id), userId: this.userSession.user._id } })
+          this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: TicketAPIObject) => ticket._id), userId: this.userSession.user._id } })
         }
       }).then(result => {
         this.snackRef.dismiss();

@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { Show, Venue, Ticket, Seat, PriceTier } from '../../interface';
+import { ShowAPIObject, VenueAPIObject, TicketAPIObject, SeatAPIObject, IPriceTier } from '../../../../../mongoose-schema/interface_util';
 import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,29 +19,26 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class EventseatComponent {
 
-  seats: Seat[] | undefined
-  tickets: Ticket[] = []
+  seats: SeatAPIObject[] | undefined
+  tickets: TicketAPIObject[] = []
   _id: string | undefined
-  event: Show | undefined
-  venue: Venue | undefined
+  event: ShowAPIObject | undefined
+  venue: VenueAPIObject | undefined
   @ViewChild('seatingPlan') seatingPlan?: SeatingPlanComponent;
-  priceTiers: PriceTier[] | undefined
+  priceTiers: IPriceTier[] | undefined
   @Input()
   set id(id: string) {
     this._id = id
     if (id) this.loadData(id)
   }
   constructor(private api: ApiService, public dialog: MatDialog, private _snackBar: MatSnackBar) {
-    this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
-      if (result && result.data)
-        this.priceTiers = result.data
-    })
   }
   loadData(id: string) {
     var promises: Promise<any>[] = []
     this.api.request.get(`/event/${this._id}`).toPromise().then((result: any) => {
       if (result && result.data) {
         this.event = result.data
+        this.priceTiers = this.event?.priceTiers;
         return result.data
       }
     }).then((event) => {

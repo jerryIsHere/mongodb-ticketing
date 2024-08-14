@@ -1,0 +1,248 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.paymentInfoModel = exports.purchaseInfoMode = exports.ticketModel = exports.singular_name = exports.collection_name = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = void 0;
+const event_1 = require("./event");
+const mongoose_1 = require("mongoose");
+const seat_1 = require("./seat");
+const event_2 = require("./event");
+const user_1 = require("./user");
+const notification_1 = require("./notification");
+exports.purchaseInfoSchema = new mongoose_1.Schema({
+    purchaseDate: { type: Date, requried: true },
+    purchaserId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: user_1.singular_name,
+        requried: true,
+        validate: {
+            validator: async (val) => {
+                return (await user_1.userModel.findById(val).select({ _id: 1 }).lean()) != null;
+            },
+            message: `${user_1.singular_name} with id {VALUE} doesn't exists.`,
+        },
+    },
+});
+exports.paymentInfoSchema = new mongoose_1.Schema({
+    confirmedBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: user_1.singular_name,
+        required: true,
+        validate: {
+            validator: async (val) => {
+                let confimer = await user_1.userModel.findById(val);
+                if (confimer == null)
+                    throw new Error(`${user_1.singular_name} with id {VALUE} doesn't exists.`);
+                if (!confimer._isAdmin && !confimer._isCustomerSupport)
+                    throw new Error(`${user_1.singular_name} with id {VALUE} do not have such permission.`);
+                return true;
+            },
+        },
+    },
+    remark: { type: String },
+    confirmationDate: { type: Date, required: true },
+});
+exports.tickerSchema = new mongoose_1.Schema({
+    eventId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: event_2.singular_name,
+        required: true,
+        validate: {
+            validator: async function (val) {
+                let event = await event_1.eventModel.findById(val);
+                if (event == null)
+                    throw new Error(`Event with id ${val} doesn't exists.`);
+                let priceTier = event.priceTiers.find((p) => p.tierName == this.priceTier.tierName);
+                if (priceTier == undefined || priceTier.price != this.priceTier.price)
+                    throw new Error(`Price tier ${this.priceTier.tierName} doesn't exists in associated event.`);
+                return true;
+            },
+        },
+    },
+    seatId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: seat_1.singular_name,
+        required: true,
+        validate: {
+            validator: async function (val) {
+                let seat = await seat_1.seatModel.findById(val).select({ _id: 1 }).lean();
+                if (seat == null)
+                    throw new Error(`Seat with id ${val} doesn't exists.`);
+                return true;
+            },
+        },
+    },
+    priceTier: { type: event_1.priceTierSchema, required: true },
+    purchaseInfo: { type: exports.purchaseInfoSchema },
+    paymentInfo: { type: exports.paymentInfoSchema },
+}, {
+    statics: {
+        async bulkPurchase(userId, ticketIds) {
+            let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Schema.Types.ObjectId(id));
+            let tickets = await exports.ticketModel
+                .find({ _id: { $in: ticketObjectIds } })
+                .lean()
+                .exec();
+            let events = await event_1.eventModel
+                .find({ _id: { $in: tickets.map((t) => t.eventId) } })
+                .lean()
+                .exec();
+            if (events.length != 1)
+                throw new Error("Bulk purchase only supports buying tickets from exactly one event.");
+            let event = events[0];
+            if (ticketIds.length > event.shoppingCartSize)
+                throw new Error(`Event with id ${event._id} have a shopping cart size limit at` +
+                    ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`);
+            let now = new Date();
+            let saleInfo = event.saleInfos.find((info) => {
+                info.start <= now && info.end >= new Date();
+            });
+            if (saleInfo == null)
+                throw new Error(`Tickets of event with id ${event._id} is not selling yet.`);
+            let baughtTicketCount = await exports.ticketModel.countDocuments({
+                "paymentInfo.purchaserId": userId,
+            });
+            if (baughtTicketCount >= saleInfo.ticketQuota)
+                throw new Error(`You have no more ticket quota (${saleInfo.ticketQuota})` +
+                    ` for event with id ${event._id}.`);
+            let purchaseInfo = new exports.purchaseInfoMode({
+                purchaserId: userId,
+                purchaseDate: now,
+            });
+            purchaseInfo.validate();
+            return exports.ticketModel
+                .updateMany({
+                _id: ticketObjectIds,
+            }, {
+                $set: {
+                    purcahseInfo: purchaseInfo,
+                },
+            })
+                .then();
+        },
+        async batchUpdatePriceTier(ticketIds, tierName) {
+            let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Schema.Types.ObjectId(id));
+            let tickets = await exports.ticketModel
+                .find({ _id: { $in: ticketObjectIds } })
+                .lean()
+                .exec();
+            let events = await event_1.eventModel
+                .find({ _id: { $in: tickets.map((t) => t.eventId) } })
+                .lean()
+                .exec();
+            if (events.length != 1)
+                throw new Error("Batch price tier update only supports updating tickets from exactly one event.");
+            let event = events[0];
+            let match = event.priceTiers.find((p) => {
+                p.tierName == tierName;
+            });
+            if (match == null)
+                throw new Error(`Tickes of event with id ${event._id} is not selling yet.`);
+            return exports.ticketModel
+                .updateMany({ _id: { $in: ticketObjectIds } }, {
+                $set: {
+                    priceTier: match,
+                },
+            })
+                .then();
+        },
+    },
+    methods: {
+        async voidPurchased(operatorName) {
+            let purchaseInfo = this.purchaseInfo;
+            if (purchaseInfo) {
+                this.purchaseInfo = undefined;
+                let purchaser = await user_1.userModel
+                    .findById(purchaseInfo.purchaserId)
+                    .then();
+                let event = await event_1.eventModel.findById(this.eventId).then();
+                let seat = await seat_1.seatModel.findById(this.seatId).then();
+                await this.save();
+                if (purchaser != null && event != null && seat != null) {
+                    let salutation = purchaser.fullname
+                        ? `Dear ${purchaser.fullname}\n`
+                        : "";
+                    let customerSupportInfo = operatorName ? ` by ${operatorName}` : "";
+                    let purchaseDateInfo = purchaseInfo.purchaseDate
+                        ? ` (at ${purchaseInfo.purchaseDate.toLocaleString()})`
+                        : "";
+                    let notification = new notification_1.notificationModel({
+                        recipientId: purchaser._id,
+                        email: purchaser.email,
+                        title: "Ticket Voided",
+                        message: salutation +
+                            `1 ticket that you had purchased${purchaseDateInfo} is voided by${customerSupportInfo}.\n` +
+                            `Information of that ticket:\n` +
+                            `Event: ${event.eventname}\n` +
+                            `Seat: ${seat.row + seat.no}\n`,
+                    });
+                    await notification.save();
+                    await notification.send();
+                }
+                return this;
+            }
+            throw new Error(`Ticker with id ${this._id} has not been sold yet.`);
+        },
+        async discloseToClient(userId) {
+            let disclosable = await this.disclose();
+            return {
+                event: disclosable.event,
+                seat: disclosable.seat,
+                priceTier: this.priceTier,
+                purchased: this.purchaseInfo != undefined,
+                belongsToUser: this.purchaseInfo != undefined &&
+                    this.purchaseInfo.purchaserId == userId,
+            };
+        },
+        async disclose() {
+            let populated = await this.populate([
+                { path: "eventId", model: event_2.singular_name },
+                { path: "seatId", model: seat_1.singular_name },
+            ]);
+            return {
+                event: populated.event,
+                seat: populated.seat,
+                priceTier: this.priceTier,
+                purchased: this.purchaseInfo != undefined,
+            };
+        },
+        async fullyPopulate() {
+            return await this.populate([
+                { path: "eventId", model: event_2.singular_name },
+                { path: "seatId", model: seat_1.singular_name },
+                { path: "purchaseInfo.purchaserId", model: user_1.singular_name },
+                { path: "paymentInfo.confirmedBy", model: user_1.singular_name },
+            ]);
+        },
+    },
+    query: {
+        findByEventId(eventId) {
+            let query = this;
+            return query.where({
+                eventId: eventId,
+            });
+        },
+        findSold() {
+            let query = this;
+            return query.find({
+                purchaseInfo: { $ne: null },
+            });
+        },
+        findByPurchaser(userId) {
+            let query = this;
+            return query.find({
+                purchaseInfo: { purchaserId: userId },
+            });
+        },
+    },
+});
+exports.tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
+// tickerSchema.pre<Query<ITicket, TicketModel>>('updateMany', function (next) {
+//     const update = this.getUpdate() as UpdateQuery<TicketModel>;
+//     if (update && update.$set && update.$set.purchaseInfo) {
+//     }
+//     next();
+// });
+exports.collection_name = "tickets";
+exports.singular_name = "Ticket";
+exports.ticketModel = (0, mongoose_1.model)(exports.singular_name, exports.tickerSchema, exports.collection_name);
+exports.purchaseInfoMode = (0, mongoose_1.model)("", exports.purchaseInfoSchema);
+exports.paymentInfoModel = (0, mongoose_1.model)("", exports.paymentInfoSchema);

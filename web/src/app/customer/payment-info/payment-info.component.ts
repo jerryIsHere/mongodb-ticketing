@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
-import { Ticket } from '../../interface'
+import { TicketAPIObject } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { UserSessionService } from '../../service/user-session.service';
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
@@ -22,7 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class PaymentInfoComponent {
   loaded = false
   summary: { events: Set<string>, price: number, } = { events: new Set<string>(), price: 0, }
-  ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
+  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
   ticketDataColumn = ['seat', 'priceTier.tierName', 'priceTier.price', 'securedBy', 'remark'];
   _ids?: string[]
   _userId?: string
@@ -81,7 +81,7 @@ export class PaymentInfoComponent {
       if (result && result.data) {
         this.loaded = true
         this.ticketDataSource.data = result.data
-        result.data.reduce((obj: { events: Set<string>, price: number, }, ticket: Ticket, ind: number) => {
+        result.data.reduce((obj: { events: Set<string>, price: number, }, ticket: TicketAPIObject, ind: number) => {
           if (!(ticket as any).belongsToUser) return obj
           if (ticket.event?.eventname)
             obj.events.add(ticket.event.eventname)

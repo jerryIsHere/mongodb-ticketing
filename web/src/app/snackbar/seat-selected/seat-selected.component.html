@@ -8,7 +8,7 @@
 <span matSnackBarActions style="color: white">
   @for( priceTier of data.priceTiers; track priceTier){
   <button mat-stroked-button color="primary"matSnackBarAction
-    [style.background-color]="priceTier._id?'#'+data.priceTiersColors?.get(priceTier._id):''"
+    [style.background-color]="priceTier?'#'+data.priceTiersColors?.get(priceTier.tierName):''"
     (click)="sellAt(priceTier)" [disabled]="doing">
     {{priceTier.tierName}}:{{priceTier.price}}</button>
   }

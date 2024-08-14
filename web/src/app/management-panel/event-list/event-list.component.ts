@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
-import { Show, Venue, isShowSelling, showSellingString } from '../../interface'
+import { ShowAPIObject, VenueAPIObject, isShowSelling, showSellingString } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { EventFormComponent } from '../../forms/event-form/event-form.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -30,13 +30,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class EventListComponent {
   loaded = false
-  showDataSource: MatTableDataSource<Show> = new MatTableDataSource<Show>()
+  showDataSource: MatTableDataSource<ShowAPIObject> = new MatTableDataSource<ShowAPIObject>()
   showDataColumn = ['eventname', 'datetime', 'duration', 'isSelling', 'venue.venuename', '_id']
   @Output() dataChanged = new EventEmitter()
   @Input()
   get shows() { return this.showDataSource.data }
   set shows(value) { this.showDataSource.data = value }
-  @Input() venues: Venue[] = []
+  @Input() venues: VenueAPIObject[] = []
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   constructor(public dialog: MatDialog, private api: ApiService) {
@@ -95,7 +95,7 @@ export class EventListComponent {
       if (result) this.dataChanged.emit()
     })
   }
-  isShowSelling(show: Show) {
+  isShowSelling(show: ShowAPIObject) {
     return isShowSelling(show)
   }
   delete(id: string) {
@@ -103,8 +103,8 @@ export class EventListComponent {
       this.dataChanged.emit()
     })
   }
-  showSellingString(show: Show): string {
-    return showSellingString(show)
+  showSellingString(show: ShowAPIObject): string {
+    return showSellingString(show.saleInfos)
   }
 }
 

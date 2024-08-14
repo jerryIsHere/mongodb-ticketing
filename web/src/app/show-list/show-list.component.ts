@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../pipes/datetime-timezone.pipe';
-import { Show } from '../interface'
+import { ShowAPIObject } from '../../../../mongoose-schema/interface_util'
 import { ApiService } from '../service/api.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
@@ -23,7 +23,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class ShowListComponent {
   loaded = false
-  eventDataSource: MatTableDataSource<Show[]> = new MatTableDataSource<Show[]>()
+  eventDataSource: MatTableDataSource<ShowAPIObject[]> = new MatTableDataSource<ShowAPIObject[]>()
   eventDataColumn = ['eventname', 'datetime', 'duration', 'venue.venuename', '_id'];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;

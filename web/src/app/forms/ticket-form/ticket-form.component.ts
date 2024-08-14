@@ -12,7 +12,7 @@ import {
   MatDialogRef,
   MatDialogModule
 } from '@angular/material/dialog';
-import { Ticket } from '../../interface'
+import { AdminTicket, TicketAPIObject, WithId } from '../../../../../mongoose-schema/interface_util'
 
 @Component({
   selector: 'app-ticket-form',
@@ -23,12 +23,14 @@ import { Ticket } from '../../interface'
 })
 export class TicketFormComponent {
   ticketForm: FormGroup = this._formBuilder.group({
-    securedBy: new FormControl(this.ticket.securedBy ? this.ticket.securedBy : ""),
-    remark: new FormControl(this.ticket.remark),
+    confirmedBy: new FormControl(
+      this.ticket && this.ticket.paymentInfo?.confirmedBy ? this.ticket.paymentInfo.confirmedBy : ""),
+    remark: new FormControl(
+     this.ticket && this.ticket.paymentInfo?.remark ? this.ticket.paymentInfo.remark : ""),
   });
   constructor(
     public dialogRef: MatDialogRef<TicketFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public ticket: Ticket,
+    @Inject(MAT_DIALOG_DATA) public ticket: (AdminTicket & WithId),
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) { }

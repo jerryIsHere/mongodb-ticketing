@@ -9,7 +9,7 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { Venue } from '../../interface'
+import { VenueAPIObject } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { VenueFormComponent } from '../../forms/venue-form/venue-form.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -24,7 +24,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class VenueListComponent {
   loaded = false
-  venueDataSource: MatTableDataSource<Venue> = new MatTableDataSource<Venue>()
+  venueDataSource: MatTableDataSource<VenueAPIObject> = new MatTableDataSource<VenueAPIObject>()
   venueDataColumn = ['venuename', '_id']
   @Output() dataChanged = new EventEmitter()
   @Input()

@@ -5,14 +5,14 @@
         <mat-label>Venue section</mat-label>
         <mat-select [(ngModel)]="selectedSection" (selectionChange)="selectedSection = $event.value;render();setRoute()"
           [compareWith]="compareSection">
-          @for(section of venue.sections; track section){
+          @for(section of venue?.sections; track section){
           <mat-option [value]="section">{{section.x}}-{{section.y}}</mat-option>
           }
         </mat-select>
       </mat-form-field>
       <mat-chip-listbox style="flex: 1">
         @for( priceTier of priceTiers; track priceTier){
-        <mat-chip [style.background-color]="priceTier._id?'#'+priceTiersColors.get(priceTier._id):''">
+        <mat-chip [style.background-color]="priceTier.tierName?'#'+priceTiersColors.get(priceTier.tierName):''">
           {{priceTier.tierName}}:${{priceTier.price}}</mat-chip>
         }
       </mat-chip-listbox>

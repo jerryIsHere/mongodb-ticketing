@@ -9,7 +9,7 @@ import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { PriceTier } from '../../interface'
+import { IPriceTier } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { PriceTierFormComponent } from '../../forms/price-tier-form/price-tier-form.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -24,7 +24,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class PriceTierListComponent {
   loaded = false
-  priceTierDataSource: MatTableDataSource<PriceTier> = new MatTableDataSource<PriceTier>()
+  priceTierDataSource: MatTableDataSource<IPriceTier> = new MatTableDataSource<IPriceTier>()
   priceTierDataColumn = ['tierName', 'price', '_id']
   @Output() dataChanged = new EventEmitter()
   @Input()

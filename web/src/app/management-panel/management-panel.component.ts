@@ -1,5 +1,5 @@
 import { Component, ViewChild, viewChild, } from '@angular/core';
-import { Show, Venue, PriceTier, Ticket } from '../interface'
+import { ShowAPIObject, VenueAPIObject, IPriceTier, TicketAPIObject } from '../../../../mongoose-schema/interface_util'
 import { EventListComponent } from './event-list/event-list.component';
 import { MatDialog } from '@angular/material/dialog';
 import { VenueListComponent } from './venue-list/venue-list.component';
@@ -25,25 +25,16 @@ interface IDataListControl {
   styleUrl: './management-panel.component.sass'
 })
 export class ManagementPanelComponent {
-  public events: Show[] = [];
-  public venues: Venue[] = [];
-  public priceTiers: PriceTier[] = [];
-  public soldTickets: Ticket[] = [];
+  public events: ShowAPIObject[] = [];
+  public venues: VenueAPIObject[] = [];
+  public priceTiers: IPriceTier[] = [];
+  public soldTickets: TicketAPIObject[] = [];
   @ViewChild("soldTicketListComp") soldTicketListComp?: SoldTicketListComponent
   @ViewChild("eventListComp") eventListComp?: EventListComponent
   @ViewChild("venueListComp") venueListComp?: VenueListComponent
   @ViewChild("priceTierListComp") priceTierListComp?: PriceTierListComponent
 
   public dataListControls: { [name: string]: IDataListControl } = {
-    priceTiers: {
-      loadData: () => {
-        return this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
-          if (result && result.data)
-            this.priceTiers = result.data
-          if (this.priceTierListComp) this.priceTierListComp.loaded = true;
-        })
-      },
-    },
     venues: {
       loadData: () => {
         return this.api.request.get("/venue?list").toPromise().then((result: any) => {

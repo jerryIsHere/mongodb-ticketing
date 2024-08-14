@@ -8,12 +8,12 @@
   <mat-icon fontIcon="airline_seat_recline_normal"></mat-icon> : Seat already sold
   &#41;
 </span>
-@if(seats && venue && event && priceTiers){
+@if(seats && venue && event){
   {{event.eventname}}
   @if(isShowSelling(event)){
   <br>
   <br>
-  <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
+  <app-seating-plan #seatingPlan [priceTiers]="event.priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
     isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()" (selectedSectionChange)="clearAction()"
     [(selectedSeatIds)]="sectionSelectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
   </app-seating-plan>
@@ -24,9 +24,9 @@
   @else {
   Ticket of this show is not purchasable right now. <br>
   Sale period:
-  {{event.startFirstRoundSellDate | date : 'short'}} - {{event.endFirstRoundSellDate | date : 'short'}}
+  {{event.saleInfos[0].start | date : 'short'}} - {{event.saleInfos[0].end | date : 'short'}}
   <br>
-  {{event.startSecondRoundSellDate | date : 'short'}} - {{event.endSecondRoundSellDate | date : 'short'}}
+  {{event.saleInfos[1].start | date : 'short'}} - {{event.saleInfos[1].end | date : 'short'}}
   }
   }
   @else{

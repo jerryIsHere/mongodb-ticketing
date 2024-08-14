@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../service/api.service';
-import { PriceTier } from '../../interface';
+import { IPriceTier } from '~/mongoose-schema/interface_util';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -26,7 +26,7 @@ export class PriceTierFormComponent {
   });
   constructor(
     public dialogRef: MatDialogRef<PriceTierFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: PriceTier,
+    @Inject(MAT_DIALOG_DATA) public data: IPriceTier,
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) { }
@@ -34,20 +34,21 @@ export class PriceTierFormComponent {
     if (this.priceTierForm.valid) {
       this.data.tierName = this.priceTierForm.controls["tierName"].value;
       this.data.price = this.priceTierForm.controls["price"].value;
-      if (this.data && this.data._id) {
-        this.api.request.patch(`/priceTier/${this.data._id}`, this.data).toPromise().then((result: any) => {
-          if (result && result.success) {
-            this.dialogRef.close(this.data)
-          }
-        })
-      }
-      else {
-        this.api.request.post("/priceTier?create", this.data).toPromise().then((result: any) => {
-          if (result && result.success) {
-            this.dialogRef.close(this.data)
-          }
-        })
-      }
+      // priceTier is no longer a entity and no api endpoint is avaliable
+      // if (this.data && this.data._id) {
+      //   this.api.request.patch(`/priceTier/${this.data._id}`, this.data).toPromise().then((result: any) => {
+      //     if (result && result.success) {
+      //       this.dialogRef.close(this.data)
+      //     }
+      //   })
+      // }
+      // else {
+      //   this.api.request.post("/priceTier?create", this.data).toPromise().then((result: any) => {
+      //     if (result && result.success) {
+      //       this.dialogRef.close(this.data)
+      //     }
+      //   })
+      // }
     }
   }
   close() {

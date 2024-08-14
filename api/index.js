@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
-const database_1 = require("./express/database");
+const database_1 = require("./server/database/database");
 var MongoDBStore = require('connect-mongodb-session')(express_session_1.default);
 const port = process.env.PORT || 3000;
 const app = (0, express_1.default)();
@@ -39,24 +39,19 @@ app.use('/web/*', function (_, res) {
 });
 app.use('*', async function (req, res, next) {
     res.locals.RequestErrorList = new Array();
-    res.locals.session = database_1.Database.mongo.startSession();
     next();
 });
 app.use(express_1.default.json());
-const user_1 = require("./express/router/user");
+const user_1 = require("./server/router/user");
 app.use('/user', user_1.User.RouterFactory());
-const event_1 = require("./express/router/event");
+const event_1 = require("./server/router/event");
 app.use('/event', event_1.Event.RouterFactory());
-const seat_1 = require("./express/router/seat");
+const seat_1 = require("./server/router/seat");
 app.use('/seat', seat_1.Seat.RouterFactory());
-const venue_1 = require("./express/router/venue");
+const venue_1 = require("./server/router/venue");
 app.use('/venue', venue_1.Venue.RouterFactory());
-const priceTier_1 = require("./express/router/priceTier");
-app.use('/priceTier', priceTier_1.PriceTier.RouterFactory());
-const ticket_1 = require("./express/router/ticket");
+const ticket_1 = require("./server/router/ticket");
 app.use('/ticket', ticket_1.Ticket.RouterFactory());
-const admin_1 = require("./express/router/admin");
-app.use('/admin', admin_1.Admin.RouterFactory());
 app.use('/*', function (_, res) {
     res.redirect("/web/");
 });

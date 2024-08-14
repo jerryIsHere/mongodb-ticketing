@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { Show, Venue, Ticket, Seat, PriceTier, isShowSelling, isShowSellingAsFirstRound, isShowSellingAsSecondROund } from '../../interface';
+import { ShowAPIObject, VenueAPIObject, TicketAPIObject, SeatAPIObject, IPriceTier, isShowSelling, getSellingInfo, getPurchaserIfAny} from '../../../../../mongoose-schema/interface_util';
 import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,13 +22,12 @@ const defaultShoppingCartSize = 6
   styleUrl: './buy-ticket.component.sass'
 })
 export class BuyTicketComponent {
-  seats: Seat[] | undefined
-  tickets: Ticket[] = []
+  seats: SeatAPIObject[] | undefined
+  tickets: TicketAPIObject[] = []
   _id: string | undefined
-  event: Show | undefined
-  venue: Venue | undefined
+  event: ShowAPIObject | undefined
+  venue: VenueAPIObject | undefined
   @ViewChild('seatingPlan') seatingPlan?: SeatingPlanComponent;
-  priceTiers: PriceTier[] | undefined
   @Input()
   set id(id: string) {
     this._id = id
@@ -37,10 +36,7 @@ export class BuyTicketComponent {
 
   constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService,
     private _snackBar: MatSnackBar) {
-    this.api.request.get("/priceTier?list").toPromise().then((result: any) => {
-      if (result && result.data)
-        this.priceTiers = result.data
-    })
+    
   }
   loadData(id: string) {
     var promises: Promise<any>[] = []
@@ -48,7 +44,7 @@ export class BuyTicketComponent {
       if (result && result.data) {
         this.event = result.data
         if (this.event && this.event.shoppingCartSize) {
-          let quota = isShowSellingAsFirstRound(this.event) ? this.event.firstRoundTicketQuota : isShowSellingAsSecondROund(this.event) ? this.event.secondRoundTicketQuota : undefined
+          let quota = getSellingInfo(this.event)?.ticketQuota
           this.shoppingCartSize = quota != undefined && Number(this.event.shoppingCartSize) > Number(quota) ? quota : this.event.shoppingCartSize != undefined ? this.event.shoppingCartSize : defaultShoppingCartSize
           this.shoppingCartSize = this.shoppingCartSize < 0 ? defaultShoppingCartSize : this.shoppingCartSize
         }
@@ -78,15 +74,15 @@ export class BuyTicketComponent {
   sectionSelectedSeatIds: Set<string> = new Set<string>()
   shoppingCartSize: number = defaultShoppingCartSize
   checkAction() {
-    let tickets: Ticket[] = [];
+    let tickets: TicketAPIObject[] = [];
     [...this.seatingPlan && this.seatingPlan.selectedSeatIds ? Array.from(this.seatingPlan.selectedSeatIds.values()) : [],
     ...this.outsideSelectedSeat.map(seat => seat._id)
-    ].map(sid => this.tickets.find(t => t.seatId == sid)).filter(ticket => ticket != undefined).forEach(t => {
-      if (t && !(t.occupant || t.occupied))
+    ].map(sid => this.tickets.find(t => t.seat?._id.toString() == sid)).filter(ticket => ticket != undefined).forEach(t => {
+      if (t && !getPurchaserIfAny(t))
         tickets.push(t)
     })
-    let seatInfo = this.outsideSelectedSeat.map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seatId == seat._id) } })
-      .map(seatNticket => { return { ...seatNticket, ...{ priceTier: this.priceTiers?.find(p => p._id == seatNticket.ticket?.priceTierId) } } })
+    let seatInfo = this.outsideSelectedSeat.map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seat?._id.toString() == seat._id) } })
+      .map(seatNticket => { return { ...seatNticket, ...{ priceTier: this.event?.priceTiers.find(p => p.tierName == seatNticket.ticket?.priceTier.tierName) } } })
       .map(info => info.seat.row + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
     let action = {
       tickets: tickets,
@@ -118,7 +114,7 @@ export class BuyTicketComponent {
       }
     }
   }
-  outsideSelectedSeat: Seat[] = []
+  outsideSelectedSeat: SeatAPIObject[] = []
   openForm(checkSection: Boolean = true) {
     if (this._id && this.seatingPlan?.selectedSection) {
       const dialogRef = this.dialog.open(SeatFormComponent, {
@@ -151,7 +147,7 @@ export class BuyTicketComponent {
     this.seatingPlan?.clearSelectedSeat();
     this.outsideSelectedSeat = [];
   }
-  isShowSelling(show: Show) {
+  isShowSelling(show: ShowAPIObject) {
     return isShowSelling(show)
   }
 

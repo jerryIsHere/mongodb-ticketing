@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
-import { Ticket } from '../../interface'
+import { TicketAPIObject } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
@@ -22,7 +22,7 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 })
 export class MyticketComponent {
   loaded = false
-  ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
+  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
   ticketDataColumn = ['event.eventname', 'event.datetime', 'event.duration', 'seat', 'priceTier.tierName', 'priceTier.price', 'securedBy', 'remark'];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;

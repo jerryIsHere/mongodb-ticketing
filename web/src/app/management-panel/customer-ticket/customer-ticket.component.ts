@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { Ticket, User, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface'
+import { TicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -35,23 +35,23 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class CustomerTicketComponent {
   ticketLoaded = false
-  ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
+  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', '_id', 'securedBy'];
-  users: User[] = [];
-  tickets: Ticket[] = []
+  users: UserAPIObject[] = [];
+  tickets: TicketAPIObject[] = []
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
-  userSearch = new FormControl<string | User>('');
-  filteredUsers: Observable<User[]> = new Observable<User[]>();
+  userSearch = new FormControl<string | UserAPIObject>('');
+  filteredUsers: Observable<UserAPIObject[]> = new Observable<UserAPIObject[]>();
 
   constructor(public dialog: MatDialog, private api: ApiService) {
     this.loadData()
   }
 
-  displayFn(user: User): string {
+  displayFn(user: UserAPIObject): string {
     return user ? (user.fullname ? user.fullname : '') + (user.username ? `(${user.username})` : '') : '';
   }
-  private _filter(keywords: string): User[] {
+  private _filter(keywords: string): UserAPIObject[] {
     const filterValue = keywords.toLowerCase();
     if (this.users) {
       return this.users.filter(user =>
@@ -108,13 +108,13 @@ export class CustomerTicketComponent {
       this.ticketDataSource.filter = filterValue.trim().toLowerCase();
     }
   }
-  openForm(data: Ticket) {
+  openForm(data: TicketAPIObject) {
     const dialogRef = this.dialog.open(TicketFormComponent, {
       data: JSON.parse(JSON.stringify(data)),
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      let ticket = result as Ticket
+      let ticket = result as TicketAPIObject
       if (ticket) {
         if (result.voided) {
           this.tickets = this.tickets.filter(t => t._id != ticket._id)
@@ -163,29 +163,30 @@ export class CustomerTicketComponent {
     if (event?.option?.value?._id) this.summarizeUser(event?.option?.value?._id)
   }
   summarizeUser(userId: string) {
-    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.occupant._id == userId)
+    this.ticketDataSource.data = this.tickets.filter(ticket => "purchaseInfo" in ticket &&
+      ticket.purchaseInfo?.purchaser?._id.toString() == userId)
     this.summary =
       this.ticketDataSource.data.reduce((summary, ticket, ind) => {
         if (ticket.priceTier.price)
           summary.totalCost += Number(ticket.priceTier.price)
-        if (ticket.priceTier.tierName && ticket.priceTier._id && ticket.priceTier.price) {
-          let tierCount = summary.tierCount.get(ticket.priceTier._id)
+        if (ticket.priceTier.tierName && ticket.priceTier.price) {
+          let tierCount = summary.tierCount.get(ticket.priceTier.tierName)
           if (tierCount) {
             tierCount.count += 1
-            summary.tierCount.set(ticket.priceTier._id, tierCount)
+            summary.tierCount.set(ticket.priceTier.tierName, tierCount)
           }
           else {
-            summary.tierCount.set(ticket.priceTier._id, { tierName: ticket.priceTier.tierName, count: 1, price: ticket.priceTier.price })
+            summary.tierCount.set(ticket.priceTier.tierName, { tierName: ticket.priceTier.tierName, count: 1, price: ticket.priceTier.price })
           }
         }
 
         return summary
       }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0, userId: userId })
   }
-  ticketConfirmDateString(ticket: Ticket): string {
+  ticketConfirmDateString(ticket: TicketAPIObject): string {
     return ticketConfirmDateString(ticket)
   }
-  ticketPurchaseDateString(ticket: Ticket): string {
+  ticketPurchaseDateString(ticket: TicketAPIObject): string {
     return ticketPurchaseDateString(ticket)
   }
   downloadUserDataCSV() {
@@ -195,26 +196,24 @@ export class CustomerTicketComponent {
           ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate", "latestTicketPurchaseDate", "latestTicketConfirmDate", "latestTicketConfirmationType",
             "latestTicketRemark",].join(","),
           ...this.users.map(user => {
-            let sortedTicket = this.tickets.filter(ticket => ticket.occupant._id == user._id).sort((ticketA, ticketB) => {
-              if (ticketA.purchaseDate && ticketB.purchaseDate) {
-                return new Date(ticketA.purchaseDate) > new Date(ticketB.purchaseDate) ? -1 :
-                  new Date(ticketA.purchaseDate) < new Date(ticketB.purchaseDate) ? 1 : 0
-              }
-              else {
-                if (ticketA.purchaseDate) {
+            let sortedTicket = this.tickets.filter(ticket =>
+              "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaser?._id.toString() == user._id).sort((ticketA, ticketB) => {
+                if ("purchaseInfo" in ticketA && "purchaseInfo" in ticketB && ticketA.purchaseInfo && ticketB.purchaseInfo) {
+                  return new Date(ticketA.purchaseInfo.purchaseDate) > new Date(ticketB.purchaseInfo.purchaseDate) ? -1 :
+                    new Date(ticketA.purchaseInfo.purchaseDate) < new Date(ticketB.purchaseInfo.purchaseDate) ? 1 : 0
+                }
+                if ("purchaseInfo" in ticketA) {
                   return -1
                 }
-                else if (ticketB.purchaseDate) {
+                else if ("purchaseInfo" in ticketB) {
                   return 1
                 }
                 else {
                   return 0
-
                 }
               }
-            }
-            )
-            let lastTicket = sortedTicket.length > 0 ? sortedTicket[0] : null
+              )
+            let lastTicket = sortedTicket.length > 0 && "purchaseInfo" in sortedTicket[0] ? sortedTicket[0] : null
             return [
               user._id,
               user.username,
@@ -222,10 +221,10 @@ export class CustomerTicketComponent {
               user.email,
               user.singingPart,
               user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss') : '',
-              lastTicket ? lastTicket.purchaseDate ? dateFormat(new Date(lastTicket.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
-              lastTicket ? lastTicket.confirmationDate ? dateFormat(new Date(lastTicket.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
-              lastTicket ? lastTicket.securedBy : '',
-              lastTicket ? lastTicket.remark : '',
+              lastTicket ? lastTicket.purchaseInfo ? dateFormat(new Date(lastTicket.purchaseInfo.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
+              lastTicket ? lastTicket.paymentInfo ? dateFormat(new Date(lastTicket.paymentInfo.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
+              lastTicket ? lastTicket.paymentInfo?.confirmedBy : '',
+              lastTicket ? lastTicket.paymentInfo?.remark : '',
 
             ].map(value => value ? value : '').join(",")
           }
@@ -261,12 +260,15 @@ export class CustomerTicketComponent {
             ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
             ticket.priceTier.tierName,
             ticket.priceTier.price,
-            ticket.occupant.username,
-            ticket.occupant.fullname,
-            ticket.purchaseDate ? dateFormat(new Date(ticket.purchaseDate), 'yyyymmdd hhmmss') : '',
-            ticket.confirmationDate ? dateFormat(new Date(ticket.confirmationDate), 'yyyymmdd hhmmss') : '',
-            ticket.securedBy,
-            ticket.remark,].map(value => value ? value : '').join(",")
+            "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser?.username : '',
+            "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser?.fullname : '',
+            "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaseDate ?
+              dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
+            "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
+              dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
+            "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
+            "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
+            ].map(value => value ? value : '').join(",")
           )
         ].join("\n")
 

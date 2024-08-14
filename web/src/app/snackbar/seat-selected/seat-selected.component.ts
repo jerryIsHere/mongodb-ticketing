@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { PriceTier, Seat, Ticket } from '../../interface';
+import { IPriceTier, SeatAPIObject, TicketAPIObject } from '../../../../../mongoose-schema/interface_util';
 import {
   MAT_SNACK_BAR_DATA,
   MatSnackBarRef,
@@ -20,10 +20,10 @@ export class SeatSelectedComponent {
   constructor(
     public snackRef: MatSnackBarRef<SeatSelectedComponent>,
     @Inject(MAT_SNACK_BAR_DATA) public data: {
-      seats: Seat[] | undefined,
-      tickets: Ticket[],
+      seats: SeatAPIObject[] | undefined,
+      tickets: TicketAPIObject[],
       selectedSeatIds: string[],
-      priceTiers: PriceTier[] | undefined,
+      priceTiers: IPriceTier[] | undefined,
       priceTiersColors?: Map<string, string>,
       eventId?: string | undefined
     }, private api: ApiService, private router: Router) {
@@ -31,17 +31,17 @@ export class SeatSelectedComponent {
       snackRef.dismiss()
     })
   }
-  sellAt(priceTier: PriceTier) {
+  sellAt(priceTier: IPriceTier) {
     if (this.data.seats && this.data.eventId) {
       console.log(this.data.selectedSeatIds, this.data.tickets)
       let promise: Promise<any>[] = []
-      let existing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seatId == seatId).length > 0)
-        .map(seatId => this.data.tickets.filter(t => t.seatId == seatId)[0]._id)
-      let missing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seatId == seatId).length == 0)
+      let existing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seat?._id.toString() == seatId).length > 0)
+        .map(seatId => this.data.tickets.filter(t => t.seat?._id.toString().toString() == seatId)[0]._id)
+      let missing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seat?._id.toString() == seatId).length == 0)
 
 
       console.log(missing.map(seatId => {
-        return { seatId: seatId, eventId: this.data.eventId, priceTierId: priceTier._id }
+        return { seatId: seatId, eventId: this.data.eventId, priceTier: priceTier }
       }))
       if (missing.length > 0) {
         missing.reduce((chunk: string[][], id, i) => {
@@ -55,7 +55,7 @@ export class SeatSelectedComponent {
         }, [[]]).forEach(ids => {
           promise.push(this.api.request.post(`/ticket?batch&create`, {
             tickets: ids.map(seatId => {
-              return { seatId: seatId, eventId: this.data.eventId, priceTierId: priceTier._id }
+              return { seatId: seatId, eventId: this.data.eventId, priceTier: priceTier }
             })
           },).toPromise().then((result: any) => {
             if (result && result.success) {
@@ -73,7 +73,7 @@ export class SeatSelectedComponent {
           }
           return chunk
         }, [[]]).forEach(ids => {
-          promise.push(this.api.request.patch(`/ticket?batch&priceTier=${priceTier._id}`, {
+          promise.push(this.api.request.patch(`/ticket?batch&tierName=${priceTier.tierName}`, {
             ticketIds: ids
           },).toPromise().then((result: any) => {
             if (result && result.success) {
@@ -90,8 +90,8 @@ export class SeatSelectedComponent {
   doing: boolean = false;
   removeTickets() {
     if (this.data.seats && this.data.eventId) {
-      let existing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seatId == seatId).length > 0)
-        .map(seatId => this.data.tickets.filter(t => t.seatId == seatId)[0]._id)
+      let existing: string[] = this.data.selectedSeatIds.filter(seatId => this.data.tickets.filter(t => t.seat?._id.toString() == seatId).length > 0)
+        .map(seatId => this.data.tickets.filter(t => t.seat?._id.toString() == seatId)[0]._id)
       if (existing.length > 0) {
         existing.reduce((chunk: string[][], id, i) => {
           if (chunk[chunk.length - 1].length < 50) {

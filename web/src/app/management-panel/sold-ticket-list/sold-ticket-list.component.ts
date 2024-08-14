@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Ticket, ticketConfirmDateString } from '../../interface'
+import { TicketAPIObject, ticketConfirmDateString } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { DatePipe } from '@angular/common';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
@@ -26,7 +26,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class SoldTicketListComponent {
   loaded = false
-  ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
+  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', '_id', 'securedBy'];
   @Output() dataChanged = new EventEmitter()
   @Input()
@@ -78,7 +78,7 @@ export class SoldTicketListComponent {
       this.ticketDataSource.filter = filterValue.trim().toLowerCase();
     }
   }
-  openForm(data: Ticket) {
+  openForm(data: TicketAPIObject) {
     const dialogRef = this.dialog.open(TicketFormComponent, {
       data: JSON.parse(JSON.stringify(data)),
       autoFocus: false
@@ -87,7 +87,7 @@ export class SoldTicketListComponent {
       if (result) this.dataChanged.emit()
     })
   }
-  ticketConfirmDateString(ticket: Ticket) {
+  ticketConfirmDateString(ticket: TicketAPIObject) {
     return ticketConfirmDateString(ticket)
   }
 

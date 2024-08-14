@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, FormControl, FormArray } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
-import { Seat } from '../../interface';
+import { SeatAPIObject } from '../../../../../mongoose-schema/interface_util';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-venue-seat',
@@ -21,8 +21,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class VenueSeatComponent {
   cols: string[] = []
   rows: string[] = []
-  slots: (Seat | undefined)[] = []
-  seats: Seat[] | undefined
+  slots: (SeatAPIObject | undefined)[] = []
+  seats: SeatAPIObject[] | undefined
   _id: string | undefined
   venue: any | undefined
 

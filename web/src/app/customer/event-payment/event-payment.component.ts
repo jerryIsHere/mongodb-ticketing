@@ -12,14 +12,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { Ticket, Show, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface'
+import { TicketAPIObject, ShowAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../../../../mongoose-schema/interface_util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import dateFormat, { masks } from "dateformat";
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-event-payment',
@@ -38,22 +38,22 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 })
 export class EventPaymentComponent {
   loaded = false
-  ticketDataSource: MatTableDataSource<Ticket> = new MatTableDataSource<Ticket>()
+  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', 'securedBy'];
-  shows: Show[] = [];
-  tickets: Ticket[] = []
+  shows: ShowAPIObject[] = [];
+  tickets: TicketAPIObject[] = []
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
-  showSearch = new FormControl<string | Show>('');
-  filteredShows: Observable<Show[]> = new Observable<Show[]>();
+  showSearch = new FormControl<string | ShowAPIObject>('');
+  filteredShows: Observable<ShowAPIObject[]> = new Observable<ShowAPIObject[]>();
   constructor(public dialog: MatDialog, private api: ApiService) {
     this.loadData()
   }
 
-  displayFn(event: Show): string {
+  displayFn(event: ShowAPIObject): string {
     return event && event.eventname ? event.eventname : '';
   }
-  private _filter(keywords: string): Show[] {
+  private _filter(keywords: string): ShowAPIObject[] {
     const filterValue = keywords.toLowerCase();
     if (this.shows) {
       return this.shows.filter(event =>
@@ -107,13 +107,13 @@ export class EventPaymentComponent {
       this.ticketDataSource.filter = filterValue.trim().toLowerCase();
     }
   }
-  openForm(data: Ticket) {
+  openForm(data: TicketAPIObject) {
     const dialogRef = this.dialog.open(TicketFormComponent, {
       data: JSON.parse(JSON.stringify(data)),
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      let ticket = result as Ticket
+      let ticket = result as TicketAPIObject
       if (ticket) {
         if (result.voided) {
           this.tickets = this.tickets.filter(t => t._id != ticket._id)
@@ -133,8 +133,10 @@ export class EventPaymentComponent {
         this.ticketDataSource.data = result.data.slice()
         this.tickets = result.data.slice()
         this.shows = [];
-        result.data.reduce((_: Show[], ticket: Ticket, __: number) => {
-          if (ticket.event && this.shows.findIndex(show => ticket.event && show._id == ticket.event._id) < 0) this.shows.push(ticket.event)
+        result.data.reduce((_: ShowAPIObject[], ticket: TicketAPIObject, __: number) => {
+          if (ticket.event &&
+            this.shows.findIndex(show => ticket.event && show._id.toString() == ticket.event._id.toString()) < 0)
+            this.shows.push(ticket.event)
         }, this.shows)
         this.shows.sort((showA, showB) => {
           if (showA.datetime && showB.datetime) {
@@ -167,29 +169,29 @@ export class EventPaymentComponent {
   summary: any
   showSelected(event: MatAutocompleteSelectedEvent) {
     console.log(event.option.value._id)
-    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.eventId == event.option.value._id)
+    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.event?._id.toString() == event.option.value._id)
     this.summary =
       this.ticketDataSource.data.reduce((summary, ticket, ind) => {
         if (ticket.priceTier.price)
           summary.totalCost += Number(ticket.priceTier.price)
-        if (ticket.priceTier.tierName && ticket.priceTier._id && ticket.priceTier.price) {
-          let tierCount = summary.tierCount.get(ticket.priceTier._id)
+        if (ticket.priceTier.tierName && ticket.priceTier.price) {
+          let tierCount = summary.tierCount.get(ticket.priceTier.tierName)
           if (tierCount) {
             tierCount.count += 1
-            summary.tierCount.set(ticket.priceTier._id, tierCount)
+            summary.tierCount.set(ticket.priceTier.tierName, tierCount)
           }
           else {
-            summary.tierCount.set(ticket.priceTier._id, { tierName: ticket.priceTier.tierName, count: 1, price: ticket.priceTier.price })
+            summary.tierCount.set(ticket.priceTier.tierName, { tierName: ticket.priceTier.tierName, count: 1, price: ticket.priceTier.price })
           }
         }
 
         return summary
       }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0 })
   }
-  ticketConfirmDateString(ticket: Ticket): string {
+  ticketConfirmDateString(ticket: TicketAPIObject): string {
     return ticketConfirmDateString(ticket)
   }
-  ticketPurchaseDateString(ticket: Ticket): string {
+  ticketPurchaseDateString(ticket: TicketAPIObject): string {
     return ticketPurchaseDateString(ticket)
   }
 }

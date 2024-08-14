@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../service/api.service';
-import { Venue } from '../../interface';
+import { VenueAPIObject } from '../../../../../mongoose-schema/interface_util';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import {
   MAT_DIALOG_DATA,
@@ -26,7 +26,7 @@ export class VenueFormComponent {
   });
   constructor(
     public dialogRef: MatDialogRef<VenueFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: Venue,
+    @Inject(MAT_DIALOG_DATA) public data: VenueAPIObject,
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) { }
@@ -38,7 +38,7 @@ export class VenueFormComponent {
     if (!Array.isArray(this.data.sections)) this.data.sections = []
     if (value && Number.isInteger(x) && Number.isInteger(y) && this.data.sections && this.data.sections.filter(s => s.x == x && s.y == y).length == 0) {
 
-      this.data.sections.push({ x: Number(value[0]), y: Number(value[1]) });
+      this.data.sections.push({ x: Number(value[0]), y: Number(value[1]), options: null });
     }
     // Clear the input value
     event.chipInput!.clear();
