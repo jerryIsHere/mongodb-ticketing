@@ -67,6 +67,7 @@
     <form [formGroup]="saleInfoForm">
 
       {{ idx }} - round
+      <br>
       <mat-form-field>
         <mat-label>Start selling ticket at</mat-label>
         <input matInput type="datetime-local" formControlName="start" required>
@@ -101,6 +102,29 @@
         }
         @if (saleInfoForm.controls['ticketQuota'].hasError('pattern')) {
         <mat-error>Quota should be a number</mat-error>
+        }
+      </mat-form-field>
+      <br>
+      Discount
+      <br>
+      <mat-form-field>
+        <mat-label>Buy X</mat-label>
+        <input matInput formControlName="buyX" required>
+        @if (saleInfoForm.controls['buyX'].hasError('required')) {
+        <mat-error>This field is required</mat-error>
+        }
+        @if (saleInfoForm.controls['buyX'].hasError('pattern')) {
+        <mat-error>Discount should be a number</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>get Y free.</mat-label>
+        <input matInput formControlName="yFree" required>
+        @if (saleInfoForm.controls['yFree'].hasError('required')) {
+        <mat-error>This field is required</mat-error>
+        }
+        @if (saleInfoForm.controls['yFree'].hasError('pattern')) {
+        <mat-error>Discount should be a number</mat-error>
         }
       </mat-form-field>
     </form>

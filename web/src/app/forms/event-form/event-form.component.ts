@@ -37,12 +37,16 @@ export class EventFormComponent {
               start: new FormControl(tolocaltimezone(new Date(this.data.event.saleInfos[0].start)).toISOString().split('Z')[0], [Validators.required,]),
               end: new FormControl(tolocaltimezone(new Date(this.data.event.saleInfos[0].end)).toISOString().split('Z')[0], [Validators.required,]),
               ticketQuota: new FormControl(this.data.event.saleInfos[i].ticketQuota, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+              buyX: new FormControl(this.data.event.saleInfos[i].buyX, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+              yFree: new FormControl(this.data.event.saleInfos[i].yFree, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
             }) :
           this._formBuilder.group(
             {
               start: new FormControl('', [Validators.required,]),
               end: new FormControl('', [Validators.required,]),
               ticketQuota: new FormControl('', [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+              buyX: new FormControl('', [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+              yFree: new FormControl('', [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
             })
       )
     ),
