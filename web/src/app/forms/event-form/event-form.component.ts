@@ -31,7 +31,7 @@ export class EventFormComponent {
     datetime: new FormControl(this.data.event.datetime ? tolocaltimezone(new Date(this.data.event.datetime)).toISOString().split('Z')[0] : '', [Validators.required,]),
     saleInfos: new FormArray(
       [0, 1].map(i =>
-        this.data.event.saleInfos[i] ?
+        this.data.event?.saleInfos && this.data.event.saleInfos[i] ?
           this._formBuilder.group(
             {
               start: new FormControl(tolocaltimezone(new Date(this.data.event.saleInfos[0].start)).toISOString().split('Z')[0], [Validators.required,]),
@@ -51,12 +51,12 @@ export class EventFormComponent {
       )
     ),
     priceTiers: new FormArray(
-      this.data.event.priceTiers.map(priceTier =>
+      this.data.event?.priceTiers ? this.data.event.priceTiers.map(priceTier =>
         this._formBuilder.group(
           {
             tierName: new FormControl(priceTier.tierName, [Validators.required]),
             price: new FormControl(priceTier.price, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
-          }))
+          })) : []
     ),
     duration: new FormControl(this.data.event.duration, [Validators.required, Validators.min(0), Validators.pattern("^[-0-9]*$"),]),
     shoppingCartSize: new FormControl(this.data.event.shoppingCartSize, [Validators.required, Validators.pattern("^[-0-9]*$"),]),

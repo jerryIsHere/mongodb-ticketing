@@ -102,7 +102,7 @@ export class VenueDAO extends BaseDAO {
     }
     async delete(): Promise<VenueDAO> {
         return new Promise<VenueDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             var dependency = await this.checkDependency()
             if (dependency.event != null || dependency.seat != null) {
                 var dependencyType = dependency.event != null ? "event" : "seat"

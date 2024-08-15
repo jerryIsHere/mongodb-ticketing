@@ -27,7 +27,7 @@ var Seat;
                     return seat_1.seatModel.startSession().
                         then(_session => {
                         res.locals.session = _session;
-                        res.locals.session.startTransaction();
+                        res.locals.session ? res.locals.session.startTransaction() : null;
                         return seat_1.seatModel.create(req.body.seats);
                     }).
                         then(docs => docs.map(doc => doc.toJSON())).
@@ -46,7 +46,7 @@ var Seat;
                 return seat_1.seatModel.startSession().
                     then(_session => {
                     res.locals.session = _session;
-                    res.locals.session.startTransaction();
+                    res.locals.session ? res.locals.session.startTransaction() : null;
                     return Promise.all(req.body.seatIds.map(async (seatId) => {
                         return seat_1.seatModel.findByIdAndDelete(seatId).exec();
                     }));

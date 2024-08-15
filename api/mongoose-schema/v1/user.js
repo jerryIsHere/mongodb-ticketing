@@ -30,8 +30,8 @@ exports.userSchema = new mongoose_1.Schema({
     verificationToken: { type: String },
     resetToken: { type: String },
     lastLoginDate: { type: Date },
-    _isAdmin: { type: Boolean, required: true },
-    _isCustomerSupport: { type: Boolean, required: true },
+    _isAdmin: { type: Boolean },
+    _isCustomerSupport: { type: Boolean },
 }, {
     methods: {
         setSaltedPassword(password) {
@@ -90,7 +90,7 @@ exports.userSchema.static("verify", async function verify(verificationToken) {
     }
     throw new Error("User with this verification token not found.");
 });
-exports.userSchema.static("verify", async function login(username, password) {
+exports.userSchema.static("login", async function login(username, password) {
     let user = await exports.userModel.findOne({ username: username });
     if (user) {
         if (await (0, bcrypt_1.compare)(password, user.saltedpassword)) {

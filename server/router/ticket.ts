@@ -106,7 +106,7 @@ export namespace Ticket {
                     return ticketModel.startSession().
                         then(_session => {
                             res.locals.session = _session;
-                            res.locals.session.startTransaction();
+                            res.locals.session ? res.locals.session.startTransaction() : null;
                             return ticketModel.create(req.body.tickets as ITicket[])
                         }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
@@ -133,7 +133,7 @@ export namespace Ticket {
                         return ticketModel.startSession().
                             then(_session => {
                                 res.locals.session = _session;
-                                res.locals.session.startTransaction();
+                                res.locals.session ? res.locals.session.startTransaction() : null;
                                 return ticketModel.bulkPurchase(userId, ids)
                             }).
                             then(docs => next({ success: true })).
@@ -146,7 +146,7 @@ export namespace Ticket {
                     return ticketModel.startSession().
                         then(_session => {
                             res.locals.session = _session;
-                            res.locals.session.startTransaction();
+                            res.locals.session ? res.locals.session.startTransaction() : null;
                             return ticketModel.batchUpdatePriceTier(ids, tierName)
                         }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
@@ -185,7 +185,7 @@ export namespace Ticket {
                 ticketModel.startSession().
                     then(_session => {
                         res.locals.session = _session;
-                        res.locals.session.startTransaction();
+                        res.locals.session ? res.locals.session.startTransaction() : null;
                         return ticketModel.deleteMany({ _id: { $in: ids.map(id => new ObjectId(id)) } }, ids)
                     }).
                     then(docs => next({ success: true })).

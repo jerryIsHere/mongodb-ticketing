@@ -21,6 +21,9 @@ exports.purchaseInfoSchema = new mongoose_1.Schema({
             message: `${schema_names_1.names.User.singular_name} with id {VALUE} doesn't exists.`,
         },
     },
+}, {
+    autoCreate: false,
+    autoIndex: false,
 });
 exports.paymentInfoSchema = new mongoose_1.Schema({
     confirmedBy: {
@@ -40,6 +43,9 @@ exports.paymentInfoSchema = new mongoose_1.Schema({
     },
     remark: { type: String },
     confirmationDate: { type: Date, required: true },
+}, {
+    autoCreate: false,
+    autoIndex: false,
 });
 exports.tickerSchema = new mongoose_1.Schema({
     eventId: {

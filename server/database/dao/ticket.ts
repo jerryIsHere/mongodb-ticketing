@@ -96,7 +96,7 @@ export class TicketDAO extends BaseDAO {
     public void(username?: string) {
         return new Promise<TicketDAO>(async (resolve, reject) => {
             if (this.occupantId) {
-                this.res.locals.session.startTransaction()
+                this.res.locals.session ? this.res.locals.session.startTransaction() : null
                 let originalOccupant = await UserDAO.getById(this.res, this.occupantId.toString()).catch(err => reject(err))
                 if (originalOccupant && originalOccupant.email) {
                     this._occupantId = null
@@ -161,7 +161,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     public claim(userId: string): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             let originalOccupant = await UserDAO.getById(this.res, userId).catch(err => reject(err))
             if (originalOccupant && originalOccupant.email) {
                 if (this.id) {
@@ -436,7 +436,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     async create(): Promise<TicketDAO> {
         return new Promise<TicketDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             try {
                 await this.checkReference()
                 await this.duplicationChecking()
@@ -456,7 +456,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchCreate(res: Response, daos: TicketDAO[]): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            res.locals.session.startTransaction()
+            res.locals.session ? res.locals.session.startTransaction() : null
             Promise.all(daos.map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     try {
@@ -484,7 +484,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchUdatePriceTier(res: Response, daos: TicketDAO[], priceTierId: string): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            res.locals.session.startTransaction()
+            res.locals.session ? res.locals.session.startTransaction() : null
             Promise.all(daos.map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     try {
@@ -538,7 +538,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchClaim(res: Response, daos: TicketDAO[], userId: string): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>(async (resolve, reject) => {
-            res.locals.session.startTransaction()
+            res.locals.session ? res.locals.session.startTransaction() : null
             let originalOccupant = await UserDAO.getById(res, userId).catch(err => reject(err))
             if (originalOccupant && originalOccupant.email) {
                 Promise.all(daos.map(dao =>
@@ -611,7 +611,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchDelete(res: Response, daos: TicketDAO[]): Promise<TicketDAO[]> {
         return new Promise<TicketDAO[]>((resolve, reject) => {
-            res.locals.session.startTransaction()
+            res.locals.session ? res.locals.session.startTransaction() : null
             Promise.all(daos.filter(dao => dao.id != undefined).map(dao =>
                 new Promise<TicketDAO>(async (daoresolve, daoreject) => {
                     if (dao.occupantId != null) {

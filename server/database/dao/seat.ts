@@ -112,7 +112,7 @@ export class SeatDAO extends BaseDAO {
     }
     async create(): Promise<SeatDAO> {
         return new Promise<SeatDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             try {
                 await this.checkReference()
                 await this.duplicationChecking()
@@ -134,7 +134,7 @@ export class SeatDAO extends BaseDAO {
 
     static async batchCreate(res: Response, daos: SeatDAO[]): Promise<SeatDAO[]> {
         return new Promise<SeatDAO[]>((resolve, reject) => {
-            res.locals.session.startTransaction()
+            res.locals.session ? res.locals.session.startTransaction() : null
             Promise.all(daos.map(dao =>
                 new Promise<SeatDAO>(async (daoresolve, daoreject) => {
                     try {
@@ -190,7 +190,7 @@ export class SeatDAO extends BaseDAO {
     }
     async delete(): Promise<SeatDAO> {
         return new Promise<SeatDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             var dependency = await this.checkTicketDependency()
             if (dependency != null) {
                 reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
@@ -208,7 +208,7 @@ export class SeatDAO extends BaseDAO {
     }
     static async batchDelete(res: Response, daos: SeatDAO[]): Promise<SeatDAO[]> {
         return new Promise<SeatDAO[]>((resolve, reject) => {
-            res.locals.session.startTransaction()
+            res.locals.session ? res.locals.session.startTransaction() : null
             Promise.all(daos.filter(dao => dao.id != undefined).map(dao =>
                 new Promise<SeatDAO>(async (daoresolve, daoreject) => {
                     var dependency = await dao.checkTicketDependency()

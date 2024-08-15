@@ -57,8 +57,8 @@ app.use('/*', function (_, res) {
 });
 app.use(async (output, req, res, next) => {
     try {
-        if (output instanceof database_1.RequestError || res.locals.RequestErrorList.length != 0) {
-            if (res.locals.session.inTransaction()) {
+        if (output instanceof Error || output instanceof database_1.RequestError || res.locals.RequestErrorList.length != 0) {
+            if (res.locals.session?.inTransaction()) {
                 console.log("abort");
                 await res.locals.session.abortTransaction();
             }
@@ -67,10 +67,13 @@ app.use(async (output, req, res, next) => {
             if (output instanceof database_1.RequestError) {
                 res.locals.RequestErrorList.push(output);
             }
+            else if (output instanceof Error && output.name == 'ValidationError') {
+                res.locals.RequestErrorList.push(new database_1.RequestError(output.message));
+            }
             res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
         }
         else {
-            if (res.locals.session.inTransaction()) {
+            if (res.locals.session?.inTransaction()) {
                 await res.locals.session.commitTransaction();
                 res.json(output);
             }
@@ -78,7 +81,7 @@ app.use(async (output, req, res, next) => {
                 res.json(output);
             }
         }
-        res.locals.session.endSession();
+        res.locals.session?.endSession();
     }
     catch (err) {
         console.log(err);

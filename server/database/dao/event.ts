@@ -253,7 +253,7 @@ export class EventDAO extends BaseDAO {
     }
     async create(): Promise<EventDAO> {
         return new Promise<EventDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             var referror = await this.checkReference()
             if (referror) {
                 reject(referror)
@@ -315,7 +315,7 @@ export class EventDAO extends BaseDAO {
     }
     async delete(): Promise<EventDAO> {
         return new Promise<EventDAO>(async (resolve, reject) => {
-            this.res.locals.session.startTransaction()
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null
             var dependency = await this.checkTicketDependency()
             if (dependency) {
                 reject(new RequestError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +

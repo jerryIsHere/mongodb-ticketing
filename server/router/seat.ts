@@ -28,7 +28,7 @@ export namespace Seat {
                     return seatModel.startSession().
                         then(_session => {
                             res.locals.session = _session;
-                            res.locals.session.startTransaction();
+                            res.locals.session ? res.locals.session.startTransaction() : null;
                             return seatModel.create(req.body.seats as ISeat[])
                         }).
                         then(docs => docs.map(doc => doc.toJSON())).
@@ -50,7 +50,7 @@ export namespace Seat {
                     return seatModel.startSession().
                         then(_session => {
                             res.locals.session = _session;
-                            res.locals.session.startTransaction();
+                            res.locals.session ? res.locals.session.startTransaction() : null;
                             return Promise.all(req.body.seatIds.map(async (seatId: string)=>{
                                 return seatModel.findByIdAndDelete(seatId).exec()
                             }))

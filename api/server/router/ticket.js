@@ -97,7 +97,7 @@ var Ticket;
                     return ticket_1.ticketModel.startSession().
                         then(_session => {
                         res.locals.session = _session;
-                        res.locals.session.startTransaction();
+                        res.locals.session ? res.locals.session.startTransaction() : null;
                         return ticket_1.ticketModel.create(req.body.tickets);
                     }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
@@ -121,7 +121,7 @@ var Ticket;
                         return ticket_1.ticketModel.startSession().
                             then(_session => {
                             res.locals.session = _session;
-                            res.locals.session.startTransaction();
+                            res.locals.session ? res.locals.session.startTransaction() : null;
                             return ticket_1.ticketModel.bulkPurchase(userId, ids);
                         }).
                             then(docs => next({ success: true })).
@@ -136,7 +136,7 @@ var Ticket;
                     return ticket_1.ticketModel.startSession().
                         then(_session => {
                         res.locals.session = _session;
-                        res.locals.session.startTransaction();
+                        res.locals.session ? res.locals.session.startTransaction() : null;
                         return ticket_1.ticketModel.batchUpdatePriceTier(ids, tierName);
                     }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
@@ -171,7 +171,7 @@ var Ticket;
                 ticket_1.ticketModel.startSession().
                     then(_session => {
                     res.locals.session = _session;
-                    res.locals.session.startTransaction();
+                    res.locals.session ? res.locals.session.startTransaction() : null;
                     return ticket_1.ticketModel.deleteMany({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }, ids);
                 }).
                     then(docs => next({ success: true })).

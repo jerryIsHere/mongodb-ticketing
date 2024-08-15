@@ -59,8 +59,8 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
     verificationToken: { type: String },
     resetToken: { type: String },
     lastLoginDate: { type: Date },
-    _isAdmin: { type: Boolean, required: true },
-    _isCustomerSupport: { type: Boolean, required: true },
+    _isAdmin: { type: Boolean },
+    _isCustomerSupport: { type: Boolean },
   },
   {
     methods: {
@@ -126,7 +126,7 @@ userSchema.static("verify", async function verify(verificationToken: string) {
   throw new Error("User with this verification token not found.");
 });
 userSchema.static(
-  "verify",
+  "login",
   async function login(username: string, password: string) {
     let user = await userModel.findOne({ username: username });
     if (user) {

@@ -112,6 +112,9 @@ export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
       message: `${names.User.singular_name} with id {VALUE} doesn't exists.`,
     },
   },
+}, {
+  autoCreate: false,
+  autoIndex: false,
 });
 export const paymentInfoSchema = new Schema<IPaymentInfo>({
   confirmedBy: {
@@ -133,6 +136,9 @@ export const paymentInfoSchema = new Schema<IPaymentInfo>({
   },
   remark: { type: String },
   confirmationDate: { type: Date, required: true },
+}, {
+  autoCreate: false,
+  autoIndex: false,
 });
 export const tickerSchema = new Schema<
   ITicket,

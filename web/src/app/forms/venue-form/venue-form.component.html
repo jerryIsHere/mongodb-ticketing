@@ -26,7 +26,7 @@
           [matChipInputSeparatorKeyCodes]="separatorKeysCodes" matChipInputAddOnBlur
           (matChipInputTokenEnd)="add($event)" />
       </mat-chip-grid>
-      @if (data.sections.length == 0) {
+      @if (data && data.sections && data.sections.length == 0) {
       <mat-error>This field is required</mat-error>
       }
     </mat-form-field>

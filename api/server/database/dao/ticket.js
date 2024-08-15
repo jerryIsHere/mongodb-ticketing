@@ -84,7 +84,7 @@ class TicketDAO extends dao_1.BaseDAO {
     void(username) {
         return new Promise(async (resolve, reject) => {
             if (this.occupantId) {
-                this.res.locals.session.startTransaction();
+                this.res.locals.session ? this.res.locals.session.startTransaction() : null;
                 let originalOccupant = await user_1.UserDAO.getById(this.res, this.occupantId.toString()).catch(err => reject(err));
                 if (originalOccupant && originalOccupant.email) {
                     this._occupantId = null;
@@ -145,7 +145,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     claim(userId) {
         return new Promise(async (resolve, reject) => {
-            this.res.locals.session.startTransaction();
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null;
             let originalOccupant = await user_1.UserDAO.getById(this.res, userId).catch(err => reject(err));
             if (originalOccupant && originalOccupant.email) {
                 if (this.id) {
@@ -402,7 +402,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     async create() {
         return new Promise(async (resolve, reject) => {
-            this.res.locals.session.startTransaction();
+            this.res.locals.session ? this.res.locals.session.startTransaction() : null;
             try {
                 await this.checkReference();
                 await this.duplicationChecking();
@@ -422,7 +422,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchCreate(res, daos) {
         return new Promise((resolve, reject) => {
-            res.locals.session.startTransaction();
+            res.locals.session ? res.locals.session.startTransaction() : null;
             Promise.all(daos.map(dao => new Promise(async (daoresolve, daoreject) => {
                 try {
                     await dao.checkReference();
@@ -452,7 +452,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchUdatePriceTier(res, daos, priceTierId) {
         return new Promise((resolve, reject) => {
-            res.locals.session.startTransaction();
+            res.locals.session ? res.locals.session.startTransaction() : null;
             Promise.all(daos.map(dao => new Promise(async (daoresolve, daoreject) => {
                 try {
                     dao.priceTierId = new mongodb_1.ObjectId(priceTierId);
@@ -510,7 +510,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchClaim(res, daos, userId) {
         return new Promise(async (resolve, reject) => {
-            res.locals.session.startTransaction();
+            res.locals.session ? res.locals.session.startTransaction() : null;
             let originalOccupant = await user_1.UserDAO.getById(res, userId).catch(err => reject(err));
             if (originalOccupant && originalOccupant.email) {
                 Promise.all(daos.map(dao => new Promise(async (daoresolve, daoreject) => {
@@ -584,7 +584,7 @@ Seat: ${seatDao && seatDao.row && seatDao.no ? seatDao.row + seatDao.no : ''}`,
     }
     static async batchDelete(res, daos) {
         return new Promise((resolve, reject) => {
-            res.locals.session.startTransaction();
+            res.locals.session ? res.locals.session.startTransaction() : null;
             Promise.all(daos.filter(dao => dao.id != undefined).map(dao => new Promise(async (daoresolve, daoreject) => {
                 if (dao.occupantId != null) {
                     daoreject(new database_1.RequestError(`Deletation of ${dao.constructor.name} with id ${dao.id} failed as it has occupant.`));
