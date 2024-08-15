@@ -22,11 +22,6 @@
       "ES2022",
       "dom"
     ],
-    "paths": {
-      "~/*": [
-        "../*"
-      ]
-    }
   },
   "angularCompilerOptions": {
     "types": [

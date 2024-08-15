@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TicketAPIObject, ticketConfirmDateString } from '../../../../../mongoose-schema/interface_util'
+import { TicketAPIObject, ticketConfirmDateString } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { DatePipe } from '@angular/common';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';

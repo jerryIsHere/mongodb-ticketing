@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { ShowAPIObject, VenueAPIObject, TicketAPIObject, SeatAPIObject, IPriceTier } from '../../../../../mongoose-schema/interface_util';
+import { ShowAPIObject, VenueAPIObject, TicketAPIObject, SeatAPIObject, IPriceTier } from '../../interface-util';
 import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';

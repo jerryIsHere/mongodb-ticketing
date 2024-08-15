@@ -1,4 +1,5 @@
-import { eventModel, IEvent, IPriceTier, priceTierSchema } from "./event";
+import { eventModel, IEvent } from "./event";
+import { IPriceTier, priceTierSchema } from './priceTier';
 import {
   Schema,
   model,
@@ -10,10 +11,10 @@ import {
   QueryWithHelpers,
   ObjectId,
 } from "mongoose";
-import { ISeat, singular_name as Seat, seatModel } from "./seat";
-import { singular_name as EventName } from "./event";
-import { IUser, singular_name as User, userModel } from "./user";
+import { ISeat, seatModel } from "./seat";
+import { IUser, userModel } from "./user";
 import { notificationModel } from "./notification";
+import { names } from "../schema-names";
 export interface IPurchaseInfo {
   purchaseDate: Date;
   purchaserId: Types.ObjectId;
@@ -102,29 +103,29 @@ export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
   purchaseDate: { type: Date, requried: true },
   purchaserId: {
     type: Schema.Types.ObjectId,
-    ref: User,
+    ref: names.User.singular_name,
     requried: true,
     validate: {
       validator: async (val: Schema.Types.ObjectId) => {
         return (await userModel.findById(val).select({ _id: 1 }).lean()) != null;
       },
-      message: `${User} with id {VALUE} doesn't exists.`,
+      message: `${names.User.singular_name} with id {VALUE} doesn't exists.`,
     },
   },
 });
 export const paymentInfoSchema = new Schema<IPaymentInfo>({
   confirmedBy: {
     type: Schema.Types.ObjectId,
-    ref: User,
+    ref: names.User.singular_name,
     required: true,
     validate: {
       validator: async (val: Schema.Types.ObjectId) => {
         let confimer = await userModel.findById(val);
         if (confimer == null)
-          throw new Error(`${User} with id {VALUE} doesn't exists.`);
+          throw new Error(`${names.User.singular_name} with id {VALUE} doesn't exists.`);
         if (!confimer._isAdmin && !confimer._isCustomerSupport)
           throw new Error(
-            `${User} with id {VALUE} do not have such permission.`
+            `${names.User.singular_name} with id {VALUE} do not have such permission.`
           );
         return true;
       },
@@ -142,7 +143,7 @@ export const tickerSchema = new Schema<
   {
     eventId: {
       type: Schema.Types.ObjectId,
-      ref: EventName,
+      ref: names.Event.singular_name,
       required: true,
       validate: {
         validator: async function (val: Types.ObjectId) {
@@ -162,7 +163,7 @@ export const tickerSchema = new Schema<
     },
     seatId: {
       type: Schema.Types.ObjectId,
-      ref: Seat,
+      ref: names.Seat.singular_name,
       required: true,
       validate: {
         validator: async function (val: Types.ObjectId) {
@@ -220,7 +221,7 @@ export const tickerSchema = new Schema<
             `You have no more ticket quota (${saleInfo.ticketQuota})` +
             ` for event with id ${event._id}.`
           );
-        let purchaseInfo = new purchaseInfoMode({
+        let purchaseInfo = new purchaseInfoModel({
           purchaserId: userId,
           purchaseDate: now,
         });
@@ -329,8 +330,8 @@ export const tickerSchema = new Schema<
       },
       async disclose() {
         let populated = await this.populate<IDisclosableTicket>([
-          { path: "eventId", model: EventName },
-          { path: "seatId", model: Seat },
+          { path: "eventId", model: names.Event.singular_name },
+          { path: "seatId", model: names.Seat.singular_name },
         ]);
         return {
           event: populated.event,
@@ -341,10 +342,10 @@ export const tickerSchema = new Schema<
       },
       async fullyPopulate() {
         return await this.populate<IFullyPopulatedTicket>([
-          { path: "eventId", model: EventName },
-          { path: "seatId", model: Seat },
-          { path: "purchaseInfo.purchaserId", model: User },
-          { path: "paymentInfo.confirmedBy", model: User },
+          { path: "eventId", model: names.Event.singular_name },
+          { path: "seatId", model: names.Seat.singular_name },
+          { path: "purchaseInfo.purchaserId", model: names.User.singular_name },
+          { path: "paymentInfo.confirmedBy", model: names.User.singular_name },
         ]);
 
       },
@@ -392,12 +393,10 @@ tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
 //     next();
 // });
 
-export const collection_name = "tickets";
-export const singular_name = "Ticket";
 export const ticketModel: TicketModel = model<ITicket, TicketModel>(
-  singular_name,
+  names.Ticket.singular_name,
   tickerSchema,
-  collection_name
+  names.Ticket.collection_name
 );
-export const purchaseInfoMode = model("", purchaseInfoSchema);
-export const paymentInfoModel = model("", paymentInfoSchema);
+export const purchaseInfoModel = model("Purchase", purchaseInfoSchema);
+export const paymentInfoModel = model("Payment", paymentInfoSchema);

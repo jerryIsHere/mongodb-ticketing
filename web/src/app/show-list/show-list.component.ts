@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../pipes/datetime-timezone.pipe';
-import { ShowAPIObject } from '../../../../mongoose-schema/interface_util'
+import { ShowAPIObject } from '../interface-util';
 import { ApiService } from '../service/api.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({

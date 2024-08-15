@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seatModel = exports.singular_name = exports.collection_name = exports.seatSchema = exports.coordSchema = void 0;
+exports.seatModel = exports.seatSchema = exports.coordSchema = void 0;
 const mongoose_1 = require("mongoose");
 const venue_1 = require("./venue");
+const schema_names_1 = require("../schema-names");
 exports.coordSchema = new mongoose_1.Schema({
     sectX: { type: Number, required: true },
     sectY: { type: Number, required: true },
@@ -25,7 +26,7 @@ exports.seatSchema = new mongoose_1.Schema({
     },
     row: { type: String, required: true },
     no: { type: Number, required: true },
-    venueId: { type: mongoose_1.Schema.Types.ObjectId, ref: venue_1.singular_name, required: true },
+    venueId: { type: mongoose_1.Schema.Types.ObjectId, ref: schema_names_1.names.Venue.singular_name, required: true },
 }, {
     query: {
         findByVenueId(venueId) {
@@ -35,6 +36,4 @@ exports.seatSchema = new mongoose_1.Schema({
     },
 });
 exports.seatSchema.index({ venueId: 1, row: 1, no: 1 }, { unique: true });
-exports.collection_name = "seats";
-exports.singular_name = "Seat";
-exports.seatModel = (0, mongoose_1.model)(exports.singular_name, exports.seatSchema, exports.collection_name);
+exports.seatModel = (0, mongoose_1.model)(schema_names_1.names.Seat.singular_name, exports.seatSchema, schema_names_1.names.Seat.collection_name);

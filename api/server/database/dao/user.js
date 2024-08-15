@@ -5,12 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserDAO = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("~/server/database/database");
+const database_1 = require("../../database/database");
 const dao_1 = require("./dao");
 const bcrypt_1 = require("bcrypt");
-const regex_1 = require("~/utils/regex");
-const token_1 = require("~/utils/token");
-const email_1 = __importDefault(require("~/services/email"));
+const regex_1 = require("../../../utils/regex");
+const token_1 = require("../../../utils/token");
+const email_1 = __importDefault(require("../../../services/email"));
 class UserDAO extends dao_1.BaseDAO {
     static collection_name = "users";
     static saltRounds = 10;

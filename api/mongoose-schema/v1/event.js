@@ -1,10 +1,34 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.eventModel = exports.singular_name = exports.collection_name = exports.eventSchema = exports.priceTierSchema = exports.saleInfoSchema = void 0;
-const mongoose_1 = require("mongoose");
+exports.eventModel = exports.eventSchema = exports.saleInfoSchema = void 0;
+const mongoose_1 = __importStar(require("mongoose"));
 const venue_1 = require("./venue");
 const ticket_1 = require("./ticket");
-const seat_1 = require("./seat");
+const schema_names_1 = require("../schema-names");
+const priceTier_1 = require("./priceTier");
 exports.saleInfoSchema = new mongoose_1.Schema({
     start: {
         type: Date,
@@ -20,27 +44,19 @@ exports.saleInfoSchema = new mongoose_1.Schema({
     ticketQuota: {
         type: Number,
         required: true,
-        min: [Number.MIN_VALUE, "Quota(2nd round) must be greater than 0."],
+        min: [Number.MIN_VALUE, "Quota must be greater than 0."],
     },
     buyX: {
         type: Number,
         required: true,
-        min: [0, "Quota(2nd round) must be greater than or equal to 0."],
+        min: [0, "Quota must be greater than or equal to 0."],
     },
     yFree: {
         type: Number,
         required: true,
-        min: [0, "Quota(2nd round) must be greater than or equal to 0."],
+        min: [0, "Quota must be greater than or equal to 0."],
     },
 });
-exports.priceTierSchema = new mongoose_1.Schema({
-    tierName: { type: String, required: true },
-    price: {
-        type: Number,
-        required: true,
-        min: [0, "Price must be greater or equal then 0."],
-    },
-}, { _id: false });
 exports.eventSchema = new mongoose_1.Schema({
     eventname: { type: String, required: true },
     datetime: { type: Date, required: true },
@@ -56,15 +72,15 @@ exports.eventSchema = new mongoose_1.Schema({
     },
     venueId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: venue_1.singular_name,
+        ref: schema_names_1.names.Venue.singular_name,
         required: true,
         validate: {
             validator: async (val) => (await venue_1.venueModel.findById(val).select({ _id: 1 }).lean()) != null,
-            message: `${venue_1.singular_name} with id {VALUE} doesn't exists.`,
+            message: `${schema_names_1.names.Venue.singular_name} with id {VALUE} doesn't exists.`,
         },
     },
     priceTiers: {
-        type: [exports.priceTierSchema],
+        type: [priceTier_1.priceTierSchema],
         required: true,
         validate: {
             validator: (val) => val.length > 0,
@@ -106,7 +122,7 @@ exports.eventSchema.path("venueId").validate(async function (val) {
         { $match: { eventId: eventId } },
         {
             $lookup: {
-                from: seat_1.collection_name,
+                from: schema_names_1.names.Seat.collection_name,
                 localField: "seatId",
                 foreignField: "_id",
                 as: "seat",
@@ -114,12 +130,11 @@ exports.eventSchema.path("venueId").validate(async function (val) {
         },
         { $set: { seat: { $first: "$seat" } } },
         { $match: { "seat.venueId": { $ne: val } } },
+        { $limit: 1 },
     ]);
-    if (tickerFromOtherVenue != null)
-        throw new Error(`Update of ${exports.singular_name} with id ${eventId} failed ` +
+    if (tickerFromOtherVenue != null && tickerFromOtherVenue.length > 0)
+        throw new Error(`Update of ${schema_names_1.names.Event.singular_name} with id ${eventId} failed ` +
             `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`);
     return true;
 });
-exports.collection_name = "events";
-exports.singular_name = "Event";
-exports.eventModel = (0, mongoose_1.model)(exports.singular_name, exports.eventSchema, exports.collection_name);
+exports.eventModel = mongoose_1.default.models[schema_names_1.names.Event.singular_name] || (0, mongoose_1.model)(schema_names_1.names.Event.singular_name, exports.eventSchema, schema_names_1.names.Event.collection_name);

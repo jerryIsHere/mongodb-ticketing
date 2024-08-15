@@ -12,7 +12,7 @@ import {
   MatDialogRef,
   MatDialogModule
 } from '@angular/material/dialog';
-import { AdminTicket, TicketAPIObject, WithId } from '../../../../../mongoose-schema/interface_util'
+import { AdminTicket, TicketAPIObject, WithId } from '../../interface-util'
 
 @Component({
   selector: 'app-ticket-form',

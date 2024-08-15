@@ -1,9 +1,9 @@
 import { ObjectId, WithId, Document } from "mongodb";
-import { Database, RequestError } from "~/server/database/database";
+import { Database, RequestError } from "../../database/database";
 import { BaseDAO } from "./dao";
 import { UserDAO } from "./user";
 import { Response } from "express";
-import EmailService from "~/services/email";
+import EmailService from "../../../services/email";
 
 export class NotificationDAO extends BaseDAO {
     public static readonly collection_name = "notifications"

@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationDAO = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("~/server/database/database");
+const database_1 = require("../../database/database");
 const dao_1 = require("./dao");
 const user_1 = require("./user");
-const email_1 = __importDefault(require("~/services/email"));
+const email_1 = __importDefault(require("../../../services/email"));
 class NotificationDAO extends dao_1.BaseDAO {
     static collection_name = "notifications";
     _recipientId;

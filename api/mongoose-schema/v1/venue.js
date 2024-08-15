@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.venueModel = exports.singular_name = exports.collection_name = exports.venueSchema = exports.sectionSchema = void 0;
+exports.venueModel = exports.venueSchema = exports.sectionSchema = void 0;
 const mongoose_1 = require("mongoose");
 const seat_1 = require("./seat");
 const event_1 = require("./event");
+const schema_names_1 = require("../schema-names");
 exports.sectionSchema = new mongoose_1.Schema({
     x: { type: Number, required: true },
     y: { type: Number, required: true },
@@ -55,6 +56,4 @@ exports.venueSchema.pre("deleteOne", { document: true, query: false }, async fun
             `as event with id ${event.id} depends on it.`));
     next();
 });
-exports.collection_name = "venues";
-exports.singular_name = "Venue";
-exports.venueModel = (0, mongoose_1.model)(exports.singular_name, exports.venueSchema);
+exports.venueModel = (0, mongoose_1.model)(schema_names_1.names.Venue.singular_name, exports.venueSchema, schema_names_1.names.Venue.collection_name);

@@ -1,6 +1,6 @@
-import EmailService from "~/services/email";
+import EmailService from "../../services/email";
 import { Schema, model, Types, Model, HydratedDocument } from "mongoose";
-import { singular_name as User } from "./user";
+import { names } from "../schema-names";
 
 export interface INotification {
   recipientId: Types.ObjectId;
@@ -20,7 +20,7 @@ export const notificationSchema = new Schema<
   INotificationMethod
 >(
   {
-    recipientId: { type: Schema.Types.ObjectId, ref: User, required: true },
+    recipientId: { type: Schema.Types.ObjectId, ref: names.User.singular_name, required: true },
     email: { type: String, required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },
@@ -47,10 +47,8 @@ export const notificationSchema = new Schema<
     },
   }
 );
-export const collection_name = "notifications";
-export const singular_name = "Notification";
 export const notificationModel = model<INotification, NotificationModel>(
-  singular_name,
+  names.Notification.singular_name,
   notificationSchema,
-  collection_name
+  names.Notification.collection_name
 );

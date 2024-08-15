@@ -10,7 +10,7 @@ import { MatSelectModule, MatSelectChange } from '@angular/material/select'
 import { FormsModule } from '@angular/forms';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { NgxImageZoomModule } from 'ngx-image-zoom';
-import { IPriceTier, VenueAPIObject, TicketAPIObject, SeatAPIObject, ISection, getPurchaserIfAny } from '../../../../../mongoose-schema/interface_util';
+import { IPriceTier, VenueAPIObject, TicketAPIObject, SeatAPIObject, ISection, getPurchaserIfAny } from '../../interface-util';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors for pricetiers
 type Section = { x: number, y: number }

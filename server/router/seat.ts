@@ -2,8 +2,8 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { HydratedDocument } from "mongoose";
-import { v1 } from '~/mongoose-schema/schema'
-import { ISeat, seatModel } from "~/mongoose-schema/v1/seat";
+import { v1 } from '../../mongoose-schema/schema'
+import { ISeat, seatModel } from "../../mongoose-schema/v1/seat";
 
 export namespace Seat {
     export function RouterFactory(): Express.Router {

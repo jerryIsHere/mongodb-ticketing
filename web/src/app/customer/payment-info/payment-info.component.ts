@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
-import { TicketAPIObject } from '../../../../../mongoose-schema/interface_util'
+import { TicketAPIObject } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { UserSessionService } from '../../service/user-session.service';
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';

@@ -9,7 +9,7 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { VenueAPIObject } from '../../../../../mongoose-schema/interface_util'
+import { VenueAPIObject } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { VenueFormComponent } from '../../forms/venue-form/venue-form.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';

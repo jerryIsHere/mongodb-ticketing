@@ -1,9 +1,10 @@
 // refer to Event of backend logic but renamed to Show to avoid name conflict with browser event javascript object
-import { IEvent as Show, IPriceTier, ISaleInfo } from '~/mongoose-schema/v1/event'
-import { IDisclosableTicket, IClientTicket, IFullyPopulatedTicket as AdminTicket } from '~/mongoose-schema/v1/ticket'
-import { ISeat as Seat } from '~/mongoose-schema/v1/seat'
-import { IDisclosableUser as User } from '~/mongoose-schema/v1/user'
-import { ISection, IVenue as Venue } from '~/mongoose-schema/v1/venue'
+import { IEvent as Show, ISaleInfo } from '../../../mongoose-schema/v1/event'
+import { IPriceTier } from '../../../mongoose-schema/v1/priceTier'
+import { IDisclosableTicket, IClientTicket, IFullyPopulatedTicket as AdminTicket } from '../../../mongoose-schema/v1/ticket'
+import { ISeat as Seat } from '../../../mongoose-schema/v1/seat'
+import { IDisclosableUser as User } from '../../../mongoose-schema/v1/user'
+import { ISection, IVenue as Venue } from '../../../mongoose-schema/v1/venue'
 export function
     isShowSelling(show: ShowAPIObject) {
     return show.saleInfos.filter(info => isShowSellingInThisRound(info)).length > 1

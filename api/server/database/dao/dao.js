@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseDAO = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("~/server/database/database");
+const database_1 = require("../../database/database");
 class BaseDAO {
     _id;
     get id() {

@@ -1,6 +1,7 @@
 import { Schema, model, Types, HydratedDocument, Model } from "mongoose";
 import { ISeat, seatModel } from "./seat";
 import { eventModel, IEvent } from "./event";
+import { names } from "../schema-names";
 export interface ISection {
   x: number;
   y: number;
@@ -23,7 +24,7 @@ export interface IVenueMethod {
   findOneSeatAssociate(): Promise<HydratedDocument<ISeat>>;
   findOneEventAssociate(): Promise<HydratedDocument<IEvent>>;
 }
-export interface VenueModel extends Model<IVenue, {}, IVenueMethod> {}
+export interface VenueModel extends Model<IVenue, {}, IVenueMethod> { }
 export const venueSchema = new Schema<IVenue, VenueModel, IVenueMethod>(
   {
     sections: { type: [sectionSchema], required: true },
@@ -72,7 +73,7 @@ venueSchema.pre(
       next(
         new Error(
           `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-            `as seat with id ${seat.id} depends on it.`
+          `as seat with id ${seat.id} depends on it.`
         )
       );
     const event = await this.findOneEventAssociate();
@@ -80,12 +81,10 @@ venueSchema.pre(
       next(
         new Error(
           `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-            `as event with id ${event.id} depends on it.`
+          `as event with id ${event.id} depends on it.`
         )
       );
     next();
   }
 );
-export const collection_name = "venues";
-export const singular_name = "Venue";
-export const venueModel = model<IVenue, VenueModel>(singular_name, venueSchema);
+export const venueModel = model<IVenue, VenueModel>(names.Venue.singular_name, venueSchema, names.Venue.collection_name);

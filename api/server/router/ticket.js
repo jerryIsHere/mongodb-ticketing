@@ -4,7 +4,7 @@ exports.Ticket = void 0;
 const express_1 = require("express");
 const database_1 = require("../database/database");
 const mongodb_1 = require("mongodb");
-const ticket_1 = require("~/mongoose-schema/v1/ticket");
+const ticket_1 = require("../../mongoose-schema/v1/ticket");
 var Ticket;
 (function (Ticket) {
     function RouterFactory() {

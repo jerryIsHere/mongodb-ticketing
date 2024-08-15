@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SeatDAO = exports.coordTypeCheck = void 0;
 const mongodb_1 = require("mongodb");
-const database_1 = require("~/server/database/database");
+const database_1 = require("../../database/database");
 const dao_1 = require("./dao");
 const venue_1 = require("./venue");
 const ticket_1 = require("./ticket");

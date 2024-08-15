@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Event = void 0;
 const express_1 = require("express");
-const event_1 = require("~/mongoose-schema/v1/event");
+const event_1 = require("../../mongoose-schema/v1/event");
 var Event;
 (function (Event) {
     function RouterFactory() {

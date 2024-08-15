@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../database/database";
-import { v1 } from '~/mongoose-schema/schema'
-import { IDisclosableUser, userModel } from "~/mongoose-schema/v1/user";
+import { v1 } from '../../mongoose-schema/schema'
+import { IDisclosableUser, userModel } from "../../mongoose-schema/v1/user";
 declare module "express-session" {
   interface SessionData {
     user?: IDisclosableUser | null;

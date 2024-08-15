@@ -6,7 +6,8 @@ import {
   HydratedDocument,
   QueryWithHelpers,
 } from "mongoose";
-import { ISection, singular_name as Venue, venueModel } from "./venue";
+import { ISection, venueModel } from "./venue";
+import { names } from "../schema-names";
 export interface Icoord {
   sectX: number;
   sectY: number;
@@ -20,7 +21,6 @@ export const coordSchema = new Schema<Icoord>(
   },
   { _id: false }
 );
-
 export interface ISeat {
   coord: Icoord;
   row: string;
@@ -70,7 +70,7 @@ export const seatSchema = new Schema<
     },
     row: { type: String, required: true },
     no: { type: Number, required: true },
-    venueId: { type: Schema.Types.ObjectId, ref: Venue, required: true },
+    venueId: { type: Schema.Types.ObjectId, ref: names.Venue.singular_name, required: true },
   },
   {
     query: {
@@ -86,10 +86,8 @@ export const seatSchema = new Schema<
   }
 );
 seatSchema.index({ venueId: 1, row: 1, no: 1 }, { unique: true });
-export const collection_name = "seats";
-export const singular_name = "Seat";
 export const seatModel = model<ISeat, SeatModel>(
-  singular_name,
+  names.Seat.singular_name,
   seatSchema,
-  collection_name
+  names.Seat.collection_name
 );

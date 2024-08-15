@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { ModifyResult, Document } from "mongoose";
-import { v1 } from '~/mongoose-schema/schema'
-import { eventModel, IEvent } from "~/mongoose-schema/v1/event";
+import { v1 } from '../../mongoose-schema/schema'
+import { eventModel, IEvent } from "../../mongoose-schema/v1/event";
 
 export namespace Event {
     export function RouterFactory(): Express.Router {

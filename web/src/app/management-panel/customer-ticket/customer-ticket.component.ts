@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { TicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../../../../mongoose-schema/interface_util'
+import { TicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';

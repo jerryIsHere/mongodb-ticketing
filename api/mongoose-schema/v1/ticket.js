@@ -1,38 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paymentInfoModel = exports.purchaseInfoMode = exports.ticketModel = exports.singular_name = exports.collection_name = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = void 0;
+exports.paymentInfoModel = exports.purchaseInfoModel = exports.ticketModel = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = void 0;
 const event_1 = require("./event");
+const priceTier_1 = require("./priceTier");
 const mongoose_1 = require("mongoose");
 const seat_1 = require("./seat");
-const event_2 = require("./event");
 const user_1 = require("./user");
 const notification_1 = require("./notification");
+const schema_names_1 = require("../schema-names");
 exports.purchaseInfoSchema = new mongoose_1.Schema({
     purchaseDate: { type: Date, requried: true },
     purchaserId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: user_1.singular_name,
+        ref: schema_names_1.names.User.singular_name,
         requried: true,
         validate: {
             validator: async (val) => {
                 return (await user_1.userModel.findById(val).select({ _id: 1 }).lean()) != null;
             },
-            message: `${user_1.singular_name} with id {VALUE} doesn't exists.`,
+            message: `${schema_names_1.names.User.singular_name} with id {VALUE} doesn't exists.`,
         },
     },
 });
 exports.paymentInfoSchema = new mongoose_1.Schema({
     confirmedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: user_1.singular_name,
+        ref: schema_names_1.names.User.singular_name,
         required: true,
         validate: {
             validator: async (val) => {
                 let confimer = await user_1.userModel.findById(val);
                 if (confimer == null)
-                    throw new Error(`${user_1.singular_name} with id {VALUE} doesn't exists.`);
+                    throw new Error(`${schema_names_1.names.User.singular_name} with id {VALUE} doesn't exists.`);
                 if (!confimer._isAdmin && !confimer._isCustomerSupport)
-                    throw new Error(`${user_1.singular_name} with id {VALUE} do not have such permission.`);
+                    throw new Error(`${schema_names_1.names.User.singular_name} with id {VALUE} do not have such permission.`);
                 return true;
             },
         },
@@ -43,7 +44,7 @@ exports.paymentInfoSchema = new mongoose_1.Schema({
 exports.tickerSchema = new mongoose_1.Schema({
     eventId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: event_2.singular_name,
+        ref: schema_names_1.names.Event.singular_name,
         required: true,
         validate: {
             validator: async function (val) {
@@ -59,7 +60,7 @@ exports.tickerSchema = new mongoose_1.Schema({
     },
     seatId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: seat_1.singular_name,
+        ref: schema_names_1.names.Seat.singular_name,
         required: true,
         validate: {
             validator: async function (val) {
@@ -70,7 +71,7 @@ exports.tickerSchema = new mongoose_1.Schema({
             },
         },
     },
-    priceTier: { type: event_1.priceTierSchema, required: true },
+    priceTier: { type: priceTier_1.priceTierSchema, required: true },
     purchaseInfo: { type: exports.purchaseInfoSchema },
     paymentInfo: { type: exports.paymentInfoSchema },
 }, {
@@ -103,7 +104,7 @@ exports.tickerSchema = new mongoose_1.Schema({
             if (baughtTicketCount >= saleInfo.ticketQuota)
                 throw new Error(`You have no more ticket quota (${saleInfo.ticketQuota})` +
                     ` for event with id ${event._id}.`);
-            let purchaseInfo = new exports.purchaseInfoMode({
+            let purchaseInfo = new exports.purchaseInfoModel({
                 purchaserId: userId,
                 purchaseDate: now,
             });
@@ -194,8 +195,8 @@ exports.tickerSchema = new mongoose_1.Schema({
         },
         async disclose() {
             let populated = await this.populate([
-                { path: "eventId", model: event_2.singular_name },
-                { path: "seatId", model: seat_1.singular_name },
+                { path: "eventId", model: schema_names_1.names.Event.singular_name },
+                { path: "seatId", model: schema_names_1.names.Seat.singular_name },
             ]);
             return {
                 event: populated.event,
@@ -206,10 +207,10 @@ exports.tickerSchema = new mongoose_1.Schema({
         },
         async fullyPopulate() {
             return await this.populate([
-                { path: "eventId", model: event_2.singular_name },
-                { path: "seatId", model: seat_1.singular_name },
-                { path: "purchaseInfo.purchaserId", model: user_1.singular_name },
-                { path: "paymentInfo.confirmedBy", model: user_1.singular_name },
+                { path: "eventId", model: schema_names_1.names.Event.singular_name },
+                { path: "seatId", model: schema_names_1.names.Seat.singular_name },
+                { path: "purchaseInfo.purchaserId", model: schema_names_1.names.User.singular_name },
+                { path: "paymentInfo.confirmedBy", model: schema_names_1.names.User.singular_name },
             ]);
         },
     },
@@ -241,8 +242,6 @@ exports.tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
 //     }
 //     next();
 // });
-exports.collection_name = "tickets";
-exports.singular_name = "Ticket";
-exports.ticketModel = (0, mongoose_1.model)(exports.singular_name, exports.tickerSchema, exports.collection_name);
-exports.purchaseInfoMode = (0, mongoose_1.model)("", exports.purchaseInfoSchema);
-exports.paymentInfoModel = (0, mongoose_1.model)("", exports.paymentInfoSchema);
+exports.ticketModel = (0, mongoose_1.model)(schema_names_1.names.Ticket.singular_name, exports.tickerSchema, schema_names_1.names.Ticket.collection_name);
+exports.purchaseInfoModel = (0, mongoose_1.model)("Purchase", exports.purchaseInfoSchema);
+exports.paymentInfoModel = (0, mongoose_1.model)("Payment", exports.paymentInfoSchema);

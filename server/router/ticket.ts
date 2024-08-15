@@ -1,12 +1,12 @@
 
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
-import { v1 } from '~/mongoose-schema/schema'
+import { v1 } from '../../mongoose-schema/schema'
 import { RequestError } from "../database/database";
 import { SessionData } from "express-session";
 import { ObjectId } from "mongodb";
-import { IPaymentInfo, ITicket, ticketModel } from "~/mongoose-schema/v1/ticket";
-import { eventModel } from "~/mongoose-schema/v1/event";
+import { IPaymentInfo, ITicket, ticketModel } from "../../mongoose-schema/v1/ticket";
+import { eventModel } from "../../mongoose-schema/v1/event";
 
 
 export namespace Ticket {

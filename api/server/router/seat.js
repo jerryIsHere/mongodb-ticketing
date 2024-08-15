@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Seat = void 0;
 const express_1 = require("express");
-const seat_1 = require("~/mongoose-schema/v1/seat");
+const seat_1 = require("../../mongoose-schema/v1/seat");
 var Seat;
 (function (Seat) {
     function RouterFactory() {

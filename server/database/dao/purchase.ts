@@ -1,6 +1,6 @@
 //indevelopment, not in use
 import { ObjectId, WithId, Document } from "mongodb";
-import { Database, RequestError } from "~/server/database/database";
+import { Database, RequestError } from "../../database/database";
 import { BaseDAO } from "./dao";
 import { EventDAO } from './event';
 import { PriceTierDAO } from "./priceTier";

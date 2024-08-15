@@ -1,8 +1,9 @@
 import { hash, compare } from "bcrypt";
-import { REGEX } from "~/utils/regex";
-import { generateResetToken } from "~/utils/token";
-import EmailService from "~/services/email";
+import { REGEX } from "../../utils/regex";
+import { generateResetToken } from "../../utils/token";
+import EmailService from "../../services/email";
 import { Schema, model, Types, Model, HydratedDocument } from "mongoose";
+import { names } from "../schema-names";
 const saltRounds = 10;
 export type IDisclosableUser = {
   _id: string;
@@ -146,10 +147,8 @@ userSchema.path("email").validate(async function (val) {
   //this.sendActivationEmail()
 
 });
-export const collection_name = "users";
-export const singular_name = "User";
 export const userModel = model<IUser, UserModel>(
-  singular_name,
+  names.User.singular_name,
   userSchema,
-  collection_name
+  names.User.collection_name
 );

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const express_1 = require("express");
 const database_1 = require("../database/database");
-const user_1 = require("~/mongoose-schema/v1/user");
+const user_1 = require("../../mongoose-schema/v1/user");
 var User;
 (function (User) {
     function RouterFactory() {

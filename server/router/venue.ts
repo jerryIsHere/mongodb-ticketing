@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { Database, RequestError } from "../database/database";
-import { v1 } from '~/mongoose-schema/schema'
-import { venueModel } from "~/mongoose-schema/v1/venue";
+import { v1 } from '../../mongoose-schema/schema'
+import { venueModel } from "../../mongoose-schema/v1/venue";
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()

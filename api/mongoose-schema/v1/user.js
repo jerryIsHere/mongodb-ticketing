@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userModel = exports.singular_name = exports.collection_name = exports.userSchema = void 0;
+exports.userModel = exports.userSchema = void 0;
 const bcrypt_1 = require("bcrypt");
-const regex_1 = require("~/utils/regex");
-const token_1 = require("~/utils/token");
-const email_1 = __importDefault(require("~/services/email"));
+const regex_1 = require("../../utils/regex");
+const token_1 = require("../../utils/token");
+const email_1 = __importDefault(require("../../services/email"));
 const mongoose_1 = require("mongoose");
+const schema_names_1 = require("../schema-names");
 const saltRounds = 10;
 exports.userSchema = new mongoose_1.Schema({
     username: { type: String, required: true, unique: true },
@@ -107,6 +108,4 @@ exports.userSchema.path("email").validate(async function (val) {
     //currently disabled as we don't allow user to change email in front end?
     //this.sendActivationEmail()
 });
-exports.collection_name = "users";
-exports.singular_name = "User";
-exports.userModel = (0, mongoose_1.model)(exports.singular_name, exports.userSchema, exports.collection_name);
+exports.userModel = (0, mongoose_1.model)(schema_names_1.names.User.singular_name, exports.userSchema, schema_names_1.names.User.collection_name);

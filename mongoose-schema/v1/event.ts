@@ -1,4 +1,4 @@
-import {
+import mongoose, {
   Schema,
   model,
   Types,
@@ -7,13 +7,10 @@ import {
   QueryWithHelpers,
   Query,
 } from "mongoose";
-import { IVenue, singular_name as Venue, venueModel } from "./venue";
+import { IVenue, venueModel } from "./venue";
 import { ticketModel } from "./ticket";
-import { collection_name as seat_collection__name } from "./seat";
-export interface IPriceTier {
-  tierName: string;
-  price: number;
-}
+import { names } from "../schema-names";
+import { IPriceTier, priceTierSchema } from './priceTier';
 
 export interface ISaleInfo {
   start: Date;
@@ -58,30 +55,19 @@ export const saleInfoSchema = new Schema<ISaleInfo>({
   ticketQuota: {
     type: Number,
     required: true,
-    min: [Number.MIN_VALUE, "Quota(2nd round) must be greater than 0."],
+    min: [Number.MIN_VALUE, "Quota must be greater than 0."],
   },
   buyX: {
     type: Number,
     required: true,
-    min: [0, "Quota(2nd round) must be greater than or equal to 0."],
+    min: [0, "Quota must be greater than or equal to 0."],
   },
   yFree: {
     type: Number,
     required: true,
-    min: [0, "Quota(2nd round) must be greater than or equal to 0."],
+    min: [0, "Quota must be greater than or equal to 0."],
   },
 });
-export const priceTierSchema = new Schema<IPriceTier>(
-  {
-    tierName: { type: String, required: true },
-    price: {
-      type: Number,
-      required: true,
-      min: [0, "Price must be greater or equal then 0."],
-    },
-  },
-  { _id: false }
-);
 export const eventSchema = new Schema<
   IEvent,
   EventModel,
@@ -103,12 +89,12 @@ export const eventSchema = new Schema<
     },
     venueId: {
       type: Schema.Types.ObjectId,
-      ref: Venue,
+      ref: names.Venue.singular_name,
       required: true,
       validate: {
         validator: async (val: Schema.Types.ObjectId) =>
           (await venueModel.findById(val).select({ _id: 1 }).lean()) != null,
-        message: `${Venue} with id {VALUE} doesn't exists.`,
+        message: `${names.Venue.singular_name} with id {VALUE} doesn't exists.`,
       },
     },
     priceTiers: {
@@ -160,7 +146,7 @@ eventSchema.path("venueId").validate(async function (val) {
     { $match: { eventId: eventId } },
     {
       $lookup: {
-        from: seat_collection__name,
+        from: names.Seat.collection_name,
         localField: "seatId",
         foreignField: "_id",
         as: "seat",
@@ -168,18 +154,17 @@ eventSchema.path("venueId").validate(async function (val) {
     },
     { $set: { seat: { $first: "$seat" } } },
     { $match: { "seat.venueId": { $ne: val } } },
+    { $limit: 1 },
   ]);
-  if (tickerFromOtherVenue != null)
+  if (tickerFromOtherVenue != null && tickerFromOtherVenue.length > 0)
     throw new Error(
-      `Update of ${singular_name} with id ${eventId} failed ` +
+      `Update of ${names.Event.singular_name} with id ${eventId} failed ` +
       `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`
     );
   return true;
 });
-export const collection_name = "events";
-export const singular_name = "Event";
-export const eventModel: EventModel = model<IEvent, EventModel>(
-  singular_name,
+export const eventModel: EventModel = (mongoose.models[names.Event.singular_name] as EventModel) || model<IEvent, EventModel>(
+  names.Event.singular_name,
   eventSchema,
-  collection_name
+  names.Event.collection_name,
 );
