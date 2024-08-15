@@ -11,7 +11,7 @@ declare global {
   namespace Express {
     interface Locals {
       RequestErrorList: RequestError[]
-      session: mongoose.ClientSession
+      session: mongoose.ClientSession | undefined
     }
   }
 }
@@ -74,8 +74,8 @@ app.use('/*', function (_, res: Response) {
 
 app.use(async (output: any, req: Request, res: Response, next: NextFunction) => {
   try {
-    if (output instanceof RequestError || res.locals.RequestErrorList.length != 0) {
-      if (res.locals.session.inTransaction()) {
+    if (output instanceof Error || output instanceof RequestError || res.locals.RequestErrorList.length != 0) {
+      if (res.locals.session?.inTransaction()) {
         console.log("abort");
         await res.locals.session.abortTransaction();
       }
@@ -84,10 +84,13 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
       if (output instanceof RequestError) {
         res.locals.RequestErrorList.push(output)
       }
+      else if (output instanceof Error && output.name == 'ValidationError') {
+        res.locals.RequestErrorList.push(new RequestError(output.message))
+      }
       res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
     }
     else {
-      if (res.locals.session.inTransaction()) {
+      if (res.locals.session?.inTransaction()) {
         await res.locals.session.commitTransaction();
         res.json(output)
       }
@@ -95,7 +98,7 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
         res.json(output)
       }
     }
-    res.locals.session.endSession();
+    res.locals.session?.endSession();
   }
   catch (err) {
     console.log(err)
