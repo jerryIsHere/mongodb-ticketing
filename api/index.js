@@ -51,6 +51,7 @@ app.use('/seat', seat_1.Seat.RouterFactory());
 const venue_1 = require("./server/router/venue");
 app.use('/venue', venue_1.Venue.RouterFactory());
 const ticket_1 = require("./server/router/ticket");
+const error_1 = require("./mongoose-schema/error");
 app.use('/ticket', ticket_1.Ticket.RouterFactory());
 app.use('/*', function (_, res) {
     res.redirect("/web/");
@@ -67,8 +68,17 @@ app.use(async (output, req, res, next) => {
             if (output instanceof database_1.RequestError) {
                 res.locals.RequestErrorList.push(output);
             }
-            else if (output instanceof Error && output.name == 'ValidationError') {
+            else if (output instanceof Error && (output.name == 'ValidationError' ||
+                output instanceof error_1.ValidationError ||
+                output instanceof error_1.ReferentialError ||
+                output instanceof error_1.OperationError)) {
                 res.locals.RequestErrorList.push(new database_1.RequestError(output.message));
+            }
+            else if (output instanceof Error) {
+                // unknow error is not presentable to end user
+                // as it might contains confidential info / technical jargons
+                console.log(output);
+                res.locals.RequestErrorList.push(new database_1.RequestError("Unexpected error occured."));
             }
             res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err) => err.message) });
         }

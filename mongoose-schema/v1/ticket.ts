@@ -15,6 +15,7 @@ import { ISeat, seatModel } from "./seat";
 import { IUser, userModel } from "./user";
 import { notificationModel } from "./notification";
 import { names } from "../schema-names";
+import { OperationError, ReferentialError } from "../error";
 export interface IPurchaseInfo {
   purchaseDate: Date;
   purchaserId: Types.ObjectId;
@@ -125,9 +126,9 @@ export const paymentInfoSchema = new Schema<IPaymentInfo>({
       validator: async (val: Schema.Types.ObjectId) => {
         let confimer = await userModel.findById(val);
         if (confimer == null)
-          throw new Error(`${names.User.singular_name} with id {VALUE} doesn't exists.`);
+          throw new ReferentialError(`${names.User.singular_name} with id {VALUE} doesn't exists.`);
         if (!confimer._isAdmin && !confimer._isCustomerSupport)
-          throw new Error(
+          throw new ReferentialError(
             `${names.User.singular_name} with id {VALUE} do not have such permission.`
           );
         return true;
@@ -155,12 +156,12 @@ export const tickerSchema = new Schema<
         validator: async function (val: Types.ObjectId) {
           let event = await eventModel.findById(val);
           if (event == null)
-            throw new Error(`Event with id ${val} doesn't exists.`);
+            throw new ReferentialError(`Event with id ${val} doesn't exists.`);
           let priceTier = event.priceTiers.find(
             (p) => p.tierName == this.priceTier.tierName
           );
           if (priceTier == undefined || priceTier.price != this.priceTier.price)
-            throw new Error(
+            throw new ReferentialError(
               `Price tier ${this.priceTier.tierName} doesn't exists in associated event.`
             );
           return true;
@@ -175,7 +176,7 @@ export const tickerSchema = new Schema<
         validator: async function (val: Types.ObjectId) {
           let seat = await seatModel.findById(val).select({ _id: 1 }).lean();
           if (seat == null)
-            throw new Error(`Seat with id ${val} doesn't exists.`);
+            throw new ReferentialError(`Seat with id ${val} doesn't exists.`);
 
           return true;
         },
@@ -190,7 +191,7 @@ export const tickerSchema = new Schema<
 
       async bulkPurchase(userId: string, ticketIds: string[]) {
         let ticketObjectIds = ticketIds.map(
-          (id) => new Schema.Types.ObjectId(id)
+          (id) => new Types.ObjectId(id)
         );
         let tickets = await ticketModel
           .find({ _id: { $in: ticketObjectIds } })
@@ -201,13 +202,13 @@ export const tickerSchema = new Schema<
           .lean()
           .exec();
         if (events.length != 1)
-          throw new Error(
+          throw new OperationError(
             "Bulk purchase only supports buying tickets from exactly one event."
           );
 
         let event = events[0];
         if (ticketIds.length > event.shoppingCartSize)
-          throw new Error(
+          throw new ReferentialError(
             `Event with id ${event._id} have a shopping cart size limit at` +
             ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`
           );
@@ -216,14 +217,14 @@ export const tickerSchema = new Schema<
           info.start <= now && info.end >= new Date();
         });
         if (saleInfo == null)
-          throw new Error(
+          throw new OperationError(
             `Tickets of event with id ${event._id} is not selling yet.`
           );
         let baughtTicketCount = await ticketModel.countDocuments({
           "paymentInfo.purchaserId": userId,
         });
         if (baughtTicketCount >= saleInfo.ticketQuota)
-          throw new Error(
+          throw new OperationError(
             `You have no more ticket quota (${saleInfo.ticketQuota})` +
             ` for event with id ${event._id}.`
           );
@@ -250,7 +251,7 @@ export const tickerSchema = new Schema<
         tierName: string,
       ) {
         let ticketObjectIds = ticketIds.map(
-          (id) => new Schema.Types.ObjectId(id)
+          (id) => new Types.ObjectId(id)
         );
         let tickets = await ticketModel
           .find({ _id: { $in: ticketObjectIds } })
@@ -261,7 +262,7 @@ export const tickerSchema = new Schema<
           .lean()
           .exec();
         if (events.length != 1)
-          throw new Error(
+          throw new OperationError(
             "Batch price tier update only supports updating tickets from exactly one event."
           );
 
@@ -270,7 +271,7 @@ export const tickerSchema = new Schema<
           p.tierName == tierName
         });
         if (match == null)
-          throw new Error(
+          throw new ReferentialError(
             `Tickes of event with id ${event._id} is not selling yet.`
           );
         return ticketModel
@@ -320,7 +321,7 @@ export const tickerSchema = new Schema<
           }
           return this;
         }
-        throw new Error(`Ticker with id ${this._id} has not been sold yet.`);
+        throw new OperationError(`Ticker with id ${this._id} has not been sold yet.`);
       },
       async discloseToClient(userId: Types.ObjectId) {
         let disclosable = await this.disclose();

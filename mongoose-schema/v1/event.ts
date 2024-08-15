@@ -11,6 +11,7 @@ import { IVenue, venueModel } from "./venue";
 import { ticketModel } from "./ticket";
 import { names } from "../schema-names";
 import { IPriceTier, priceTierSchema } from './priceTier';
+import { ReferentialError, ValidationError } from "../error";
 
 export interface ISaleInfo {
   start: Date;
@@ -111,10 +112,10 @@ export const eventSchema = new Schema<
       validate: {
         validator: (val: ISaleInfo[]) => {
           if (val.length < 1)
-            throw new Error("At least one sale info should be provided.");
+            throw new ValidationError("At least one sale info should be provided.");
           // TODO: check that sale date is not overlapping
           if (false)
-            throw new Error("At least one sale info should be provided.");
+            throw new ValidationError("At least one sale info should be provided.");
           return true;
         },
       },
@@ -157,7 +158,7 @@ eventSchema.path("venueId").validate(async function (val) {
     { $limit: 1 },
   ]);
   if (tickerFromOtherVenue != null && tickerFromOtherVenue.length > 0)
-    throw new Error(
+    throw new ReferentialError(
       `Update of ${names.Event.singular_name} with id ${eventId} failed ` +
       `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`
     );

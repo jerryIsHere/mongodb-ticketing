@@ -25,7 +25,9 @@ var User;
         };
         user.get("/", async (req, res, next) => {
             if (req.query.list != undefined) {
-                next({ success: true, data: await user_1.userModel.find().then(docs => docs.map(doc => doc.disclose())) });
+                user_1.userModel.find().then(docs => docs.map(doc => doc.disclose())).
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)));
             }
         });
         user.post("/forget-password", async (req, res, next) => {

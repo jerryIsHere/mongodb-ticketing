@@ -1,7 +1,8 @@
-import { Schema, model, Types, HydratedDocument, Model } from "mongoose";
+import { Schema, model, Types, HydratedDocument, Model, CallbackWithoutResultAndOptionalError, FlatRecord, Document } from "mongoose";
 import { ISeat, seatModel } from "./seat";
 import { eventModel, IEvent } from "./event";
 import { names } from "../schema-names";
+import { ReferentialError } from "../error";
 export interface ISection {
   x: number;
   y: number;
@@ -62,29 +63,32 @@ venueSchema.methods.findOneEventAssociate = async function () {
   return await eventModel.findOne({ venueId: this._id }).then();
 };
 
-venueSchema.pre(
-  "deleteOne",
-  { document: true, query: false },
-  async function (next) {
-    this;
-    //referential integrity checks
-    const seat = await this.findOneSeatAssociate();
-    if (seat != null)
-      next(
-        new Error(
-          `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-          `as seat with id ${seat.id} depends on it.`
-        )
-      );
-    const event = await this.findOneEventAssociate();
-    if (event != null)
-      next(
-        new Error(
-          `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
-          `as event with id ${event.id} depends on it.`
-        )
-      );
-    next();
+async function deleteReferentialIntegritycheck(this: Document<unknown, {}, FlatRecord<IVenue>> & Omit<FlatRecord<IVenue> & {
+  _id: Types.ObjectId;
+}, keyof IVenueMethod> & IVenueMethod, next: CallbackWithoutResultAndOptionalError) {
+  const seat = await this.findOneSeatAssociate();
+  if (seat != null) {
+    next(
+      new ReferentialError(
+        `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+        `as seat with id ${seat.id} depends on it.`
+      )
+    );
+    return
   }
-);
+  const event = await this.findOneEventAssociate();
+  console.log(event)
+  if (event != null) {
+    next(
+      new ReferentialError(
+        `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+        `as event with id ${event.id} depends on it.`
+      )
+    );
+    return
+  }
+  next();
+}
+venueSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
+venueSchema.pre("findOneAndDelete", { document: true, query: false }, deleteReferentialIntegritycheck);
 export const venueModel = model<IVenue, VenueModel>(names.Venue.singular_name, venueSchema, names.Venue.collection_name);

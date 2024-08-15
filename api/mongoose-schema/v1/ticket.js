@@ -8,6 +8,7 @@ const seat_1 = require("./seat");
 const user_1 = require("./user");
 const notification_1 = require("./notification");
 const schema_names_1 = require("../schema-names");
+const error_1 = require("../error");
 exports.purchaseInfoSchema = new mongoose_1.Schema({
     purchaseDate: { type: Date, requried: true },
     purchaserId: {
@@ -34,9 +35,9 @@ exports.paymentInfoSchema = new mongoose_1.Schema({
             validator: async (val) => {
                 let confimer = await user_1.userModel.findById(val);
                 if (confimer == null)
-                    throw new Error(`${schema_names_1.names.User.singular_name} with id {VALUE} doesn't exists.`);
+                    throw new error_1.ReferentialError(`${schema_names_1.names.User.singular_name} with id {VALUE} doesn't exists.`);
                 if (!confimer._isAdmin && !confimer._isCustomerSupport)
-                    throw new Error(`${schema_names_1.names.User.singular_name} with id {VALUE} do not have such permission.`);
+                    throw new error_1.ReferentialError(`${schema_names_1.names.User.singular_name} with id {VALUE} do not have such permission.`);
                 return true;
             },
         },
@@ -56,10 +57,10 @@ exports.tickerSchema = new mongoose_1.Schema({
             validator: async function (val) {
                 let event = await event_1.eventModel.findById(val);
                 if (event == null)
-                    throw new Error(`Event with id ${val} doesn't exists.`);
+                    throw new error_1.ReferentialError(`Event with id ${val} doesn't exists.`);
                 let priceTier = event.priceTiers.find((p) => p.tierName == this.priceTier.tierName);
                 if (priceTier == undefined || priceTier.price != this.priceTier.price)
-                    throw new Error(`Price tier ${this.priceTier.tierName} doesn't exists in associated event.`);
+                    throw new error_1.ReferentialError(`Price tier ${this.priceTier.tierName} doesn't exists in associated event.`);
                 return true;
             },
         },
@@ -72,7 +73,7 @@ exports.tickerSchema = new mongoose_1.Schema({
             validator: async function (val) {
                 let seat = await seat_1.seatModel.findById(val).select({ _id: 1 }).lean();
                 if (seat == null)
-                    throw new Error(`Seat with id ${val} doesn't exists.`);
+                    throw new error_1.ReferentialError(`Seat with id ${val} doesn't exists.`);
                 return true;
             },
         },
@@ -83,7 +84,7 @@ exports.tickerSchema = new mongoose_1.Schema({
 }, {
     statics: {
         async bulkPurchase(userId, ticketIds) {
-            let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Schema.Types.ObjectId(id));
+            let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
             let tickets = await exports.ticketModel
                 .find({ _id: { $in: ticketObjectIds } })
                 .lean()
@@ -93,22 +94,22 @@ exports.tickerSchema = new mongoose_1.Schema({
                 .lean()
                 .exec();
             if (events.length != 1)
-                throw new Error("Bulk purchase only supports buying tickets from exactly one event.");
+                throw new error_1.OperationError("Bulk purchase only supports buying tickets from exactly one event.");
             let event = events[0];
             if (ticketIds.length > event.shoppingCartSize)
-                throw new Error(`Event with id ${event._id} have a shopping cart size limit at` +
+                throw new error_1.ReferentialError(`Event with id ${event._id} have a shopping cart size limit at` +
                     ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`);
             let now = new Date();
             let saleInfo = event.saleInfos.find((info) => {
                 info.start <= now && info.end >= new Date();
             });
             if (saleInfo == null)
-                throw new Error(`Tickets of event with id ${event._id} is not selling yet.`);
+                throw new error_1.OperationError(`Tickets of event with id ${event._id} is not selling yet.`);
             let baughtTicketCount = await exports.ticketModel.countDocuments({
                 "paymentInfo.purchaserId": userId,
             });
             if (baughtTicketCount >= saleInfo.ticketQuota)
-                throw new Error(`You have no more ticket quota (${saleInfo.ticketQuota})` +
+                throw new error_1.OperationError(`You have no more ticket quota (${saleInfo.ticketQuota})` +
                     ` for event with id ${event._id}.`);
             let purchaseInfo = new exports.purchaseInfoModel({
                 purchaserId: userId,
@@ -126,7 +127,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                 .then();
         },
         async batchUpdatePriceTier(ticketIds, tierName) {
-            let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Schema.Types.ObjectId(id));
+            let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
             let tickets = await exports.ticketModel
                 .find({ _id: { $in: ticketObjectIds } })
                 .lean()
@@ -136,13 +137,13 @@ exports.tickerSchema = new mongoose_1.Schema({
                 .lean()
                 .exec();
             if (events.length != 1)
-                throw new Error("Batch price tier update only supports updating tickets from exactly one event.");
+                throw new error_1.OperationError("Batch price tier update only supports updating tickets from exactly one event.");
             let event = events[0];
             let match = event.priceTiers.find((p) => {
                 p.tierName == tierName;
             });
             if (match == null)
-                throw new Error(`Tickes of event with id ${event._id} is not selling yet.`);
+                throw new error_1.ReferentialError(`Tickes of event with id ${event._id} is not selling yet.`);
             return exports.ticketModel
                 .updateMany({ _id: { $in: ticketObjectIds } }, {
                 $set: {
@@ -186,7 +187,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                 }
                 return this;
             }
-            throw new Error(`Ticker with id ${this._id} has not been sold yet.`);
+            throw new error_1.OperationError(`Ticker with id ${this._id} has not been sold yet.`);
         },
         async discloseToClient(userId) {
             let disclosable = await this.disclose();

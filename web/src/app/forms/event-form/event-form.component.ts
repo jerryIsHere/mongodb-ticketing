@@ -5,8 +5,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../service/api.service';
-import { ShowAPIObject, VenueAPIObject } from '../../interface-util';
+import { IPriceTier, ShowAPIObject, VenueAPIObject } from '../../interface-util';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -21,11 +23,12 @@ var tolocaltimezone = (d: Date) => {
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, MatSelectModule, MatIconModule, MatDialogModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatChipsModule, MatInputModule, FormsModule, ReactiveFormsModule, MatSelectModule, MatIconModule, MatDialogModule],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.sass'
 })
 export class EventFormComponent {
+  readonly separatorKeysCodes = [ENTER, COMMA] as const;
   eventForm = this._formBuilder.group({
     eventname: new FormControl(this.data.event.eventname, [Validators.required]),
     datetime: new FormControl(this.data.event.datetime ? tolocaltimezone(new Date(this.data.event.datetime)).toISOString().split('Z')[0] : '', [Validators.required,]),
@@ -75,17 +78,20 @@ export class EventFormComponent {
       let timezone = (new Date()).getTimezoneOffset() * 60000
       let formData = this.eventForm.getRawValue()
       let body = {
+        ...formData,
         ...{
           datetime: new Date(formData.datetime ? formData.datetime : ''),
           saleInfos: formData.saleInfos.map(info => {
             return {
-              start: info.start ? new Date(info.start) : '',
-              end: info.end ? new Date(info.end) : '',
-              ticketQuota: info.ticketQuota,
+              ...info,
+              ...{
+                start: info.start ? new Date(info.start) : '',
+                end: info.end ? new Date(info.end) : '',
+              }
             }
-          })
+          }),
+          priceTiers: this.data.event.priceTiers
         },
-        ...formData
       }
       if (this.data && this.data.event && this.data.event._id) {
         this.api.request.patch(`/event/${this.data.event._id}`, body).toPromise().then((result: any) => {
@@ -100,6 +106,29 @@ export class EventFormComponent {
             this.dialogRef.close(body)
           }
         })
+      }
+    }
+  }
+  addPriceTier(event: MatChipInputEvent) {
+    const value = (event.value || '').trim().split(':');
+    let tierName = value[0].trim()
+    let price = Number(value[1].trim())
+    if (!Array.isArray(this.data.event.priceTiers)) this.data.event.priceTiers = []
+    if (value && Number.isInteger(price) &&
+      this.data.event.priceTiers &&
+      this.data.event.priceTiers.filter(p => p.tierName == tierName).length == 0) {
+
+      this.data.event.priceTiers.push({ tierName: tierName, price: price });
+    }
+    // Clear the input value
+    event.chipInput!.clear();
+  }
+  removePriceTier(priceTier: IPriceTier): void {
+    if (this.data.event.priceTiers) {
+      const index = this.data.event.priceTiers.findIndex(p => p.tierName == priceTier.tierName);
+
+      if (index >= 0) {
+        this.data.event.priceTiers.splice(index, 1);
       }
     }
   }

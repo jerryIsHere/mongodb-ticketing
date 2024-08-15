@@ -5,6 +5,7 @@ const mongoose_1 = require("mongoose");
 const seat_1 = require("./seat");
 const event_1 = require("./event");
 const schema_names_1 = require("../schema-names");
+const error_1 = require("../error");
 exports.sectionSchema = new mongoose_1.Schema({
     x: { type: Number, required: true },
     y: { type: Number, required: true },
@@ -43,17 +44,22 @@ exports.venueSchema.methods.findOneSeatAssociate = async function () {
 exports.venueSchema.methods.findOneEventAssociate = async function () {
     return await event_1.eventModel.findOne({ venueId: this._id }).then();
 };
-exports.venueSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
-    this;
-    //referential integrity checks
+async function deleteReferentialIntegritycheck(next) {
     const seat = await this.findOneSeatAssociate();
-    if (seat != null)
-        next(new Error(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+    if (seat != null) {
+        next(new error_1.ReferentialError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
             `as seat with id ${seat.id} depends on it.`));
+        return;
+    }
     const event = await this.findOneEventAssociate();
-    if (event != null)
-        next(new Error(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+    console.log(event);
+    if (event != null) {
+        next(new error_1.ReferentialError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
             `as event with id ${event.id} depends on it.`));
+        return;
+    }
     next();
-});
+}
+exports.venueSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
+exports.venueSchema.pre("findOneAndDelete", { document: true, query: false }, deleteReferentialIntegritycheck);
 exports.venueModel = (0, mongoose_1.model)(schema_names_1.names.Venue.singular_name, exports.venueSchema, schema_names_1.names.Venue.collection_name);

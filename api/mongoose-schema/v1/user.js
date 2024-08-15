@@ -10,6 +10,7 @@ const token_1 = require("../../utils/token");
 const email_1 = __importDefault(require("../../services/email"));
 const mongoose_1 = require("mongoose");
 const schema_names_1 = require("../schema-names");
+const error_1 = require("../error");
 const saltRounds = 10;
 exports.userSchema = new mongoose_1.Schema({
     username: { type: String, required: true, unique: true },
@@ -88,7 +89,7 @@ exports.userSchema.static("verify", async function verify(verificationToken) {
         await user.save();
         return user;
     }
-    throw new Error("User with this verification token not found.");
+    throw new error_1.OperationError("User with this verification token not found.");
 });
 exports.userSchema.static("login", async function login(username, password) {
     let user = await exports.userModel.findOne({ username: username });
@@ -98,9 +99,9 @@ exports.userSchema.static("login", async function login(username, password) {
             await user.save();
             return user;
         }
-        throw new Error(`Incorrect password.`);
+        throw new error_1.OperationError(`Incorrect password.`);
     }
-    throw new Error(`User with user name ${username} not found.`);
+    throw new error_1.OperationError(`User with user name ${username} not found.`);
 });
 exports.userSchema.path("email").validate(async function (val) {
     const token = await (0, token_1.generateResetToken)();

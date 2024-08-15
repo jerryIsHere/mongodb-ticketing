@@ -8,12 +8,13 @@ import {
 } from "mongoose";
 import { ISection, venueModel } from "./venue";
 import { names } from "../schema-names";
-export interface Icoord {
+import { ReferentialError } from "../error";
+export interface ICoord {
   sectX: number;
   sectY: number;
   orderInRow: number;
 }
-export const coordSchema = new Schema<Icoord>(
+export const coordSchema = new Schema<ICoord>(
   {
     sectX: { type: Number, required: true },
     sectY: { type: Number, required: true },
@@ -22,7 +23,7 @@ export const coordSchema = new Schema<Icoord>(
   { _id: false }
 );
 export interface ISeat {
-  coord: Icoord;
+  coord: ICoord;
   row: string;
   no: number;
   venueId: Types.ObjectId;
@@ -52,16 +53,16 @@ export const seatSchema = new Schema<
       type: coordSchema,
       required: true,
       validate: {
-        validator: async function (val: Icoord) {
+        validator: async function (val: ICoord) {
           let venue = await venueModel.findById(this.venueId);
           if (venue == null)
-            throw new Error(`Venue with id ${val} doesn't exists.`);
+            throw new ReferentialError(`Venue with id ${this.venueId} doesn't exists.`);
           if (
             venue.sections.filter(
               (s: any) => s.x == val.sectX && s.y == val.sectY
             ).length == 0
           )
-            throw new Error(
+            throw new ReferentialError(
               `Venue with id ${this.venueId} doesn't contain section ${val.sectX}-${val.sectY}.`
             );
           return true;
@@ -80,7 +81,7 @@ export const seatSchema = new Schema<
           HydratedSeat,
           SeatQueryHelpers
         >;
-        return query.find({ venueId: new Schema.Types.ObjectId(venueId) });
+        return query.find({ venueId: new Types.ObjectId(venueId) });
       },
     },
   }

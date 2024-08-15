@@ -4,6 +4,7 @@ import { generateResetToken } from "../../utils/token";
 import EmailService from "../../services/email";
 import { Schema, model, Types, Model, HydratedDocument } from "mongoose";
 import { names } from "../schema-names";
+import { OperationError } from "../error";
 const saltRounds = 10;
 export type IDisclosableUser = {
   _id: string;
@@ -123,7 +124,7 @@ userSchema.static("verify", async function verify(verificationToken: string) {
     await user.save();
     return user;
   }
-  throw new Error("User with this verification token not found.");
+  throw new OperationError("User with this verification token not found.");
 });
 userSchema.static(
   "login",
@@ -135,9 +136,9 @@ userSchema.static(
         await user.save();
         return user;
       }
-      throw new Error(`Incorrect password.`);
+      throw new OperationError(`Incorrect password.`);
     }
-    throw new Error(`User with user name ${username} not found.`);
+    throw new OperationError(`User with user name ${username} not found.`);
   }
 );
 userSchema.path("email").validate(async function (val) {

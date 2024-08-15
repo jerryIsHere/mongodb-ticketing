@@ -4,6 +4,7 @@ exports.seatModel = exports.seatSchema = exports.coordSchema = void 0;
 const mongoose_1 = require("mongoose");
 const venue_1 = require("./venue");
 const schema_names_1 = require("../schema-names");
+const error_1 = require("../error");
 exports.coordSchema = new mongoose_1.Schema({
     sectX: { type: Number, required: true },
     sectY: { type: Number, required: true },
@@ -17,9 +18,9 @@ exports.seatSchema = new mongoose_1.Schema({
             validator: async function (val) {
                 let venue = await venue_1.venueModel.findById(this.venueId);
                 if (venue == null)
-                    throw new Error(`Venue with id ${val} doesn't exists.`);
+                    throw new error_1.ReferentialError(`Venue with id ${this.venueId} doesn't exists.`);
                 if (venue.sections.filter((s) => s.x == val.sectX && s.y == val.sectY).length == 0)
-                    throw new Error(`Venue with id ${this.venueId} doesn't contain section ${val.sectX}-${val.sectY}.`);
+                    throw new error_1.ReferentialError(`Venue with id ${this.venueId} doesn't contain section ${val.sectX}-${val.sectY}.`);
                 return true;
             },
         },
@@ -31,7 +32,7 @@ exports.seatSchema = new mongoose_1.Schema({
     query: {
         findByVenueId(venueId) {
             let query = this;
-            return query.find({ venueId: new mongoose_1.Schema.Types.ObjectId(venueId) });
+            return query.find({ venueId: new mongoose_1.Types.ObjectId(venueId) });
         },
     },
 });

@@ -179,13 +179,14 @@ var Ticket;
             }
         });
         ticket.delete("/:ticketId", async (req, res, next) => {
-            let deleteResult = await ticket_1.ticketModel.findByIdAndDelete(req.params.ticketId, { includeResultMetadata: true }).exec().catch((err) => next(err));
-            if (deleteResult && deleteResult.ok) {
-                next({ success: true });
-            }
-            else {
-                next({ success: false });
-            }
+            ticket_1.ticketModel.findByIdAndDelete(req.params.ticketId, { includeResultMetadata: true }).then((deleteResult) => {
+                if (deleteResult && deleteResult.ok) {
+                    next({ success: true });
+                }
+                else {
+                    next({ success: false });
+                }
+            }).catch((err) => next(err));
         });
         return ticket;
     }

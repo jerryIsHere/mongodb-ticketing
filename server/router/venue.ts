@@ -1,8 +1,9 @@
 import { Request, Response, Router } from "express";
 import * as Express from "express-serve-static-core"
 import { Database, RequestError } from "../database/database";
-import { v1 } from '../../mongoose-schema/schema'
 import { venueModel } from "../../mongoose-schema/v1/venue";
+import { IEvent } from "../../mongoose-schema/v1/event";
+import { DeleteResult, ModifyResult } from "mongodb";
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()
@@ -16,11 +17,15 @@ export namespace Venue {
 
         venue.get("/", async (req: Request, res: Response, next) => {
             if (req.query.list != undefined) {
-                next({ success: true, data: await venueModel.find().lean().exec() })
+                venueModel.find().lean().
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)))
             }
         })
         venue.get("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            next({ success: true, data: await venueModel.findById(req.params.venueId).lean().exec() })
+            venueModel.findById(req.params.venueId).lean().
+                then(doc => next({ success: true, data: doc })).
+                catch((err => next(err)))
         })
 
         venue.post("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -43,14 +48,15 @@ export namespace Venue {
         })
 
         venue.delete("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            let deleteResult = await venueModel.findByIdAndDelete(req.params.eventId,
-                { includeResultMetadata: true }).exec().catch((err) => next(err))
-            if (deleteResult && deleteResult.ok)  {
-                next({ success: true })
-            }
-            else {
-                next({ success: false })
-            }
+            venueModel.findByIdAndDelete(req.params.venueId,
+                { includeResultMetadata: true }).then((deleteResult) => {
+                    if (deleteResult && deleteResult.ok) {
+                        next({ success: true })
+                    }
+                    else {
+                        next({ success: false })
+                    }
+                }).catch((err: any) => next(err))
         })
         return venue
     };

@@ -17,7 +17,9 @@ var Seat;
         });
         seat.get("/", async (req, res, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
-                next({ success: true, data: await seat_1.seatModel.find().findByVenueId(req.query.venueId).lean().exec() });
+                seat_1.seatModel.find().findByVenueId(req.query.venueId).lean().
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)));
             }
         });
         seat.post("/", async (req, res, next) => {
@@ -28,7 +30,14 @@ var Seat;
                         then(_session => {
                         res.locals.session = _session;
                         res.locals.session ? res.locals.session.startTransaction() : null;
-                        return seat_1.seatModel.create(req.body.seats);
+                        return seat_1.seatModel.create(req.body.seats.map((s) => {
+                            return {
+                                ...s,
+                                ...{
+                                    venueId: req.query.venueId
+                                }
+                            };
+                        }));
                     }).
                         then(docs => docs.map(doc => doc.toJSON())).
                         then(json => { return { success: true, data: json }; });
@@ -56,13 +65,14 @@ var Seat;
             }
         });
         seat.delete("/:seatId", async (req, res, next) => {
-            let deleteResult = await seat_1.seatModel.findByIdAndDelete(req.params.seatId, { includeResultMetadata: true }).exec().catch((err) => next(err));
-            if (deleteResult && deleteResult.ok) {
-                next({ success: true });
-            }
-            else {
-                next({ success: false });
-            }
+            seat_1.seatModel.findByIdAndDelete(req.params.seatId, { includeResultMetadata: true }).then((deleteResult) => {
+                if (deleteResult && deleteResult.ok) {
+                    next({ success: true });
+                }
+                else {
+                    next({ success: false });
+                }
+            }).catch((err) => next(err));
         });
         return seat;
     }

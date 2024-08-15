@@ -18,7 +18,9 @@ export namespace Seat {
 
         seat.get("/", async (req: Request, res: Response, next) => {
             if (req.query.venueId && typeof req.query.venueId == "string") {
-                next({ success: true, data: await seatModel.find().findByVenueId(req.query.venueId).lean().exec() })
+                seatModel.find().findByVenueId(req.query.venueId).lean().
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)))
             }
         })
         seat.post("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -29,7 +31,14 @@ export namespace Seat {
                         then(_session => {
                             res.locals.session = _session;
                             res.locals.session ? res.locals.session.startTransaction() : null;
-                            return seatModel.create(req.body.seats as ISeat[])
+                            return seatModel.create(req.body.seats.map((s: ISeat) => {
+                                return {
+                                    ...s,
+                                    ...{
+                                        venueId: req.query.venueId
+                                    }
+                                }
+                            }) as ISeat[])
                         }).
                         then(docs => docs.map(doc => doc.toJSON())).
                         then(json => { return { success: true, data: json } })
@@ -47,27 +56,28 @@ export namespace Seat {
         seat.delete("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.batch != undefined && req.body.seatIds && Array.isArray(req.body.seatIds)) {
 
-                    return seatModel.startSession().
-                        then(_session => {
-                            res.locals.session = _session;
-                            res.locals.session ? res.locals.session.startTransaction() : null;
-                            return Promise.all(req.body.seatIds.map(async (seatId: string)=>{
-                                return seatModel.findByIdAndDelete(seatId).exec()
-                            }))
-                        }).
-                        then(docs => docs.map(doc => doc.toJSON())).
-                        then(json => { return { success: true, data: json } })
+                return seatModel.startSession().
+                    then(_session => {
+                        res.locals.session = _session;
+                        res.locals.session ? res.locals.session.startTransaction() : null;
+                        return Promise.all(req.body.seatIds.map(async (seatId: string) => {
+                            return seatModel.findByIdAndDelete(seatId).exec()
+                        }))
+                    }).
+                    then(docs => docs.map(doc => doc.toJSON())).
+                    then(json => { return { success: true, data: json } })
             }
         })
         seat.delete("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
-            let deleteResult = await seatModel.findByIdAndDelete(req.params.seatId,
-                { includeResultMetadata: true }).exec().catch((err) => next(err))
-            if (deleteResult && deleteResult.ok)  {
-                next({ success: true })
-            }
-            else {
-                next({ success: false })
-            }
+            seatModel.findByIdAndDelete(req.params.seatId,
+                { includeResultMetadata: true }).then((deleteResult) => {
+                    if (deleteResult && deleteResult.ok) {
+                        next({ success: true })
+                    }
+                    else {
+                        next({ success: false })
+                    }
+                }).catch((err: any) => next(err))
         })
         return seat
     }

@@ -194,14 +194,15 @@ export namespace Ticket {
         })
 
         ticket.delete("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
-            let deleteResult = await ticketModel.findByIdAndDelete(req.params.ticketId,
-                { includeResultMetadata: true }).exec().catch((err) => next(err))
-            if (deleteResult && deleteResult.ok)  {
-                next({ success: true })
-            }
-            else {
-                next({ success: false })
-            }
+            ticketModel.findByIdAndDelete(req.params.ticketId,
+                { includeResultMetadata: true }).then((deleteResult) => {
+                    if (deleteResult && deleteResult.ok) {
+                        next({ success: true })
+                    }
+                    else {
+                        next({ success: false })
+                    }
+                }).catch((err: any) => next(err))
         })
         return ticket
     };

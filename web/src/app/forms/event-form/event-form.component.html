@@ -38,31 +38,25 @@
       }
     </mat-form-field>
     <br>
-    @for(priceTierForm of eventForm.controls['priceTiers'].controls; track priceTierForm){
-    <form [formGroup]="priceTierForm">
-      <mat-form-field>
-        <mat-label>Tier Name</mat-label>
-        <input matInput formControlName="tierName" required>
-        @if (priceTierForm.controls['tierName'].hasError('required')) {
-        <mat-error>This field is required</mat-error>
+    <mat-form-field>
+      <mat-label>Price Tiers</mat-label>
+      <mat-chip-grid #chipGrid aria-label="Enter price tier">
+        @for (priceTier of data.event.priceTiers; track priceTier) {
+        <mat-chip-row (removed)="removePriceTier(priceTier)">
+          {{priceTier.tierName}}: ${{priceTier.price}}
+          <button matChipRemove>
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip-row>
         }
-      </mat-form-field>
-      <br>
-      <mat-form-field>
-        <mat-label>Price</mat-label>
-        <input matInput formControlName="price" required>
-        @if (priceTierForm.controls['price'].hasError('required')) {
-        <mat-error>This field is required</mat-error>
-        }
-        @if (priceTierForm.controls['price'].hasError('min')) {
-        <mat-error>Price should be positive</mat-error>
-        }
-        @if (priceTierForm.controls['price'].hasError('pattern')) {
-        <mat-error>Price should be a number</mat-error>
-        }
-      </mat-form-field>
-    </form>
-    }
+        <input placeholder=" e.g. Tier Name A: 100, Tier Name B: 200" [matChipInputFor]="chipGrid"
+          [matChipInputSeparatorKeyCodes]="separatorKeysCodes" matChipInputAddOnBlur
+          (matChipInputTokenEnd)="addPriceTier($event)" />
+      </mat-chip-grid>
+      @if (data && data.event.priceTiers && data.event.priceTiers.length == 0) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
     @for(saleInfoForm of eventForm.controls['saleInfos'].controls; track saleInfoForm; let idx = $index){
     <form [formGroup]="saleInfoForm">
 

@@ -29,6 +29,7 @@ const venue_1 = require("./venue");
 const ticket_1 = require("./ticket");
 const schema_names_1 = require("../schema-names");
 const priceTier_1 = require("./priceTier");
+const error_1 = require("../error");
 exports.saleInfoSchema = new mongoose_1.Schema({
     start: {
         type: Date,
@@ -93,10 +94,10 @@ exports.eventSchema = new mongoose_1.Schema({
         validate: {
             validator: (val) => {
                 if (val.length < 1)
-                    throw new Error("At least one sale info should be provided.");
+                    throw new error_1.ValidationError("At least one sale info should be provided.");
                 // TODO: check that sale date is not overlapping
                 if (false)
-                    throw new Error("At least one sale info should be provided.");
+                    throw new error_1.ValidationError("At least one sale info should be provided.");
                 return true;
             },
         },
@@ -133,7 +134,7 @@ exports.eventSchema.path("venueId").validate(async function (val) {
         { $limit: 1 },
     ]);
     if (tickerFromOtherVenue != null && tickerFromOtherVenue.length > 0)
-        throw new Error(`Update of ${schema_names_1.names.Event.singular_name} with id ${eventId} failed ` +
+        throw new error_1.ReferentialError(`Update of ${schema_names_1.names.Event.singular_name} with id ${eventId} failed ` +
             `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`);
     return true;
 });

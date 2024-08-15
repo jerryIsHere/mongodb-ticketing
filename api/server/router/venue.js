@@ -17,11 +17,15 @@ var Venue;
         });
         venue.get("/", async (req, res, next) => {
             if (req.query.list != undefined) {
-                next({ success: true, data: await venue_1.venueModel.find().lean().exec() });
+                venue_1.venueModel.find().lean().
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)));
             }
         });
         venue.get("/:venueId", async (req, res, next) => {
-            next({ success: true, data: await venue_1.venueModel.findById(req.params.venueId).lean().exec() });
+            venue_1.venueModel.findById(req.params.venueId).lean().
+                then(doc => next({ success: true, data: doc })).
+                catch((err => next(err)));
         });
         venue.post("/", async (req, res, next) => {
             if (req.query.create != undefined && req.body.venuename && req.body.sections) {
@@ -40,13 +44,14 @@ var Venue;
             }
         });
         venue.delete("/:venueId", async (req, res, next) => {
-            let deleteResult = await venue_1.venueModel.findByIdAndDelete(req.params.eventId, { includeResultMetadata: true }).exec().catch((err) => next(err));
-            if (deleteResult && deleteResult.ok) {
-                next({ success: true });
-            }
-            else {
-                next({ success: false });
-            }
+            venue_1.venueModel.findByIdAndDelete(req.params.venueId, { includeResultMetadata: true }).then((deleteResult) => {
+                if (deleteResult && deleteResult.ok) {
+                    next({ success: true });
+                }
+                else {
+                    next({ success: false });
+                }
+            }).catch((err) => next(err));
         });
         return venue;
     }

@@ -17,27 +17,26 @@ var Event;
         });
         event.get("/", async (req, res, next) => {
             if (req.query.list != undefined) {
-                next({ success: true, data: await event_1.eventModel.find().lean().exec() });
+                event_1.eventModel.find().lean().
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)));
             }
             else if (req.query.listSelling != undefined) {
-                next({ success: true, data: await event_1.eventModel.find().findSelling().lean().exec() });
+                event_1.eventModel.find().findSelling().lean().
+                    then(doc => next({ success: true, data: doc })).
+                    catch((err => next(err)));
             }
         });
         event.get("/:eventId", async (req, res, next) => {
-            next({ success: true, data: await event_1.eventModel.findById(req.params.eventId).lean().exec() });
+            event_1.eventModel.findById(req.params.eventId).lean().
+                then(doc => next({ success: true, data: doc })).
+                catch((err => next(err)));
         });
         event.post("/", async (req, res, next) => {
             if (req.query.create != undefined) {
                 if (req.body.venueId && typeof req.body.venueId == "string") {
                     let venueId = req.body.venueId;
-                    var eventDoc = new event_1.eventModel({
-                        eventname: req.body.eventname,
-                        datetime: req.body.datetime,
-                        duration: req.body.duration,
-                        saleInfos: req.body.saleInfos,
-                        shoppingCartSize: req.body.shoppingCartSize,
-                        venueId: req.body.venueId
-                    });
+                    var eventDoc = new event_1.eventModel(req.body);
                     await eventDoc.save().catch((err) => next(err));
                     next({ success: true });
                 }
@@ -50,13 +49,14 @@ var Event;
             }
         });
         event.delete("/:eventId", async (req, res, next) => {
-            let deleteResult = await event_1.eventModel.findByIdAndDelete(req.params.eventId, { includeResultMetadata: true }).exec().catch((err) => next(err));
-            if (deleteResult && deleteResult.ok) {
-                next({ success: true });
-            }
-            else {
-                next({ success: false });
-            }
+            await event_1.eventModel.findByIdAndDelete(req.params.eventId, { includeResultMetadata: true }).then((deleteResult) => {
+                if (deleteResult && deleteResult.ok) {
+                    next({ success: true });
+                }
+                else {
+                    next({ success: false });
+                }
+            }).catch((err) => next(err));
         });
         return event;
     }

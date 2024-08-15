@@ -28,7 +28,9 @@ export namespace User {
     }
     user.get("/", async (req: Request, res: Response, next) => {
       if (req.query.list != undefined) {
-        next({ success: true, data: await userModel.find().then(docs => docs.map(doc => doc.disclose())) })
+        userModel.find().then(docs => docs.map(doc => doc.disclose())).
+          then(doc => next({ success: true, data: doc })).
+          catch((err => next(err)))
       }
     })
     user.post(

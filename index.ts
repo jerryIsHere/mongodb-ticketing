@@ -65,6 +65,7 @@ import { Venue } from './server/router/venue';
 app.use('/venue', Venue.RouterFactory());
 
 import { Ticket } from './server/router/ticket';
+import { OperationError, ReferentialError, ValidationError } from "./mongoose-schema/error";
 app.use('/ticket', Ticket.RouterFactory());
 
 
@@ -84,8 +85,19 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
       if (output instanceof RequestError) {
         res.locals.RequestErrorList.push(output)
       }
-      else if (output instanceof Error && output.name == 'ValidationError') {
+      else if (output instanceof Error && (
+        output.name == 'ValidationError' || 
+        output instanceof ValidationError ||
+        output instanceof ReferentialError ||
+        output instanceof OperationError
+      )) {
         res.locals.RequestErrorList.push(new RequestError(output.message))
+      }
+      else if(output instanceof Error){
+        // unknow error is not presentable to end user
+        // as it might contains confidential info / technical jargons
+        console.log(output)
+        res.locals.RequestErrorList.push(new RequestError("Unexpected error occured."))
       }
       res.status(400).json({ success: false, reasons: res.locals.RequestErrorList.map((err: any) => err.message) })
     }
