@@ -5,6 +5,7 @@ const express_1 = require("express");
 const database_1 = require("../database/database");
 const mongodb_1 = require("mongodb");
 const ticket_1 = require("../../mongoose-schema/v1/ticket");
+let ticketNotFound = (id) => { throw new database_1.RequestError(`Ticket with id ${id} not found.`); };
 var Ticket;
 (function (Ticket) {
     function RouterFactory() {
@@ -29,14 +30,12 @@ var Ticket;
             }
         });
         ticket.get("/", async (req, res, next) => {
-            let x = (await ticket_1.ticketModel.find({}).then());
-            x?.map(y => y.disclose());
             if (req.query.eventId && typeof req.query.eventId == "string") {
                 ticket_1.ticketModel.find().findByEventId(req.query.eventId).
                     then(doc => next({
                     success: true, data: doc?.map(doc => doc.disclose())
                 })).
-                    catch((err) => next(err));
+                    catch(err => next(err));
             }
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
                 let userId = req.session['user']._id;
@@ -45,7 +44,7 @@ var Ticket;
                     success: true,
                     data: doc?.map(doc => doc.discloseToClient(userId))
                 })).
-                    catch((err) => next(err));
+                    catch(err => next(err));
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session);
@@ -54,7 +53,7 @@ var Ticket;
                     success: true,
                     data: doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose())
                 })).
-                    catch((err) => next(err));
+                    catch(err => next(err));
             }
             else if (req.query.list != undefined && req.query.userId && typeof req.query.userId === "string") {
                 let ids;
@@ -89,7 +88,7 @@ var Ticket;
                 success: true,
                 data: showOccupant ? doc?.fullyPopulate() : doc?.disclose()
             })).
-                catch((err) => next(err));
+                catch(err => next(err));
         });
         ticket.post("/", async (req, res, next) => {
             if (req.query.create != undefined) {
@@ -107,8 +106,9 @@ var Ticket;
                     req.body.seatId && typeof req.body.seatId == "string" &&
                     req.body.priceTierId && typeof req.body.priceTierId == "string") {
                     var ticketDoc = new ticket_1.ticketModel(req.body);
-                    await ticketDoc.save().catch((err) => next(err));
-                    next({ success: true });
+                    ticketDoc.save().
+                        then(_ => next({ success: true })).
+                        catch(err => next(err));
                 }
             }
         });
@@ -153,16 +153,25 @@ var Ticket;
                     remark: req.body.remark,
                     confirmationDate: new Date()
                 };
-                ticket_1.ticketModel.findByIdAndUpdate(req.params.ticketId, { paymentInfo: info }, { returnDocument: 'after' }).
+                ticket_1.ticketModel.findById(req.params.ticketId).
+                    then(ticketDoc => {
+                    if (ticketDoc) {
+                        ticketDoc.paymentInfo = info;
+                        return ticketDoc.save();
+                    }
+                    else {
+                        ticketNotFound(req.params.ticketId);
+                    }
+                }).
                     then(doc => next({ success: true, data: doc?.fullyPopulate() })).
-                    catch((err) => next(err));
+                    catch(err => next(err));
             }
             else if (req.query.void != undefined) {
                 let username = req.session?.user?.username;
                 ticket_1.ticketModel.findById(req.params.ticketId).
                     then(doc => doc?.voidPurchased(username)).
                     then(doc => next({ success: true })).
-                    catch((err) => next(err));
+                    catch(err => next(err));
             }
         });
         ticket.delete("/", async (req, res, next) => {
@@ -172,15 +181,24 @@ var Ticket;
                     then(_session => {
                     res.locals.session = _session;
                     res.locals.session ? res.locals.session.startTransaction() : null;
-                    return ticket_1.ticketModel.deleteMany({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }, ids);
+                    return ticket_1.ticketModel.deleteMany({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }, ids).exec();
                 }).
                     then(docs => next({ success: true })).
                     catch(err => next(err));
             }
         });
         ticket.delete("/:ticketId", async (req, res, next) => {
-            ticket_1.ticketModel.findByIdAndDelete(req.params.ticketId, { includeResultMetadata: true }).then((deleteResult) => {
-                if (deleteResult && deleteResult.ok) {
+            ticket_1.ticketModel.findById(req.params.ticketId).
+                then(ticketDoc => {
+                if (ticketDoc) {
+                    return ticketDoc.deleteOne({ includeResultMetadata: true }).exec();
+                }
+                else {
+                    ticketNotFound(req.params.ticketId);
+                }
+            }).
+                then((deleteResult) => {
+                if (deleteResult && deleteResult.deletedCount > 0) {
                     next({ success: true });
                 }
                 else {

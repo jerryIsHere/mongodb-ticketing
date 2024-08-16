@@ -36,5 +36,8 @@ exports.seatSchema = new mongoose_1.Schema({
         },
     },
 });
+exports.seatSchema.pre('updateOne', { document: false, query: true }, () => {
+    throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
+});
 exports.seatSchema.index({ venueId: 1, row: 1, no: 1 }, { unique: true });
 exports.seatModel = (0, mongoose_1.model)(schema_names_1.names.Seat.singular_name, exports.seatSchema, schema_names_1.names.Seat.collection_name);

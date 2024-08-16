@@ -242,6 +242,9 @@ exports.tickerSchema = new mongoose_1.Schema({
         },
     },
 });
+exports.tickerSchema.pre('updateOne', { document: false, query: true }, () => {
+    throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
+});
 exports.tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
 // tickerSchema.pre<Query<ITicket, TicketModel>>('updateMany', function (next) {
 //     const update = this.getUpdate() as UpdateQuery<TicketModel>;

@@ -47,6 +47,10 @@ export const notificationSchema = new Schema<
     },
   }
 );
+notificationSchema.pre('updateOne', { document: false, query: true }, () => {
+  throw new Error(
+    "Please use find(ById) and chain save afterwards, as referential checking needs documents")
+})
 export const notificationModel = model<INotification, NotificationModel>(
   names.Notification.singular_name,
   notificationSchema,

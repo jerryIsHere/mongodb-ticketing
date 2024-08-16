@@ -4,6 +4,7 @@ import { Database, RequestError } from "../database/database";
 import { venueModel } from "../../mongoose-schema/v1/venue";
 import { IEvent } from "../../mongoose-schema/v1/event";
 import { DeleteResult, ModifyResult } from "mongodb";
+let venueNotFound = (id: string) => { throw new RequestError(`Venue with id ${id} not found.`) }
 export namespace Venue {
     export function RouterFactory(): Express.Router {
         var venue = Router()
@@ -19,38 +20,60 @@ export namespace Venue {
             if (req.query.list != undefined) {
                 venueModel.find().lean().
                     then(doc => next({ success: true, data: doc })).
-                    catch((err => next(err)))
+                    catch(err => next(err))
             }
         })
         venue.get("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
             venueModel.findById(req.params.venueId).lean().
                 then(doc => next({ success: true, data: doc })).
-                catch((err => next(err)))
+                catch(err => next(err))
         })
 
         venue.post("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.create != undefined && req.body.venuename && req.body.sections) {
-                var eventDoc = new venueModel({
+                var venueDoc = new venueModel({
                     venuename: req.body.venuename,
                     sections: req.body.sections
                 });
-                await eventDoc.save().catch((err) => next(err))
-                next({ success: true })
+                venueDoc.save().
+                    then(_ => next({ success: true })).
+                    catch(err => next(err))
             }
         })
 
         venue.patch("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.venuename && req.body.sections) {
-                let eventDoc = await venueModel.findByIdAndUpdate(req.params.venueId, req.body
-                    , { returnDocument: "after", lean: true }).exec().catch((err) => next(err))
-                next({ success: true, data: eventDoc })
+                venueModel.findById(req.params.venueId).
+                    then(venueDoc => {
+                        if (venueDoc) {
+                            Object.keys(req.body).forEach(key => {
+                                if (key in venueDoc) {
+                                    (venueDoc as any)[key] = req.body[key]
+                                }
+                            })
+                            return venueDoc.save()
+                        }
+                        else {
+                            throw venueNotFound(req.params.venueId)
+                        }
+                    }).
+                    then(venueDoc => next({ success: true, data: venueDoc })).
+                    catch(err => next(err))
             }
         })
 
         venue.delete("/:venueId", async (req: Request, res: Response, next): Promise<any> => {
-            venueModel.findByIdAndDelete(req.params.venueId,
-                { includeResultMetadata: true }).then((deleteResult) => {
-                    if (deleteResult && deleteResult.ok) {
+            venueModel.findById(req.params.venueId).
+                then(venueDoc => {
+                    if (venueDoc) {
+                        return venueDoc.deleteOne({ includeResultMetadata: true }).exec()
+                    }
+                    else {
+                        throw venueNotFound(req.params.venueId)
+                    }
+                }).
+                then((deleteResult) => {
+                    if (deleteResult && deleteResult.deletedCount > 0) {
                         next({ success: true })
                     }
                     else {

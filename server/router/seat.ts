@@ -4,7 +4,9 @@ import * as Express from "express-serve-static-core"
 import { HydratedDocument } from "mongoose";
 import { v1 } from '../../mongoose-schema/schema'
 import { ISeat, seatModel } from "../../mongoose-schema/v1/seat";
+import { RequestError } from "../database/database";
 
+let seatNotFound = (id: string) => { new RequestError(`Seat with id ${id} not found.`) }
 export namespace Seat {
     export function RouterFactory(): Express.Router {
         var seat = Router()
@@ -20,7 +22,7 @@ export namespace Seat {
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 seatModel.find().findByVenueId(req.query.venueId).lean().
                     then(doc => next({ success: true, data: doc })).
-                    catch((err => next(err)))
+                    catch(err => next(err))
             }
         })
         seat.post("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -41,16 +43,29 @@ export namespace Seat {
                             }) as ISeat[])
                         }).
                         then(docs => docs.map(doc => doc.toJSON())).
-                        then(json => { return { success: true, data: json } })
+                        then(json => { return { success: true, data: json } }).
+                        catch(err => next(err))
                 }
             }
         })
         seat.patch("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.body.coord) {
-                let seatDoc = await seatModel.findByIdAndUpdate(req.params.seatId,
-                    { coord: req.body.coord }
-                    , { returnDocument: "after", lean: true }).exec().catch((err) => next(err))
-                next({ success: true, data: seatDoc })
+                seatModel.findById(req.params.seatId).
+                    then(seatDoc => {
+                        if (seatDoc) {
+                            Object.keys(req.body).forEach(key => {
+                                if (key in seatDoc) {
+                                    (seatDoc as any)[key] = req.body[key]
+                                }
+                            })
+                            return seatDoc.save()
+                        }
+                        else {
+                            seatNotFound(req.params.seatId)
+                        }
+                    }).
+                    then(seat => next({ success: true, data: seat })).
+                    catch(err => next(err))
             }
         })
         seat.delete("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -61,17 +76,34 @@ export namespace Seat {
                         res.locals.session = _session;
                         res.locals.session ? res.locals.session.startTransaction() : null;
                         return Promise.all(req.body.seatIds.map(async (seatId: string) => {
-                            return seatModel.findByIdAndDelete(seatId).exec()
+                            return seatModel.findById(req.params.seatId).
+                                then(seatDoc => {
+                                    if (seatDoc) {
+                                        return seatDoc.deleteOne({ includeResultMetadata: true }).exec()
+                                    }
+                                    else {
+                                        seatNotFound(req.params.seatId)
+                                    }
+                                })
                         }))
                     }).
-                    then(docs => docs.map(doc => doc.toJSON())).
-                    then(json => { return { success: true, data: json } })
+                    //then(docs => docs.map(doc => doc)).
+                    then(json => { return { success: true, data: json } }).
+                    catch((err: any) => next(err))
             }
         })
         seat.delete("/:seatId", async (req: Request, res: Response, next): Promise<any> => {
-            seatModel.findByIdAndDelete(req.params.seatId,
-                { includeResultMetadata: true }).then((deleteResult) => {
-                    if (deleteResult && deleteResult.ok) {
+            seatModel.findById(req.params.seatId).
+                then(seatDoc => {
+                    if (seatDoc) {
+                        return seatDoc.deleteOne({ includeResultMetadata: true }).exec()
+                    }
+                    else {
+                        seatNotFound(req.params.seatId)
+                    }
+                }).
+                then((deleteResult) => {
+                    if (deleteResult && deleteResult.deletedCount > 0) {
                         next({ success: true })
                     }
                     else {

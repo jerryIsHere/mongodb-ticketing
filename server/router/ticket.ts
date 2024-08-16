@@ -8,7 +8,7 @@ import { ObjectId } from "mongodb";
 import { IPaymentInfo, ITicket, ticketModel } from "../../mongoose-schema/v1/ticket";
 import { eventModel } from "../../mongoose-schema/v1/event";
 
-
+let ticketNotFound = (id: string) => { throw new RequestError(`Ticket with id ${id} not found.`) }
 export namespace Ticket {
     export function RouterFactory(): Express.Router {
         var ticket = Router()
@@ -33,15 +33,13 @@ export namespace Ticket {
         })
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
-            let x = (await ticketModel.find({}).then())
-            x?.map(y => y.disclose())
             if (req.query.eventId && typeof req.query.eventId == "string") {
                 ticketModel.find().findByEventId(req.query.eventId).
                     then(doc =>
                         next({
                             success: true, data: doc?.map(doc => doc.disclose())
                         })).
-                    catch((err) => next(err))
+                    catch(err => next(err))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 let userId = (req.session['user'] as any)._id
@@ -51,7 +49,7 @@ export namespace Ticket {
                             success: true,
                             data: doc?.map(doc => doc.discloseToClient(userId))
                         })).
-                    catch((err) => next(err))
+                    catch(err => next(err))
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session)
@@ -61,7 +59,7 @@ export namespace Ticket {
                             success: true,
                             data: doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose())
                         })).
-                    catch((err) => next(err))
+                    catch(err => next(err))
             }
             else if (req.query.list != undefined && req.query.userId && typeof req.query.userId === "string") {
                 let ids: string[] | undefined
@@ -97,7 +95,7 @@ export namespace Ticket {
                     success: true,
                     data: showOccupant ? doc?.fullyPopulate() : doc?.disclose()
                 })).
-                catch((err) => next(err))
+                catch(err => next(err))
         }
         )
         ticket.post("/", async (req: Request, res: Response, next): Promise<any> => {
@@ -118,8 +116,9 @@ export namespace Ticket {
                     req.body.priceTierId && typeof req.body.priceTierId == "string"
                 ) {
                     var ticketDoc = new ticketModel(req.body);
-                    await ticketDoc.save().catch((err) => next(err))
-                    next({ success: true })
+                    ticketDoc.save().
+                        then(_ => next({ success: true })).
+                        catch(err => next(err))
 
                 }
             }
@@ -163,18 +162,25 @@ export namespace Ticket {
                     remark: req.body.remark,
                     confirmationDate: new Date()
                 }
-                ticketModel.findByIdAndUpdate(req.params.ticketId, { paymentInfo: info },
-                    { returnDocument: 'after' }
-                ).
+                ticketModel.findById(req.params.ticketId).
+                    then(ticketDoc => {
+                        if (ticketDoc) {
+                            ticketDoc.paymentInfo = info
+                            return ticketDoc.save()
+                        }
+                        else {
+                            ticketNotFound(req.params.ticketId)
+                        }
+                    }).
                     then(doc => next({ success: true, data: doc?.fullyPopulate() })).
-                    catch((err) => next(err))
+                    catch(err => next(err))
             }
             else if (req.query.void != undefined) {
                 let username = (req.session?.user as any)?.username
                 ticketModel.findById(req.params.ticketId).
                     then(doc => doc?.voidPurchased(username)).
                     then(doc => next({ success: true })).
-                    catch((err) => next(err))
+                    catch(err => next(err))
 
             }
         })
@@ -186,7 +192,7 @@ export namespace Ticket {
                     then(_session => {
                         res.locals.session = _session;
                         res.locals.session ? res.locals.session.startTransaction() : null;
-                        return ticketModel.deleteMany({ _id: { $in: ids.map(id => new ObjectId(id)) } }, ids)
+                        return ticketModel.deleteMany({ _id: { $in: ids.map(id => new ObjectId(id)) } }, ids).exec()
                     }).
                     then(docs => next({ success: true })).
                     catch(err => next(err))
@@ -194,9 +200,17 @@ export namespace Ticket {
         })
 
         ticket.delete("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
-            ticketModel.findByIdAndDelete(req.params.ticketId,
-                { includeResultMetadata: true }).then((deleteResult) => {
-                    if (deleteResult && deleteResult.ok) {
+            ticketModel.findById(req.params.ticketId).
+                then(ticketDoc => {
+                    if (ticketDoc) {
+                        return ticketDoc.deleteOne({ includeResultMetadata: true }).exec()
+                    }
+                    else {
+                        ticketNotFound(req.params.ticketId)
+                    }
+                }).
+                then((deleteResult) => {
+                    if (deleteResult && deleteResult.deletedCount > 0) {
                         next({ success: true })
                     }
                     else {

@@ -86,6 +86,10 @@ export const seatSchema = new Schema<
     },
   }
 );
+seatSchema.pre('updateOne', { document: false, query: true }, () => {
+  throw new Error(
+    "Please use find(ById) and chain save afterwards, as referential checking needs documents")
+})
 seatSchema.index({ venueId: 1, row: 1, no: 1 }, { unique: true });
 export const seatModel = model<ISeat, SeatModel>(
   names.Seat.singular_name,

@@ -141,6 +141,10 @@ export const eventSchema = new Schema<
     },
   }
 );
+eventSchema.pre('updateOne', { document: false, query: true }, () => {
+  throw new Error(
+    "Please use find(ById) and chain save afterwards, as referential checking needs documents")
+})
 eventSchema.path("venueId").validate(async function (val) {
   let eventId = this.get("_id");
   let tickerFromOtherVenue = await ticketModel.aggregate([

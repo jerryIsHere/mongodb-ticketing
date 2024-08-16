@@ -2,7 +2,7 @@ import { Schema, model, Types, HydratedDocument, Model, CallbackWithoutResultAnd
 import { ISeat, seatModel } from "./seat";
 import { eventModel, IEvent } from "./event";
 import { names } from "../schema-names";
-import { ReferentialError } from "../error";
+import { ReferentialError, ValidationError } from "../error";
 export interface ISection {
   x: number;
   y: number;
@@ -28,20 +28,34 @@ export interface IVenueMethod {
 export interface VenueModel extends Model<IVenue, {}, IVenueMethod> { }
 export const venueSchema = new Schema<IVenue, VenueModel, IVenueMethod>(
   {
-    sections: { type: [sectionSchema], required: true },
+    sections: {
+      type: [sectionSchema], required: true,
+      validate: {
+        validator: async function (val) {
+          let seatNotInSections = await seatModel
+            .findOne({
+              venueId: (this as any)._id,
+              $nor: this.sections.map((s) => {
+                return { $and: [{ "coord.sectX": s.x }, { "coord.sectY": s.y }] };
+              }),
+            })
+            .then();
+          console.log(this, seatNotInSections)
+          if (seatNotInSections == null) {
+            return true
+          }
+          throw new ReferentialError(`This section update does not consider ` +
+            `${names.Seat.singular_name} with id ${seatNotInSections.id} ` +
+            `(in section ${seatNotInSections.coord.sectX}-${seatNotInSections.coord.sectY}).`);
+        }
+      }
+    },
     venuename: { type: String, required: true },
   },
   {
     methods: {
       async findOneSeatAssociate() {
-        return await seatModel
-          .findOne({
-            venueId: this._id,
-            $nor: this.sections.map((s) => {
-              return { $and: [{ "coord.sectX": s.x }, { "coord.sectY": s.y }] };
-            }),
-          })
-          .then();
+        return await seatModel.findOne({ venueId: this._id, }).then();
       },
       async findOneEventAssociate() {
         return await eventModel.findOne({ venueId: this._id }).then();
@@ -49,19 +63,6 @@ export const venueSchema = new Schema<IVenue, VenueModel, IVenueMethod>(
     },
   }
 );
-venueSchema.methods.findOneSeatAssociate = async function () {
-  return await seatModel
-    .findOne({
-      venueId: this._id,
-      $nor: this.sections.map((s) => {
-        return { $and: [{ "coord.sectX": s.x }, { "coord.sectY": s.y }] };
-      }),
-    })
-    .then();
-};
-venueSchema.methods.findOneEventAssociate = async function () {
-  return await eventModel.findOne({ venueId: this._id }).then();
-};
 
 async function deleteReferentialIntegritycheck(this: Document<unknown, {}, FlatRecord<IVenue>> & Omit<FlatRecord<IVenue> & {
   _id: Types.ObjectId;
@@ -77,11 +78,10 @@ async function deleteReferentialIntegritycheck(this: Document<unknown, {}, FlatR
     return
   }
   const event = await this.findOneEventAssociate();
-  console.log(event)
   if (event != null) {
     next(
       new ReferentialError(
-        `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+        `Deletation of ${names.Venue.singular_name} with id ${this._id} failed ` +
         `as event with id ${event.id} depends on it.`
       )
     );
@@ -89,6 +89,13 @@ async function deleteReferentialIntegritycheck(this: Document<unknown, {}, FlatR
   }
   next();
 }
+venueSchema.pre('updateOne', { document: false, query: true }, () => {
+  throw new Error(
+    "Please use find(ById) and chain save afterwards, as referential checking needs documents")
+})
 venueSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
-venueSchema.pre("findOneAndDelete", { document: true, query: false }, deleteReferentialIntegritycheck);
+venueSchema.pre("findOneAndDelete", () => {
+  throw new Error(
+    "Please use find(ById) and chain delete afterwards, as referential checking needs documents")
+});
 export const venueModel = model<IVenue, VenueModel>(names.Venue.singular_name, venueSchema, names.Venue.collection_name);

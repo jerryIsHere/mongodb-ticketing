@@ -391,6 +391,10 @@ export const tickerSchema = new Schema<
     },
   }
 );
+tickerSchema.pre('updateOne', { document: false, query: true }, () => {
+  throw new Error(
+    "Please use find(ById) and chain save afterwards, as referential checking needs documents")
+})
 tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
 // tickerSchema.pre<Query<ITicket, TicketModel>>('updateMany', function (next) {
 //     const update = this.getUpdate() as UpdateQuery<TicketModel>;

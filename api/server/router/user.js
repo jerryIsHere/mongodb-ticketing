@@ -9,7 +9,10 @@ var User;
     function RouterFactory() {
         var user = (0, express_1.Router)();
         user.use((req, res, next) => {
-            if (req.method == 'POST' && req.query.register != undefined && req.session["user"]?.hasAdminRight != true) {
+            if (req.method == 'POST' && req.query.register != undefined && req.session.user?.hasAdminRight != true) {
+                res.status(401).json({ success: false, reason: "Unauthorized access" });
+            }
+            if (req.method == 'PATCH' && (req.session.user?.username != req.query.username && req.session.user?.hasAdminRight != true)) {
                 res.status(401).json({ success: false, reason: "Unauthorized access" });
             }
             else {
@@ -27,34 +30,39 @@ var User;
             if (req.query.list != undefined) {
                 user_1.userModel.find().then(docs => docs.map(doc => doc.disclose())).
                     then(doc => next({ success: true, data: doc })).
-                    catch((err => next(err)));
+                    catch(err => next(err));
             }
         });
         user.post("/forget-password", async (req, res, next) => {
             if (req.body.email === undefined && req.body.username === undefined)
                 res.status(400).send("Email Address / Username are Required.");
-            // Generate a password reset token and save it in the user in the database
-            const validUser = req.body.email != undefined ?
-                await user_1.userModel.findOne({ email: req.body.email }).exec() :
-                await user_1.userModel.findOne({ username: req.body.username }).exec();
-            if (!validUser) {
-                next(new database_1.RequestError("User not found."));
-                // Send the password reset email containing the reset token
+            try {
+                // Generate a password reset token and save it in the user in the database
+                const validUser = req.body.email != undefined ?
+                    await user_1.userModel.findOne({ email: req.body.email }).exec() :
+                    await user_1.userModel.findOne({ username: req.body.username }).exec();
+                if (!validUser) {
+                    next(new database_1.RequestError("User not found."));
+                    // Send the password reset email containing the reset token
+                }
+                else {
+                    await validUser.sendResetPasswordEmail();
+                    next({ success: true, message: "Password reset email sent." });
+                }
             }
-            else {
-                await validUser.sendResetPasswordEmail();
-                next({ success: true, message: "Password reset email sent." });
+            catch (err) {
+                next(err);
             }
         });
         user.patch("/reset-password/:resetToken", async (req, res, next) => {
             const resetToken = req.params.resetToken;
             const newPassword = req.body.newPassword;
             if (resetToken && newPassword) {
-                const validUser = await user_1.userModel.findOne({ resetToken: resetToken }).exec();
-                if (!validUser)
-                    return next(new database_1.RequestError("Invalid or expired reset token."));
-                // Reset the user's password and clear the reset token
                 try {
+                    const validUser = await user_1.userModel.findOne({ resetToken: resetToken }).exec();
+                    if (!validUser)
+                        return next(new database_1.RequestError("Invalid or expired reset token."));
+                    // Reset the user's password and clear the reset token
                     await validUser.setSaltedPassword(newPassword);
                     validUser.resetToken = undefined;
                     await validUser.save();
@@ -75,15 +83,28 @@ var User;
                 next();
             }
         });
+        let changeableField = ["username", "fullname", "email", "singingPart"];
         user.patch("/:username", async (req, res, next) => {
             if (req.params.username && typeof req.params.username == "string") {
                 if (req.query.profile != undefined) {
-                    user_1.userModel.findOneAndUpdate({ username: req.body.username }, req.body).then((doc) => {
+                    user_1.userModel.findOne({ username: req.body.username }).
+                        then(user => {
+                        if (user) {
+                            let profile = Object.fromEntries(changeableField.map(key => [key, req.body[key]]));
+                            Object.keys(profile).forEach(key => {
+                                if (key in user)
+                                    user[key] = profile[key];
+                            });
+                            return user.save();
+                        }
+                        throw new database_1.RequestError(`User with user name ${req.params.username} not found`);
+                    }).then((doc) => {
                         if (doc) {
                             updateSession(req, res, doc?.disclose());
                             next({ success: true, data: req.session.user });
                         }
-                    }).catch((error) => next(error));
+                    }).
+                        catch(err => next(err));
                 }
                 else if (req.query.password != undefined) {
                     user_1.userModel.findOne({ username: req.body.username }, req.body).
@@ -96,7 +117,8 @@ var User;
                             updateSession(req, res, doc?.disclose());
                             next({ success: true, data: req.session.user });
                         }
-                    }).catch((error) => next(error));
+                    }).
+                        catch(err => next(err));
                 }
             }
         });
@@ -109,7 +131,7 @@ var User;
                 updateSession(req, res, user.disclose());
                 next({ success: true, data: req.session.user });
             }).
-                catch((err) => next(err));
+                catch(err => next(err));
         });
         user.post("/", async (req, res, next) => {
             if (req.query.login != undefined) {
@@ -146,7 +168,8 @@ var User;
                         then(user => next({
                         success: true,
                         user: user.disclose(),
-                    }));
+                    })).
+                        catch(err => next(err));
                 }
             }
             // else if (req.query.resendVerification != undefined) {

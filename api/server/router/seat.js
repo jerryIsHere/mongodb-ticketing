@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Seat = void 0;
 const express_1 = require("express");
 const seat_1 = require("../../mongoose-schema/v1/seat");
+const database_1 = require("../database/database");
+let seatNotFound = (id) => { new database_1.RequestError(`Seat with id ${id} not found.`); };
 var Seat;
 (function (Seat) {
     function RouterFactory() {
@@ -19,7 +21,7 @@ var Seat;
             if (req.query.venueId && typeof req.query.venueId == "string") {
                 seat_1.seatModel.find().findByVenueId(req.query.venueId).lean().
                     then(doc => next({ success: true, data: doc })).
-                    catch((err => next(err)));
+                    catch(err => next(err));
             }
         });
         seat.post("/", async (req, res, next) => {
@@ -40,14 +42,29 @@ var Seat;
                         }));
                     }).
                         then(docs => docs.map(doc => doc.toJSON())).
-                        then(json => { return { success: true, data: json }; });
+                        then(json => { return { success: true, data: json }; }).
+                        catch(err => next(err));
                 }
             }
         });
         seat.patch("/:seatId", async (req, res, next) => {
             if (req.body.coord) {
-                let seatDoc = await seat_1.seatModel.findByIdAndUpdate(req.params.seatId, { coord: req.body.coord }, { returnDocument: "after", lean: true }).exec().catch((err) => next(err));
-                next({ success: true, data: seatDoc });
+                seat_1.seatModel.findById(req.params.seatId).
+                    then(seatDoc => {
+                    if (seatDoc) {
+                        Object.keys(req.body).forEach(key => {
+                            if (key in seatDoc) {
+                                seatDoc[key] = req.body[key];
+                            }
+                        });
+                        return seatDoc.save();
+                    }
+                    else {
+                        seatNotFound(req.params.seatId);
+                    }
+                }).
+                    then(seat => next({ success: true, data: seat })).
+                    catch(err => next(err));
             }
         });
         seat.delete("/", async (req, res, next) => {
@@ -57,16 +74,34 @@ var Seat;
                     res.locals.session = _session;
                     res.locals.session ? res.locals.session.startTransaction() : null;
                     return Promise.all(req.body.seatIds.map(async (seatId) => {
-                        return seat_1.seatModel.findByIdAndDelete(seatId).exec();
+                        return seat_1.seatModel.findById(req.params.seatId).
+                            then(seatDoc => {
+                            if (seatDoc) {
+                                return seatDoc.deleteOne({ includeResultMetadata: true }).exec();
+                            }
+                            else {
+                                seatNotFound(req.params.seatId);
+                            }
+                        });
                     }));
                 }).
-                    then(docs => docs.map(doc => doc.toJSON())).
-                    then(json => { return { success: true, data: json }; });
+                    //then(docs => docs.map(doc => doc)).
+                    then(json => { return { success: true, data: json }; }).
+                    catch((err) => next(err));
             }
         });
         seat.delete("/:seatId", async (req, res, next) => {
-            seat_1.seatModel.findByIdAndDelete(req.params.seatId, { includeResultMetadata: true }).then((deleteResult) => {
-                if (deleteResult && deleteResult.ok) {
+            seat_1.seatModel.findById(req.params.seatId).
+                then(seatDoc => {
+                if (seatDoc) {
+                    return seatDoc.deleteOne({ includeResultMetadata: true }).exec();
+                }
+                else {
+                    seatNotFound(req.params.seatId);
+                }
+            }).
+                then((deleteResult) => {
+                if (deleteResult && deleteResult.deletedCount > 0) {
                     next({ success: true });
                 }
                 else {

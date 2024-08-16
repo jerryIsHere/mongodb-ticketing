@@ -103,6 +103,9 @@ exports.userSchema.static("login", async function login(username, password) {
     }
     throw new error_1.OperationError(`User with user name ${username} not found.`);
 });
+exports.userSchema.pre('updateOne', { document: false, query: true }, () => {
+    throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
+});
 exports.userSchema.path("email").validate(async function (val) {
     const token = await (0, token_1.generateResetToken)();
     this.verificationToken = token;
