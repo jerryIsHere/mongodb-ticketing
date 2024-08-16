@@ -4,7 +4,7 @@ exports.Seat = void 0;
 const express_1 = require("express");
 const seat_1 = require("../../mongoose-schema/v1/seat");
 const database_1 = require("../database/database");
-let seatNotFound = (id) => { new database_1.RequestError(`Seat with id ${id} not found.`); };
+let seatNotFound = (id) => { throw new database_1.RequestError(`Seat with id ${id} not found.`); };
 var Seat;
 (function (Seat) {
     function RouterFactory() {
@@ -42,7 +42,7 @@ var Seat;
                         }));
                     }).
                         then(docs => docs.map(doc => doc.toJSON())).
-                        then(json => { return { success: true, data: json }; }).
+                        then(json => next({ success: true, data: json })).
                         catch(err => next(err));
                 }
             }
@@ -74,7 +74,7 @@ var Seat;
                     res.locals.session = _session;
                     res.locals.session ? res.locals.session.startTransaction() : null;
                     return Promise.all(req.body.seatIds.map(async (seatId) => {
-                        return seat_1.seatModel.findById(req.params.seatId).
+                        return seat_1.seatModel.findById(seatId).
                             then(seatDoc => {
                             if (seatDoc) {
                                 return seatDoc.deleteOne({ includeResultMetadata: true }).exec();
@@ -85,8 +85,7 @@ var Seat;
                         });
                     }));
                 }).
-                    //then(docs => docs.map(doc => doc)).
-                    then(json => { return { success: true, data: json }; }).
+                    then(json => { next({ success: true, data: json }); }).
                     catch((err) => next(err));
             }
         });

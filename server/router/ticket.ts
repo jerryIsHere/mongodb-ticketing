@@ -108,7 +108,7 @@ export namespace Ticket {
                             return ticketModel.create(req.body.tickets as ITicket[])
                         }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => { return { success: true, data: json } })
+                        then(json => next({ success: true, data: json } ))
                 }
                 else if (
                     req.body.eventId && typeof req.body.eventId == "string" &&
@@ -149,7 +149,7 @@ export namespace Ticket {
                             return ticketModel.batchUpdatePriceTier(ids, tierName)
                         }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => { return { success: true, data: json } })
+                        then(json => next({ success: true, data: json } ))
                 }
             }
         })

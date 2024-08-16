@@ -100,7 +100,7 @@ var Ticket;
                         return ticket_1.ticketModel.create(req.body.tickets);
                     }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => { return { success: true, data: json }; });
+                        then(json => next({ success: true, data: json }));
                 }
                 else if (req.body.eventId && typeof req.body.eventId == "string" &&
                     req.body.seatId && typeof req.body.seatId == "string" &&
@@ -140,7 +140,7 @@ var Ticket;
                         return ticket_1.ticketModel.batchUpdatePriceTier(ids, tierName);
                     }).
                         then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => { return { success: true, data: json }; });
+                        then(json => next({ success: true, data: json }));
                 }
             }
         });

@@ -6,7 +6,7 @@ import { v1 } from '../../mongoose-schema/schema'
 import { ISeat, seatModel } from "../../mongoose-schema/v1/seat";
 import { RequestError } from "../database/database";
 
-let seatNotFound = (id: string) => { new RequestError(`Seat with id ${id} not found.`) }
+let seatNotFound = (id: string) => { throw new RequestError(`Seat with id ${id} not found.`) }
 export namespace Seat {
     export function RouterFactory(): Express.Router {
         var seat = Router()
@@ -43,7 +43,7 @@ export namespace Seat {
                             }) as ISeat[])
                         }).
                         then(docs => docs.map(doc => doc.toJSON())).
-                        then(json => { return { success: true, data: json } }).
+                        then(json => next({ success: true, data: json } )).
                         catch(err => next(err))
                 }
             }
@@ -76,7 +76,7 @@ export namespace Seat {
                         res.locals.session = _session;
                         res.locals.session ? res.locals.session.startTransaction() : null;
                         return Promise.all(req.body.seatIds.map(async (seatId: string) => {
-                            return seatModel.findById(req.params.seatId).
+                            return seatModel.findById(seatId).
                                 then(seatDoc => {
                                     if (seatDoc) {
                                         return seatDoc.deleteOne({ includeResultMetadata: true }).exec()
@@ -87,8 +87,7 @@ export namespace Seat {
                                 })
                         }))
                     }).
-                    //then(docs => docs.map(doc => doc)).
-                    then(json => { return { success: true, data: json } }).
+                    then(json => { next({ success: true, data: json }) }).
                     catch((err: any) => next(err))
             }
         })
