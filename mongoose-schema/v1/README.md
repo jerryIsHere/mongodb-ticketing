@@ -72,6 +72,9 @@ An ultimate approach of enabling query middleware with robust referential integr
 { $set: { priceTier: val } }
 ```
 
+additional discussion
+https://www.mongodb.com/community/forums/t/when-to-use-aggregation-pipelines-instead-of-processing-data-at-the-app-level/235585
+
 Task 2 is too complex:
 1. as the input of the query could be document or pipeline. https://www.mongodb.com/docs/manual/reference/method/db.collection.updateOne/
 2. The implementation is not intuitive, easy to make mistake. Better to use if we have automated unit test.
