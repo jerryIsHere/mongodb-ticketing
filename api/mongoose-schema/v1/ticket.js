@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paymentInfoModel = exports.purchaseInfoModel = exports.ticketModel = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = void 0;
+exports.paymentInfoModel = exports.purchaseInfoModel = exports.ticketModel = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = exports.vendors = void 0;
 const event_1 = require("./event");
 const priceTier_1 = require("./priceTier");
 const mongoose_1 = require("mongoose");
@@ -9,6 +9,7 @@ const user_1 = require("./user");
 const notification_1 = require("./notification");
 const schema_names_1 = require("../schema-names");
 const error_1 = require("../error");
+exports.vendors = ["fps", "payme", "wechatpay", "alipay", "free"];
 exports.purchaseInfoSchema = new mongoose_1.Schema({
     purchaseDate: { type: Date, requried: true },
     purchaserId: {
@@ -26,6 +27,9 @@ exports.purchaseInfoSchema = new mongoose_1.Schema({
     autoCreate: false,
     autoIndex: false,
 });
+function checkVendorName(vendor) {
+    return exports.vendors.includes(vendor);
+}
 exports.paymentInfoSchema = new mongoose_1.Schema({
     confirmerId: {
         type: mongoose_1.Schema.Types.ObjectId,
@@ -40,6 +44,14 @@ exports.paymentInfoSchema = new mongoose_1.Schema({
                     throw new error_1.ReferentialError(`${schema_names_1.names.User.singular_name} with id {VALUE} do not have such permission.`);
                 return true;
             },
+        },
+    },
+    confirmedBy: {
+        type: String,
+        required: true,
+        validate: {
+            validator: async (val) => checkVendorName(val),
+            message: "Payment confirmation {VALUE} is not recongized"
         },
     },
     remark: { type: String },
@@ -86,7 +98,6 @@ exports.tickerSchema = new mongoose_1.Schema({
         async bulkPurchase(userId, ticketIds) {
             let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
             let tickets = await exports.ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec();
-            console.log(ticketIds, tickets);
             if (tickets.length != ticketIds.length) {
                 let idsPurchaseable = tickets.map(model => model._id.toString());
                 let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id));
@@ -106,7 +117,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                     ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`);
             let now = new Date();
             let saleInfo = event.saleInfos.find((info) => {
-                info.start <= now && info.end >= new Date();
+                return info.start <= now && info.end >= new Date();
             });
             if (saleInfo == null)
                 throw new error_1.OperationError(`Tickets of event with id ${event._id} is not selling yet.`);
@@ -195,6 +206,7 @@ exports.tickerSchema = new mongoose_1.Schema({
         async discloseToClient(userId) {
             let disclosable = await this.disclose();
             return {
+                _id: this._id,
                 event: disclosable.event,
                 seat: disclosable.seat,
                 priceTier: this.priceTier,
@@ -206,6 +218,7 @@ exports.tickerSchema = new mongoose_1.Schema({
         async disclose() {
             let populated = await this.populate(["event", "seat"]);
             return {
+                _id: this._id,
                 event: populated.event,
                 seat: populated.seat,
                 priceTier: this.priceTier,
@@ -213,11 +226,29 @@ exports.tickerSchema = new mongoose_1.Schema({
             };
         },
         async fullyPopulate() {
-            return await this.populate([
+            let populated = await this.populate([
                 "event",
-                "seat", "purchaseInfo.purchaser",
+                "seat",
+                "purchaseInfo.purchaser",
                 "paymentInfo.confirmer"
             ]);
+            let populatedPurchaseInfo = populated.purchaseInfo ?
+                {
+                    ...populated.purchaseInfo.toJSON(),
+                    ...{ purchaser: populated.purchaseInfo.purchaser }
+                } : undefined;
+            let populatedPaymentInfo = populated.paymentInfo
+                ? {
+                    ...populated.paymentInfo.toJSON(), ...{ confirmer: populated.paymentInfo.confirmer }
+                } : undefined;
+            return {
+                _id: populated._id,
+                event: populated.event,
+                seat: populated.seat,
+                priceTier: populated.priceTier,
+                purchaseInfo: populatedPurchaseInfo,
+                paymentInfo: populatedPaymentInfo,
+            };
         },
     },
     query: {

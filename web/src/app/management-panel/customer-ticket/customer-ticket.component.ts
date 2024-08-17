@@ -223,7 +223,7 @@ export class CustomerTicketComponent {
               user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss') : '',
               lastTicket ? lastTicket.purchaseInfo ? dateFormat(new Date(lastTicket.purchaseInfo.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
               lastTicket ? lastTicket.paymentInfo ? dateFormat(new Date(lastTicket.paymentInfo.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
-              lastTicket ? lastTicket.paymentInfo?.confirmerId : '',
+              lastTicket ? lastTicket.paymentInfo?.confirmer?.username : '',
               lastTicket ? lastTicket.paymentInfo?.remark : '',
 
             ].map(value => value ? value : '').join(",")
@@ -266,7 +266,7 @@ export class CustomerTicketComponent {
               dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
             "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
               dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
-            "paymentInfo" in ticket ? ticket.paymentInfo?.confirmerId : '',
+            "paymentInfo" in ticket ? ticket.paymentInfo?.confirmer?.username : '',
             "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
             ].map(value => value ? value : '').join(",")
           )

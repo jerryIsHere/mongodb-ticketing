@@ -1,7 +1,7 @@
 // refer to Event of backend logic but renamed to Show to avoid name conflict with browser event javascript object
 import { IEvent as Show, ISaleInfo } from '../../../mongoose-schema/v1/event'
 import { IPriceTier } from '../../../mongoose-schema/v1/priceTier'
-import { IDisclosableTicket, IClientTicket, IFullyPopulatedTicket as AdminTicket } from '../../../mongoose-schema/v1/ticket'
+import { IDisclosableTicket, IClientTicket, IFullyPopulatedTicket as AdminTicket, IPopulatedPaymentInfo, IPopulatedPurchaseInfo } from '../../../mongoose-schema/v1/ticket'
 import { ISeat as Seat } from '../../../mongoose-schema/v1/seat'
 import { IDisclosableUser as User } from '../../../mongoose-schema/v1/user'
 import { ISection, IVenue as Venue } from '../../../mongoose-schema/v1/venue'
@@ -23,10 +23,10 @@ export function showSellingString(saleInfos: ISaleInfo[]): string {
         join("\n")
 
 }
-export function ticketConfirmDateString(ticket: AdminTicket<ShowAPIObject, SeatAPIObject>): string {
+export function ticketConfirmDateString(ticket: AdminTicketAPIObject): string {
     return ticket.paymentInfo ? 'Ticket confirmed at ' + new Date(ticket.paymentInfo.confirmationDate).toLocaleDateString() : ''
 }
-export function ticketPurchaseDateString(ticket: AdminTicket<ShowAPIObject, SeatAPIObject>): string {
+export function ticketPurchaseDateString(ticket: AdminTicketAPIObject): string {
     return ticket.purchaseInfo ? new Date(ticket.purchaseInfo.purchaseDate).toLocaleDateString() : ''
 }
 export interface WithId {
@@ -36,10 +36,14 @@ export function getPurchaserIfAny(ticket: TicketAPIObject) {
     return "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser : "purchased" in ticket ? ticket.purchased : null
 }
 type ShowAPIObject = Show & WithId
+type PurchaseInfoAPIObject = IPopulatedPurchaseInfo<UserAPIObject> & WithId
+type PaymentInfoAPIObject = IPopulatedPaymentInfo<UserAPIObject> & WithId
+type AdminTicketAPIObject =
+    (AdminTicket<ShowAPIObject, SeatAPIObject, PurchaseInfoAPIObject, PaymentInfoAPIObject> & WithId)
 type TicketAPIObject =
     (IDisclosableTicket<ShowAPIObject, SeatAPIObject> & WithId) |
     (IClientTicket<ShowAPIObject, SeatAPIObject> & WithId) |
-    (AdminTicket<ShowAPIObject, SeatAPIObject> & WithId)
+    AdminTicketAPIObject
 type SeatAPIObject = Seat & WithId
 type UserAPIObject = User & WithId
 type VenueAPIObject = Venue & WithId

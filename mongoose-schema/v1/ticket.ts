@@ -8,7 +8,7 @@ import {
   HydratedDocument,
   QueryWithHelpers,
 } from "mongoose";
-import { ISeat, seatModel } from "./seat";
+import { ISeat, ISeatMethod, seatModel } from "./seat";
 import { IUser, userModel } from "./user";
 import { notificationModel } from "./notification";
 import { names } from "../schema-names";
@@ -17,36 +17,44 @@ export interface IPurchaseInfo {
   purchaseDate: Date;
   purchaserId: Types.ObjectId;
 }
-export interface IPopulatedPurchaseInfou {
+export interface IPopulatedPurchaseInfo<TUser = HydratedDocument<IUser>> {
   purchaseDate: Date;
-  purchaser: HydratedDocument<IUser> | null;
+  purchaser: TUser | null;
 }
-
+export const vendors = ["fps", "payme", "wechatpay", "alipay", "free"]
+export type MicrotransctionVendor = "fps" | "payme" | "wechatpay" | "alipay" | "free";
 export interface IPaymentInfo {
   confirmerId: Types.ObjectId;
-  remark: string;
+  confirmedBy: MicrotransctionVendor;
+  remark?: string;
   confirmationDate: Date;
 }
-export interface IPopulatedPaymentInfo {
-  confirmerId: IUser | null;
-  remark: string;
+export interface IPopulatedPaymentInfo<TUser = HydratedDocument<IUser>> {
+  confirmer: TUser | null;
+  confirmedBy: MicrotransctionVendor;
+  remark?: string;
   confirmationDate: Date;
 }
 
-export interface IPopulatedTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>,> {
+export interface IBasePopulatedTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>,> {
   event: TEvent | null;
   seat: TSeat | null;
   priceTier: IPriceTier;
 }
-export interface IDisclosableTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IPopulatedTicket<TEvent, TSeat> {
+export interface IDisclosableTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IBasePopulatedTicket<TEvent, TSeat> {
   purchased: boolean;
+  _id: Types.ObjectId | string;
 }
 export interface IClientTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IDisclosableTicket<TEvent, TSeat> {
   belongsToUser: boolean;
 }
-export interface IFullyPopulatedTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IPopulatedTicket<TEvent, TSeat> {
-  purchaseInfo?: IPopulatedPurchaseInfou;
-  paymentInfo?: IPopulatedPaymentInfo;
+export interface IFullyPopulatedTicket<TEvent = HydratedDocument<IEvent>,
+  TSeat = HydratedDocument<ISeat>,
+  TPurchaseInfo = HydratedDocument<IPopulatedPurchaseInfo>,
+  TPaymentInfo = HydratedDocument<IPopulatedPaymentInfo>,
+> extends IBasePopulatedTicket<TEvent, TSeat> {
+  purchaseInfo?: TPurchaseInfo;
+  paymentInfo?: TPaymentInfo;
 }
 
 export interface ITicket {
@@ -60,9 +68,8 @@ interface ITicketMethod {
   voidPurchased(operatorName: string): Promise<HydratedDocument<ITicket>>;
   discloseToClient(userId: Types.ObjectId): Promise<IClientTicket>;
   disclose(): Promise<IDisclosableTicket>;
-  fullyPopulate(): Promise<IFullyPopulatedTicket>
+  fullyPopulate(): Promise<IFullyPopulatedTicket<IEvent, ISeat, IPopulatedPurchaseInfo<IUser>, IPopulatedPaymentInfo<IUser>>>
 }
-
 interface HydratedTicket extends HydratedDocument<ITicket, ITicketMethod, TickerQueryHelpers> { }
 interface TickerQueryHelpers {
   findByEventId(
@@ -114,6 +121,9 @@ export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
   autoCreate: false,
   autoIndex: false,
 });
+function checkVendorName(vendor: string): vendor is MicrotransctionVendor {
+  return vendors.includes(vendor);
+}
 export const paymentInfoSchema = new Schema<IPaymentInfo>({
   confirmerId: {
     type: Schema.Types.ObjectId,
@@ -130,6 +140,14 @@ export const paymentInfoSchema = new Schema<IPaymentInfo>({
           );
         return true;
       },
+    },
+  },
+  confirmedBy: {
+    type: String,
+    required: true,
+    validate: {
+      validator: async (val: string) => checkVendorName(val),
+      message: "Payment confirmation {VALUE} is not recongized"
     },
   },
   remark: { type: String },
@@ -191,7 +209,6 @@ export const tickerSchema = new Schema<
           (id) => new Types.ObjectId(id)
         );
         let tickets = await ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec()
-        console.log(ticketIds, tickets)
         if (tickets.length != ticketIds.length) {
           let idsPurchaseable = tickets.map(model => model._id.toString());
           let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id))
@@ -218,7 +235,7 @@ export const tickerSchema = new Schema<
           );
         let now = new Date();
         let saleInfo = event.saleInfos.find((info) => {
-          info.start <= now && info.end >= new Date();
+          return info.start <= now && info.end >= new Date();
         });
         if (saleInfo == null)
           throw new OperationError(
@@ -327,6 +344,7 @@ export const tickerSchema = new Schema<
       async discloseToClient(userId: Types.ObjectId) {
         let disclosable = await this.disclose();
         return {
+          _id: this._id,
           event: disclosable.event,
           seat: disclosable.seat,
           priceTier: this.priceTier,
@@ -339,6 +357,7 @@ export const tickerSchema = new Schema<
       async disclose() {
         let populated = await this.populate<IDisclosableTicket>(["event", "seat"]);
         return {
+          _id: this._id,
           event: populated.event,
           seat: populated.seat,
           priceTier: this.priceTier,
@@ -346,11 +365,29 @@ export const tickerSchema = new Schema<
         };
       },
       async fullyPopulate() {
-        return await this.populate<IFullyPopulatedTicket>([
+        let populated = await this.populate<IFullyPopulatedTicket>([
           "event",
-          "seat", "purchaseInfo.purchaser",
-          "paymentInfo.confirmer"]);
-
+          "seat",
+          "purchaseInfo.purchaser",
+          "paymentInfo.confirmer"])
+        let populatedPurchaseInfo: IPopulatedPurchaseInfo<IUser> | undefined = populated.purchaseInfo ?
+          {
+            ...populated.purchaseInfo.toJSON(),
+            ...{ purchaser: populated.purchaseInfo.purchaser }
+          } : undefined
+        let populatedPaymentInfo: IPopulatedPaymentInfo<IUser> | undefined =
+          populated.paymentInfo
+            ? {
+              ...populated.paymentInfo.toJSON(), ...{ confirmer: populated.paymentInfo.confirmer }
+            } : undefined
+        return {
+          _id: populated._id,
+          event: populated.event,
+          seat: populated.seat,
+          priceTier: populated.priceTier,
+          purchaseInfo: populatedPurchaseInfo,
+          paymentInfo: populatedPaymentInfo,
+        }
       },
     },
     query: {

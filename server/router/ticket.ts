@@ -152,10 +152,11 @@ export namespace Ticket {
         })
         ticket.patch("/:ticketId", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.verify != undefined &&
-                (req.body.confirmerId != undefined || req.body.confirmerId == null || typeof req.body.confirmerId == "string") &&
+                (req.body.confirmedBy != undefined || req.body.confirmerId == null || typeof req.body.confirmerId == "string") &&
                 (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string")) {
                 let info: IPaymentInfo = {
-                    confirmerId: req.body.securedBy,
+                    confirmerId: (req.session['user'] as any)._id,
+                    confirmedBy: req.body.confirmedBy,
                     remark: req.body.remark,
                     confirmationDate: new Date()
                 }

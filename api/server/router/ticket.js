@@ -61,6 +61,7 @@ var Ticket;
                     ids = (JSON.parse(req.query.list)).filter((value) => typeof value == "string");
                 }
                 catch (e) {
+                    return next(new database_1.RequestError("Ids are not in regconized format"));
                 }
                 if (req.session["user"] != null && req.session["user"]._id && req.session["user"]._id != req.query.userId) {
                     next(new database_1.RequestError("This reveals information of another user"));
@@ -68,16 +69,11 @@ var Ticket;
                 }
                 else {
                     let userId = req.session["user"]._id;
-                    if (ids) {
-                        ticket_1.ticketModel.find({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }).
-                            then(async (docs) => next({
-                            sucess: true,
-                            data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
-                        }));
-                    }
-                    else {
-                        next(new database_1.RequestError("unregconized list query"));
-                    }
+                    ticket_1.ticketModel.find({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }).
+                        then(async (docs) => next({
+                        sucess: true,
+                        data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
+                    }));
                 }
             }
         });
@@ -147,10 +143,11 @@ var Ticket;
         });
         ticket.patch("/:ticketId", async (req, res, next) => {
             if (req.query.verify != undefined &&
-                (req.body.confirmerId != undefined || req.body.confirmerId == null || typeof req.body.confirmerId == "string") &&
+                (req.body.confirmedBy != undefined || req.body.confirmerId == null || typeof req.body.confirmerId == "string") &&
                 (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string")) {
                 let info = {
-                    confirmerId: req.body.securedBy,
+                    confirmerId: req.session['user']._id,
+                    confirmedBy: req.body.confirmedBy,
                     remark: req.body.remark,
                     confirmationDate: new Date()
                 };

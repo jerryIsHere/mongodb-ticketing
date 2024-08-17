@@ -23,10 +23,10 @@ import { AdminTicket, TicketAPIObject, WithId } from '../../interface-util'
 })
 export class TicketFormComponent {
   ticketForm: FormGroup = this._formBuilder.group({
-    confirmerId: new FormControl(
-      this.ticket && this.ticket.paymentInfo?.confirmerId ? this.ticket.paymentInfo.confirmerId : ""),
+    confirmedBy: new FormControl(
+      this.ticket && this.ticket.paymentInfo?.confirmedBy ? this.ticket.paymentInfo.confirmedBy : ""),
     remark: new FormControl(
-     this.ticket && this.ticket.paymentInfo?.remark ? this.ticket.paymentInfo.remark : ""),
+      this.ticket && this.ticket.paymentInfo?.remark ? this.ticket.paymentInfo.remark : ""),
   });
   constructor(
     public dialogRef: MatDialogRef<TicketFormComponent>,
