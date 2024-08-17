@@ -62,10 +62,11 @@ export namespace Ticket {
                     catch(err => next(err))
             }
             else if (req.query.list != undefined && req.query.userId && typeof req.query.userId === "string") {
-                let ids: string[] | undefined
+                let ids: string[]
                 try {
                     ids = (JSON.parse(req.query.list as string)).filter((value: any) => typeof value == "string")
                 } catch (e) {
+                    return next(new RequestError("Ids are not in regconized format"))
                 }
                 if (req.session["user"] != null && req.session["user"]._id && req.session["user"]._id != req.query.userId) {
                     next(new RequestError("This reveals information of another user"))
@@ -73,17 +74,12 @@ export namespace Ticket {
                 }
                 else {
                     let userId = (req.session["user"] as any)._id
-                    if (ids) {
-                        ticketModel.find({ _id: { $in: ids.map(id => new ObjectId(id)) } }).
-                            then(async docs =>
-                                next({
-                                    sucess: true,
-                                    data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
-                                }));
-                    }
-                    else {
-                        next(new RequestError("unregconized list query"))
-                    }
+                    ticketModel.find({ _id: { $in: ids.map(id => new ObjectId(id)) } }).
+                        then(async docs =>
+                            next({
+                                sucess: true,
+                                data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
+                            }));
                 }
             }
         })
