@@ -54,7 +54,7 @@ pre("findOneAndDelete", () => {
 
 An ultimate approach of enabling query middleware with robust referential integrity validation would be:
 1. for delete query, append condition to the filter such that the query only matches deletable document.
-2. for update query, replace the query with aggregate, as $lookup is not avaliable for filter parameter for querys `updateone`. Analyze the update modifications and appends condition to the filter that filter out everything if the modification is prohibited. For examples, if use update the priceTier of ticket x with `updateOne({ _id: objectId }, {$set: { priceTier: val } })` we change the query to aggregate as follows :
+2. for update query, replace the query with aggregate, as $lookup is not avaliable for filter parameter for querys `updateone`. Analyze the update modifications and appends $match to the piple for filtering prohibited modification out. For examples, if use update the priceTier of ticket x with `updateOne({ _id: objectId }, {$set: { priceTier: val } })` we change the query to aggregate as follows :
 ```
 { $match: { _id: objectId } },
 {
