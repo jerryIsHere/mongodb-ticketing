@@ -85,10 +85,14 @@ exports.tickerSchema = new mongoose_1.Schema({
     statics: {
         async bulkPurchase(userId, ticketIds) {
             let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
-            let tickets = await exports.ticketModel
-                .find({ _id: { $in: ticketObjectIds } })
-                .lean()
-                .exec();
+            let tickets = await exports.ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec();
+            if (tickets.length != ticketIds.length) {
+                let idsPurchaseable = tickets.map(model => model._id.toString());
+                let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id));
+                throw new error_1.OperationError(`Ticket${idsNotPurchaseable.length > 1 ? 's' : ''} with id ` +
+                    idsNotPurchaseable.join(', ') +
+                    `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.`);
+            }
             let events = await event_1.eventModel
                 .find({ _id: { $in: tickets.map((t) => t.eventId) } })
                 .lean()
@@ -105,10 +109,10 @@ exports.tickerSchema = new mongoose_1.Schema({
             });
             if (saleInfo == null)
                 throw new error_1.OperationError(`Tickets of event with id ${event._id} is not selling yet.`);
-            let baughtTicketCount = await exports.ticketModel.countDocuments({
+            let userTicketForEventCount = await exports.ticketModel.countDocuments({
                 "paymentInfo.purchaserId": userId,
             });
-            if (baughtTicketCount >= saleInfo.ticketQuota)
+            if (userTicketForEventCount + ticketIds.length >= saleInfo.ticketQuota)
                 throw new error_1.OperationError(`You have no more ticket quota (${saleInfo.ticketQuota})` +
                     ` for event with id ${event._id}.`);
             let purchaseInfo = new exports.purchaseInfoModel({
@@ -116,15 +120,13 @@ exports.tickerSchema = new mongoose_1.Schema({
                 purchaseDate: now,
             });
             purchaseInfo.validate();
-            return exports.ticketModel
-                .updateMany({
-                _id: ticketObjectIds,
-            }, {
-                $set: {
-                    purcahseInfo: purchaseInfo,
-                },
-            })
-                .then();
+            let purchasedTicket = await Promise.all(tickets.map(ticket => {
+                ticket.purchaseInfo = purchaseInfo;
+                // validation done with purchaseInfo.validate() and only one filed of ticket is modified.
+                // purchaseinfo.validate requires finding user in db, and is slightly expensive
+                return ticket.save({ validateBeforeSave: false });
+            }));
+            return purchasedTicket;
         },
         async batchUpdatePriceTier(ticketIds, tierName) {
             let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
@@ -143,7 +145,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                 p.tierName == tierName;
             });
             if (match == null)
-                throw new error_1.ReferentialError(`Tickes of event with id ${event._id} is not selling yet.`);
+                throw new error_1.ReferentialError(`Event with id ${event._id} does not have a price tier called ${tierName}.`);
             return exports.ticketModel
                 .updateMany({ _id: { $in: ticketObjectIds } }, {
                 $set: {
@@ -246,12 +248,6 @@ exports.tickerSchema.pre('updateOne', { document: false, query: true }, () => {
     throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
 });
 exports.tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
-// tickerSchema.pre<Query<ITicket, TicketModel>>('updateMany', function (next) {
-//     const update = this.getUpdate() as UpdateQuery<TicketModel>;
-//     if (update && update.$set && update.$set.purchaseInfo) {
-//     }
-//     next();
-// });
 exports.ticketModel = (0, mongoose_1.model)(schema_names_1.names.Ticket.singular_name, exports.tickerSchema, schema_names_1.names.Ticket.collection_name);
 exports.purchaseInfoModel = (0, mongoose_1.model)("Purchase", exports.purchaseInfoSchema);
 exports.paymentInfoModel = (0, mongoose_1.model)("Payment", exports.paymentInfoSchema);

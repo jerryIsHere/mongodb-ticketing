@@ -96,6 +96,7 @@ venueSchema.pre('updateOne', { document: false, query: true }, () => {
 venueSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
 venueSchema.pre("findOneAndDelete", () => {
   throw new Error(
-    "Please use find(ById) and chain delete afterwards, as referential checking needs documents")
+    "Please use find(ById) and chain delete afterwards, as referential checking needs " +
+    "foreign key in document fields thus has to be executed in document middleware")
 });
 export const venueModel = model<IVenue, VenueModel>(names.Venue.singular_name, venueSchema, names.Venue.collection_name);

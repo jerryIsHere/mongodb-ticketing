@@ -5,11 +5,8 @@ import {
   model,
   Types,
   Model,
-  Query,
-  UpdateQuery,
   HydratedDocument,
   QueryWithHelpers,
-  ObjectId,
 } from "mongoose";
 import { ISeat, seatModel } from "./seat";
 import { IUser, userModel } from "./user";
@@ -193,10 +190,16 @@ export const tickerSchema = new Schema<
         let ticketObjectIds = ticketIds.map(
           (id) => new Types.ObjectId(id)
         );
-        let tickets = await ticketModel
-          .find({ _id: { $in: ticketObjectIds } })
-          .lean()
-          .exec();
+        let tickets = await ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec()
+        if (tickets.length != ticketIds.length) {
+          let idsPurchaseable = tickets.map(model => model._id.toString());
+          let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id))
+          throw new OperationError(
+            `Ticket${idsNotPurchaseable.length > 1 ? 's' : ''} with id ` +
+            idsNotPurchaseable.join(', ') +
+            `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.`
+          );
+        }
         let events = await eventModel
           .find({ _id: { $in: tickets.map((t) => t.eventId) } })
           .lean()
@@ -220,10 +223,10 @@ export const tickerSchema = new Schema<
           throw new OperationError(
             `Tickets of event with id ${event._id} is not selling yet.`
           );
-        let baughtTicketCount = await ticketModel.countDocuments({
+        let userTicketForEventCount = await ticketModel.countDocuments({
           "paymentInfo.purchaserId": userId,
         });
-        if (baughtTicketCount >= saleInfo.ticketQuota)
+        if (userTicketForEventCount + ticketIds.length >= saleInfo.ticketQuota)
           throw new OperationError(
             `You have no more ticket quota (${saleInfo.ticketQuota})` +
             ` for event with id ${event._id}.`
@@ -233,18 +236,15 @@ export const tickerSchema = new Schema<
           purchaseDate: now,
         });
         purchaseInfo.validate();
-        return ticketModel
-          .updateMany(
-            {
-              _id: ticketObjectIds,
-            },
-            {
-              $set: {
-                purcahseInfo: purchaseInfo,
-              },
-            }
-          )
-          .then();
+        let purchasedTicket = await Promise.all(
+          tickets.map(ticket => {
+            ticket.purchaseInfo = purchaseInfo;
+            // validation done with purchaseInfo.validate() and only one filed of ticket is modified.
+            // purchaseinfo.validate requires finding user in db, and is slightly expensive
+            return ticket.save({ validateBeforeSave: false })
+          }))
+
+        return purchasedTicket
       },
       async batchUpdatePriceTier(
         ticketIds: string[],
@@ -272,7 +272,7 @@ export const tickerSchema = new Schema<
         });
         if (match == null)
           throw new ReferentialError(
-            `Tickes of event with id ${event._id} is not selling yet.`
+            `Event with id ${event._id} does not have a price tier called ${tierName}.`
           );
         return ticketModel
           .updateMany(
@@ -396,13 +396,6 @@ tickerSchema.pre('updateOne', { document: false, query: true }, () => {
     "Please use find(ById) and chain save afterwards, as referential checking needs documents")
 })
 tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
-// tickerSchema.pre<Query<ITicket, TicketModel>>('updateMany', function (next) {
-//     const update = this.getUpdate() as UpdateQuery<TicketModel>;
-//     if (update && update.$set && update.$set.purchaseInfo) {
-
-//     }
-//     next();
-// });
 
 export const ticketModel: TicketModel = model<ITicket, TicketModel>(
   names.Ticket.singular_name,
