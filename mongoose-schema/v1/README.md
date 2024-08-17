@@ -3,6 +3,22 @@ as there is no way to get fields of the documents in those callback.
 
 For example when updating priceTier of a ticket, we need to check whether the new priceTier value are in the associated event or not.
 We need eventId of the document, and new priceTier value from the update query.
+Ticket object
+```
+{
+  eventId: ObjectId(asdf123)
+  priceTier: {tierName: "A", price: 100}
+  ...otherTicketInfomations
+}
+```
+Event object
+```
+{
+  _id: ObjectId(asdf123)
+  priceTiers: [{tierName: "A", price: 100},{tierName: "B", price: 200},{tierName: "C", price: D00}]
+  ...otherEventInfomations
+}
+```
 
 These info are avaliable only in document middleware.
 If we 1. find the document; 2. set the fields; 3. call save method, we can validate these fields.
@@ -52,8 +68,8 @@ An ultimate approach of enabling query middleware with robust referential integr
 
 },
 { $set: { 'event': { $first: '$event' } } },
-{ $match: {'event.priceTier': val } },
-{ $set: {priceTier: val } }
+{ $match: {'event.priceTiers': val } },
+{ $set: { priceTier: val } }
 ```
 
 Task 2 is too complex:
