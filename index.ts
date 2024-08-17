@@ -66,6 +66,7 @@ app.use('/venue', Venue.RouterFactory());
 
 import { Ticket } from './server/router/ticket';
 import { OperationError, ReferentialError, ValidationError } from "./mongoose-schema/error";
+import { MongoServerError } from "mongodb";
 app.use('/ticket', Ticket.RouterFactory());
 
 
@@ -92,6 +93,10 @@ app.use(async (output: any, req: Request, res: Response, next: NextFunction) => 
         output instanceof OperationError
       )) {
         res.locals.RequestErrorList.push(new RequestError(output.message))
+      }
+      else if (output instanceof MongoServerError){
+        if(output.code == 11000) 
+          res.locals.RequestErrorList.push(new RequestError("The creation fails as the request object already exists."))
       }
       else if(output instanceof Error){
         // unknow error is not presentable to end user
