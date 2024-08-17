@@ -36,6 +36,12 @@ exports.seatSchema = new mongoose_1.Schema({
         },
     },
 });
+exports.seatSchema.virtual('venue', {
+    ref: schema_names_1.names.Venue.singular_name,
+    localField: 'venueId',
+    foreignField: '_id',
+    justOne: true
+});
 exports.seatSchema.pre('updateOne', { document: false, query: true }, () => {
     throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
 });

@@ -86,6 +86,7 @@ exports.tickerSchema = new mongoose_1.Schema({
         async bulkPurchase(userId, ticketIds) {
             let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
             let tickets = await exports.ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec();
+            console.log(ticketIds, tickets);
             if (tickets.length != ticketIds.length) {
                 let idsPurchaseable = tickets.map(model => model._id.toString());
                 let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id));
@@ -203,10 +204,7 @@ exports.tickerSchema = new mongoose_1.Schema({
             };
         },
         async disclose() {
-            let populated = await this.populate([
-                { path: "eventId", model: schema_names_1.names.Event.singular_name },
-                { path: "seatId", model: schema_names_1.names.Seat.singular_name },
-            ]);
+            let populated = await this.populate(["event", "seat"]);
             return {
                 event: populated.event,
                 seat: populated.seat,
@@ -216,10 +214,9 @@ exports.tickerSchema = new mongoose_1.Schema({
         },
         async fullyPopulate() {
             return await this.populate([
-                { path: "eventId", model: schema_names_1.names.Event.singular_name },
-                { path: "seatId", model: schema_names_1.names.Seat.singular_name },
-                { path: "purchaseInfo.purchaserId", model: schema_names_1.names.User.singular_name },
-                { path: "paymentInfo.confirmerId", model: schema_names_1.names.User.singular_name },
+                "event",
+                "seat", "purchaseInfo.purchaser",
+                "paymentInfo.confirmer"
             ]);
         },
     },
@@ -243,6 +240,30 @@ exports.tickerSchema = new mongoose_1.Schema({
             });
         },
     },
+});
+exports.purchaseInfoSchema.virtual('purchaser', {
+    ref: schema_names_1.names.User.singular_name,
+    localField: 'purchaserId',
+    foreignField: '_id',
+    justOne: true
+});
+exports.paymentInfoSchema.virtual('confirmer', {
+    ref: schema_names_1.names.User.singular_name,
+    localField: 'confirmerId',
+    foreignField: '_id',
+    justOne: true
+});
+exports.tickerSchema.virtual('event', {
+    ref: schema_names_1.names.Event.singular_name,
+    localField: 'eventId',
+    foreignField: '_id',
+    justOne: true
+});
+exports.tickerSchema.virtual('seat', {
+    ref: schema_names_1.names.Seat.singular_name,
+    localField: 'seatId',
+    foreignField: '_id',
+    justOne: true
 });
 exports.tickerSchema.pre('updateOne', { document: false, query: true }, () => {
     throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");

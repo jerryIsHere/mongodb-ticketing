@@ -191,6 +191,7 @@ export const tickerSchema = new Schema<
           (id) => new Types.ObjectId(id)
         );
         let tickets = await ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec()
+        console.log(ticketIds, tickets)
         if (tickets.length != ticketIds.length) {
           let idsPurchaseable = tickets.map(model => model._id.toString());
           let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id))
@@ -336,10 +337,7 @@ export const tickerSchema = new Schema<
         };
       },
       async disclose() {
-        let populated = await this.populate<IDisclosableTicket>([
-          { path: "eventId", model: names.Event.singular_name },
-          { path: "seatId", model: names.Seat.singular_name },
-        ]);
+        let populated = await this.populate<IDisclosableTicket>(["event", "seat"]);
         return {
           event: populated.event,
           seat: populated.seat,
@@ -349,11 +347,9 @@ export const tickerSchema = new Schema<
       },
       async fullyPopulate() {
         return await this.populate<IFullyPopulatedTicket>([
-          { path: "eventId", model: names.Event.singular_name },
-          { path: "seatId", model: names.Seat.singular_name },
-          { path: "purchaseInfo.purchaserId", model: names.User.singular_name },
-          { path: "paymentInfo.confirmerId", model: names.User.singular_name },
-        ]);
+          "event",
+          "seat", "purchaseInfo.purchaser",
+          "paymentInfo.confirmer"]);
 
       },
     },

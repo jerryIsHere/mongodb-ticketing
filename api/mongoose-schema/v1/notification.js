@@ -30,6 +30,12 @@ exports.notificationSchema = new mongoose_1.Schema({
         },
     },
 });
+exports.notificationSchema.virtual('recipient', {
+    ref: schema_names_1.names.User.singular_name,
+    localField: 'recipientId',
+    foreignField: '_id',
+    justOne: true
+});
 exports.notificationSchema.pre('updateOne', { document: false, query: true }, () => {
     throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
 });
