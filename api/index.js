@@ -52,6 +52,7 @@ const venue_1 = require("./server/router/venue");
 app.use('/venue', venue_1.Venue.RouterFactory());
 const ticket_1 = require("./server/router/ticket");
 const error_1 = require("./mongoose-schema/error");
+const mongodb_1 = require("mongodb");
 app.use('/ticket', ticket_1.Ticket.RouterFactory());
 app.use('/*', function (_, res) {
     res.redirect("/web/");
@@ -73,6 +74,10 @@ app.use(async (output, req, res, next) => {
                 output instanceof error_1.ReferentialError ||
                 output instanceof error_1.OperationError)) {
                 res.locals.RequestErrorList.push(new database_1.RequestError(output.message));
+            }
+            else if (output instanceof mongodb_1.MongoServerError) {
+                if (output.code == 11000)
+                    res.locals.RequestErrorList.push(new database_1.RequestError("The creation fails as the request object already exists."));
             }
             else if (output instanceof Error) {
                 // unknow error is not presentable to end user

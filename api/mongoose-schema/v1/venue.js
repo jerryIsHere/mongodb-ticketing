@@ -65,6 +65,7 @@ exports.venueSchema.pre('updateOne', { document: false, query: true }, () => {
 });
 exports.venueSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
 exports.venueSchema.pre("findOneAndDelete", () => {
-    throw new Error("Please use find(ById) and chain delete afterwards, as referential checking needs documents");
+    throw new Error("Please use find(ById) and chain delete afterwards, as referential checking needs " +
+        "foreign key in document fields thus has to be executed in document middleware");
 });
 exports.venueModel = (0, mongoose_1.model)(schema_names_1.names.Venue.singular_name, exports.venueSchema, schema_names_1.names.Venue.collection_name);
