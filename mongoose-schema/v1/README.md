@@ -16,7 +16,7 @@ pre("findOneAndDelete", () => {
 ``` 
 This approach enable a more robust referential integratiy checking mechanism but have overhead in more round-trip time.
 
-Can add custom options in query calls and middleware for allowing these query for flexibility.
+Can add custom options in query calls and update middleware implementation for allowing these query for flexibility.
 https://github.com/Automattic/mongoose/issues/7092
 ```
 pre('updateOne', { document: false, query: true }, () => {
