@@ -35,29 +35,29 @@ export namespace Ticket {
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
                 ticketModel.find().findByEventId(req.query.eventId).
-                    then(doc =>
+                    then(async docs =>
                         next({
-                            success: true, data: doc?.map(doc => doc.disclose())
+                            success: true, data: await Promise.all(docs?.map(doc => doc.disclose()))
                         })).
                     catch(err => next(err))
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 let userId = (req.session['user'] as any)._id
                 ticketModel.find().findByPurchaser(userId).
-                    then(doc =>
+                    then(async doc =>
                         next({
                             success: true,
-                            data: doc?.map(doc => doc.discloseToClient(userId))
+                            data: await Promise.all(doc?.map(doc => doc.discloseToClient(userId)))
                         })).
                     catch(err => next(err))
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session)
                 ticketModel.find().findSold().
-                    then(doc =>
+                    then(async doc =>
                         next({
                             success: true,
-                            data: doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose())
+                            data: await Promise.all(doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose()))
                         })).
                     catch(err => next(err))
             }
@@ -75,10 +75,10 @@ export namespace Ticket {
                     let userId = (req.session["user"] as any)._id
                     if (ids) {
                         ticketModel.find({ _id: { $in: ids.map(id => new ObjectId(id)) } }).
-                            then(docs =>
+                            then(async docs =>
                                 next({
                                     sucess: true,
-                                    data: docs.map(doc => doc.discloseToClient(userId))
+                                    data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
                                 }));
                     }
                     else {
@@ -91,9 +91,9 @@ export namespace Ticket {
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {
             let showOccupant = shouldShowOccupant(req.session)
             ticketModel.findById(req.params.eventId).
-                then(doc => next({
+                then(async doc => next({
                     success: true,
-                    data: showOccupant ? doc?.fullyPopulate() : doc?.disclose()
+                    data: await (showOccupant ? doc?.fullyPopulate() : doc?.disclose())
                 })).
                 catch(err => next(err))
         }
@@ -107,8 +107,9 @@ export namespace Ticket {
                             res.locals.session ? res.locals.session.startTransaction() : null;
                             return ticketModel.create(req.body.tickets as ITicket[])
                         }).
-                        then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => next({ success: true, data: json } ))
+                        then(async docs => await Promise.all(docs.map(doc => doc.fullyPopulate()))).
+                        then(json => next({ success: true, data: json })).
+                        catch(err => next(err))
                 }
                 else if (
                     req.body.eventId && typeof req.body.eventId == "string" &&
@@ -148,8 +149,8 @@ export namespace Ticket {
                             res.locals.session ? res.locals.session.startTransaction() : null;
                             return ticketModel.batchUpdatePriceTier(ids, tierName)
                         }).
-                        then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => next({ success: true, data: json } ))
+                        then(async docs => await Promise.all(docs.map(doc => doc.fullyPopulate()))).
+                        then(json => next({ success: true, data: json }))
                 }
             }
         })
@@ -172,7 +173,7 @@ export namespace Ticket {
                             ticketNotFound(req.params.ticketId)
                         }
                     }).
-                    then(doc => next({ success: true, data: doc?.fullyPopulate() })).
+                    then(async doc => next({ success: true, data: await doc?.fullyPopulate() })).
                     catch(err => next(err))
             }
             else if (req.query.void != undefined) {

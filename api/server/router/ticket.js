@@ -32,26 +32,26 @@ var Ticket;
         ticket.get("/", async (req, res, next) => {
             if (req.query.eventId && typeof req.query.eventId == "string") {
                 ticket_1.ticketModel.find().findByEventId(req.query.eventId).
-                    then(doc => next({
-                    success: true, data: doc?.map(doc => doc.disclose())
+                    then(async (docs) => next({
+                    success: true, data: await Promise.all(docs?.map(doc => doc.disclose()))
                 })).
                     catch(err => next(err));
             }
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
                 let userId = req.session['user']._id;
                 ticket_1.ticketModel.find().findByPurchaser(userId).
-                    then(doc => next({
+                    then(async (doc) => next({
                     success: true,
-                    data: doc?.map(doc => doc.discloseToClient(userId))
+                    data: await Promise.all(doc?.map(doc => doc.discloseToClient(userId)))
                 })).
                     catch(err => next(err));
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session);
                 ticket_1.ticketModel.find().findSold().
-                    then(doc => next({
+                    then(async (doc) => next({
                     success: true,
-                    data: doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose())
+                    data: await Promise.all(doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose()))
                 })).
                     catch(err => next(err));
             }
@@ -70,9 +70,9 @@ var Ticket;
                     let userId = req.session["user"]._id;
                     if (ids) {
                         ticket_1.ticketModel.find({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }).
-                            then(docs => next({
+                            then(async (docs) => next({
                             sucess: true,
-                            data: docs.map(doc => doc.discloseToClient(userId))
+                            data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
                         }));
                     }
                     else {
@@ -84,9 +84,9 @@ var Ticket;
         ticket.get("/:ticketId", async (req, res, next) => {
             let showOccupant = shouldShowOccupant(req.session);
             ticket_1.ticketModel.findById(req.params.eventId).
-                then(doc => next({
+                then(async (doc) => next({
                 success: true,
-                data: showOccupant ? doc?.fullyPopulate() : doc?.disclose()
+                data: await (showOccupant ? doc?.fullyPopulate() : doc?.disclose())
             })).
                 catch(err => next(err));
         });
@@ -99,8 +99,9 @@ var Ticket;
                         res.locals.session ? res.locals.session.startTransaction() : null;
                         return ticket_1.ticketModel.create(req.body.tickets);
                     }).
-                        then(docs => docs.map(doc => doc.fullyPopulate())).
-                        then(json => next({ success: true, data: json }));
+                        then(async (docs) => await Promise.all(docs.map(doc => doc.fullyPopulate()))).
+                        then(json => next({ success: true, data: json })).
+                        catch(err => next(err));
                 }
                 else if (req.body.eventId && typeof req.body.eventId == "string" &&
                     req.body.seatId && typeof req.body.seatId == "string" &&
@@ -139,7 +140,7 @@ var Ticket;
                         res.locals.session ? res.locals.session.startTransaction() : null;
                         return ticket_1.ticketModel.batchUpdatePriceTier(ids, tierName);
                     }).
-                        then(docs => docs.map(doc => doc.fullyPopulate())).
+                        then(async (docs) => await Promise.all(docs.map(doc => doc.fullyPopulate()))).
                         then(json => next({ success: true, data: json }));
                 }
             }
@@ -163,7 +164,7 @@ var Ticket;
                         ticketNotFound(req.params.ticketId);
                     }
                 }).
-                    then(doc => next({ success: true, data: doc?.fullyPopulate() })).
+                    then(async (doc) => next({ success: true, data: await doc?.fullyPopulate() })).
                     catch(err => next(err));
             }
             else if (req.query.void != undefined) {
