@@ -21,7 +21,18 @@ Event object
 ```
 
 These info are avaliable only in document middleware.
-If we 1. find the document; 2. set the fields; 3. call save method, we can validate these fields.
+If we 1. find the document; 2. set the fields; 3. call save method, we can validate these fields with mongoose validators.
+```
+// assume we had a validator that checks the price tier and event pair for us
+// do not use ticketModel.findByIdAndUpdate(objectIdx, {$set: { priceTier: val } }, {runValidators: true}),
+// as `this` in the validator would be resovled to the query object, not the document.
+ticketModel.findById(objectIdx).
+then(ticket=>{
+  ticket.priceTier=val
+  return ticket.save()
+})
+ticket.save()
+```
 For prohibiting use of query middle ware as well as query calls, error are throw in: 
 ```
 pre('updateOne', { document: false, query: true }, () => {
@@ -54,9 +65,9 @@ pre("findOneAndDelete", () => {
 
 An ultimate approach of enabling query middleware with robust referential integrity validation would be:
 1. for delete query, append condition to the filter such that the query only matches deletable document.
-2. for update query, replace the query with aggregate, as $lookup is not avaliable for filter parameter for querys `updateone`. Analyze the update modifications and appends $match to the piple for filtering prohibited modification out. For examples, if use update the priceTier of ticket x with `updateOne({ _id: objectId }, {$set: { priceTier: val } })` we change the query to aggregate as follows :
+2. for update query, replace the query with aggregate, as $lookup is not avaliable for filter parameter for querys `updateone`. Analyze the update modifications and appends $match to the piple for filtering prohibited modification out. For examples, if use update the priceTier of ticket x with `updateOne({ _id: objectIdx }, {$set: { priceTier: val } })` we change the query to aggregate as follows :
 ```
-{ $match: { _id: objectId } },
+{ $match: { _id: objectIdx } },
 {
     $lookup:
     {
