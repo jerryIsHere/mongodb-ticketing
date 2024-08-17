@@ -47,6 +47,12 @@ export const notificationSchema = new Schema<
     },
   }
 );
+notificationSchema.virtual('recipient', {
+  ref: names.User.singular_name,
+  localField: 'recipientId',
+  foreignField: '_id',
+  justOne: true
+})
 notificationSchema.pre('updateOne', { document: false, query: true }, () => {
   throw new Error(
     "Please use find(ById) and chain save afterwards, as referential checking needs documents")

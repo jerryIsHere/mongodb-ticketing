@@ -141,6 +141,12 @@ export const eventSchema = new Schema<
     },
   }
 );
+eventSchema.virtual('venue', {
+  ref: names.Venue.singular_name,
+  localField: 'venueId',
+  foreignField: '_id',
+  justOne: true
+})
 eventSchema.pre('updateOne', { document: false, query: true }, () => {
   throw new Error(
     "Please use find(ById) and chain save afterwards, as referential checking needs documents")

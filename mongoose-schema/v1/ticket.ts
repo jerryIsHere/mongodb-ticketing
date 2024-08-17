@@ -23,12 +23,12 @@ export interface IPopulatedPurchaseInfou {
 }
 
 export interface IPaymentInfo {
-  confirmedBy: Types.ObjectId;
+  confirmerId: Types.ObjectId;
   remark: string;
   confirmationDate: Date;
 }
 export interface IPopulatedPaymentInfo {
-  confirmedBy: IUser | null;
+  confirmerId: IUser | null;
   remark: string;
   confirmationDate: Date;
 }
@@ -115,7 +115,7 @@ export const purchaseInfoSchema = new Schema<IPurchaseInfo>({
   autoIndex: false,
 });
 export const paymentInfoSchema = new Schema<IPaymentInfo>({
-  confirmedBy: {
+  confirmerId: {
     type: Schema.Types.ObjectId,
     ref: names.User.singular_name,
     required: true,
@@ -352,7 +352,7 @@ export const tickerSchema = new Schema<
           { path: "eventId", model: names.Event.singular_name },
           { path: "seatId", model: names.Seat.singular_name },
           { path: "purchaseInfo.purchaserId", model: names.User.singular_name },
-          { path: "paymentInfo.confirmedBy", model: names.User.singular_name },
+          { path: "paymentInfo.confirmerId", model: names.User.singular_name },
         ]);
 
       },
@@ -391,6 +391,30 @@ export const tickerSchema = new Schema<
     },
   }
 );
+purchaseInfoSchema.virtual('purchaser', {
+  ref: names.User.singular_name,
+  localField: 'purchaserId',
+  foreignField: '_id',
+  justOne: true
+})
+paymentInfoSchema.virtual('confirmer', {
+  ref: names.User.singular_name,
+  localField: 'confirmerId',
+  foreignField: '_id',
+  justOne: true
+})
+tickerSchema.virtual('event', {
+  ref: names.Event.singular_name,
+  localField: 'eventId',
+  foreignField: '_id',
+  justOne: true
+})
+tickerSchema.virtual('seat', {
+  ref: names.Seat.singular_name,
+  localField: 'seatId',
+  foreignField: '_id',
+  justOne: true
+})
 tickerSchema.pre('updateOne', { document: false, query: true }, () => {
   throw new Error(
     "Please use find(ById) and chain save afterwards, as referential checking needs documents")

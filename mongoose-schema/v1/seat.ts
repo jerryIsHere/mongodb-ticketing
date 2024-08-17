@@ -86,6 +86,12 @@ export const seatSchema = new Schema<
     },
   }
 );
+seatSchema.virtual('venue', {
+  ref: names.Venue.singular_name,
+  localField: 'venueId',
+  foreignField: '_id',
+  justOne: true
+})
 seatSchema.pre('updateOne', { document: false, query: true }, () => {
   throw new Error(
     "Please use find(ById) and chain save afterwards, as referential checking needs documents")

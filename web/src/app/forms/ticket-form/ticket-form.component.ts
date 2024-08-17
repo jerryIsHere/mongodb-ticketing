@@ -23,8 +23,8 @@ import { AdminTicket, TicketAPIObject, WithId } from '../../interface-util'
 })
 export class TicketFormComponent {
   ticketForm: FormGroup = this._formBuilder.group({
-    confirmedBy: new FormControl(
-      this.ticket && this.ticket.paymentInfo?.confirmedBy ? this.ticket.paymentInfo.confirmedBy : ""),
+    confirmerId: new FormControl(
+      this.ticket && this.ticket.paymentInfo?.confirmerId ? this.ticket.paymentInfo.confirmerId : ""),
     remark: new FormControl(
      this.ticket && this.ticket.paymentInfo?.remark ? this.ticket.paymentInfo.remark : ""),
   });

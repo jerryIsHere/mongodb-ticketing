@@ -27,7 +27,7 @@ exports.purchaseInfoSchema = new mongoose_1.Schema({
     autoIndex: false,
 });
 exports.paymentInfoSchema = new mongoose_1.Schema({
-    confirmedBy: {
+    confirmerId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: schema_names_1.names.User.singular_name,
         required: true,
@@ -219,7 +219,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                 { path: "eventId", model: schema_names_1.names.Event.singular_name },
                 { path: "seatId", model: schema_names_1.names.Seat.singular_name },
                 { path: "purchaseInfo.purchaserId", model: schema_names_1.names.User.singular_name },
-                { path: "paymentInfo.confirmedBy", model: schema_names_1.names.User.singular_name },
+                { path: "paymentInfo.confirmerId", model: schema_names_1.names.User.singular_name },
             ]);
         },
     },

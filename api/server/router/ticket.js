@@ -147,10 +147,10 @@ var Ticket;
         });
         ticket.patch("/:ticketId", async (req, res, next) => {
             if (req.query.verify != undefined &&
-                (req.body.confirmedBy != undefined || req.body.confirmedBy == null || typeof req.body.confirmedBy == "string") &&
+                (req.body.confirmerId != undefined || req.body.confirmerId == null || typeof req.body.confirmerId == "string") &&
                 (req.body.remark == undefined || req.body.remark == null || typeof req.body.remark == "string")) {
                 let info = {
-                    confirmedBy: req.body.securedBy,
+                    confirmerId: req.body.securedBy,
                     remark: req.body.remark,
                     confirmationDate: new Date()
                 };
