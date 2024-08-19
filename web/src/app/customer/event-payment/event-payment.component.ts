@@ -250,9 +250,10 @@ export class EventPaymentComponent {
           roundInfo.freed = freeCount
           roundInfo.count = totalTickerCount
           for (let priceTier of sortedPriceTier) {
-            if (freeCount <= 0) break;
             let priceTierInfo = tierInfo.get(priceTier.tierName)
-            if (priceTierInfo) {
+            if (!priceTierInfo) break;
+            if (freeCount <= 0) { }
+            else {
               priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
               freeCount -= priceTierInfo.freed
               tierInfo.set(priceTier.tierName, priceTierInfo)

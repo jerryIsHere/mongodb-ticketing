@@ -38,7 +38,7 @@ export class TicketFormComponent {
     if (this.ticketForm.valid) {
       this.api.request.patch(`/ticket/${this.ticket._id}?verify`, this.ticketForm.getRawValue()).toPromise().then((result: any) => {
         if (result && result.success) {
-          this.dialogRef.close({ ...this.ticket, ...this.ticketForm.getRawValue() })
+          this.dialogRef.close({ ...result.data })
         }
       })
     }
@@ -46,7 +46,7 @@ export class TicketFormComponent {
   voidTicket() {
     this.api.request.patch(`/ticket/${this.ticket._id}?void`, {}).toPromise().then((result: any) => {
       if (result && result.success) {
-        this.dialogRef.close({ ...this.ticket, ...this.ticketForm.getRawValue(), voided: true })
+        this.dialogRef.close({ ...result.data, voided: true })
       }
     })
   }

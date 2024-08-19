@@ -29,14 +29,46 @@
 <button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
 <button mat-stroked-button color="primary" (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>
-@if(summary){
-Ticket bought:
-<br>
-@for(tierCount of summary.tierCount.values(); track tierCount){
-{{tierCount.tierName}}&#40;{{tierCount.price}}&#41;: {{tierCount.count}}<br>
+@if(summary)
+{<mat-action-list>
+  @for(roundAndInfo of summary.round.entries(); track roundAndInfo; let isLast = $last){
+  <div mat-subheader> round {{roundAndInfo[0]+1}}: baught: {{roundAndInfo[1].count}} and get {{roundAndInfo[1].freed}}
+    free</div>
+  <div mat-subheader> Total {{roundAndInfo[1].total}}
+    free:</div>
+  @for(tierInfo of roundAndInfo[1].tierInfo.values(); track tierInfo){
+  <div mat-subheader>
+    {{tierInfo.tierName}}&#40;{{tierInfo.price}}&#41;: {{tierInfo.count-tierInfo.freed}}&#40;{{tierInfo.count}} &#41;
+  </div>
+  @for(ticket of tierInfo.tickets; track ticket){
+  <button mat-list-item color="primary" (click)="openForm(ticket)">
+    {{ticket.seat?.row}}{{ticket.seat?.no}}
+    &emsp;
+    @if(ticket.freed){
+    Free
+    }
+    @else{
+    <mat-icon>receipt_long</mat-icon>
+    }
+    &emsp;
+    @if(ticket.paymentInfo){
+    <span mat-stroked-button color="primary" [matTooltip]="ticketConfirmDateString(ticket)">
+      paid by: {{ticket.paymentInfo?.confirmedBy}}
+      @if(ticket.paymentInfo?.remark){
+      &#40;remark: {{ticket.paymentInfo?.remark}}&#41;
+      }
+    </span>
+    }
+  </button>
+  }
+  }
+  @if(!isLast){
+  <mat-divider></mat-divider>
+  }
+  }
+</mat-action-list>
 }
-Total price: ${{summary.totalCost}}
-}
+@else {
 <mat-form-field style="width: 100%">
   <mat-label>Filter (possible to use '+' for combination)</mat-label>
   <input matInput (keyup)="applyFilter($event)"
@@ -102,3 +134,4 @@ no data
   <tr mat-row *matRowDef="let row; columns: ticketDataColumn;"></tr>
 </table>
 <mat-paginator [pageSizeOptions]="[15, 25, 100]" aria-label="Select page of users" MatPaginator></mat-paginator>
+}

@@ -35,7 +35,7 @@ export interface WithId {
 export function getPurchaserIfAny(ticket: TicketAPIObject) {
     return "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser : "purchased" in ticket ? ticket.purchased : null
 }
-export function ticetCompare(ticketA: TicketAPIObject, ticketB: TicketAPIObject, ascending: boolean = true): number {
+export function ticketCompare(ticketA: TicketAPIObject, ticketB: TicketAPIObject, ascending: boolean = true): number {
     let aLargerThenb = null
     if(ticketA.priceTier.price > ticketA.priceTier.price){
         aLargerThenb = true

@@ -1,5 +1,7 @@
 import { Component, ViewChild, Input, Output, EventEmitter, } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { AdminTicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString, ticketCompareByDate, ShowAPIObject } from '../../interface-util'
+import { AdminTicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString, ticketCompareByDate, ShowAPIObject, ticketCompare } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -24,8 +26,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   selector: 'app-customer-ticket',
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatSortModule, MatPaginatorModule, MatButtonModule,
-    MatTooltipModule, MatProgressSpinnerModule,
-    FormsModule,
+    MatTooltipModule, MatProgressSpinnerModule, MatListModule,
+    FormsModule, MatDividerModule,
     MatFormFieldModule,
     MatAutocompleteModule,
     ReactiveFormsModule,
@@ -144,12 +146,9 @@ export class CustomerTicketComponent {
           let ticketInd = this.tickets.findIndex(t => t._id == ticket._id)
           if (ticketInd > -1) this.tickets[ticketInd] = ticket
         }
-        if (this.summary?.userId) {
-          this.summarize(this.summary.userId)
-        }
-        else {
-          this.ticketDataSource.data = this.tickets.slice()
-        }
+        this.ticketDataSource.data = [...this.tickets]
+        console.log(ticket)
+        this.summarize()
       }
     })
   }
@@ -162,6 +161,8 @@ export class CustomerTicketComponent {
         this.filteredShows = this.showSearch.valueChanges.pipe(
           startWith(''),
           map(value => {
+            this.summary = undefined;
+            this.selectedShow = undefined;
             const keywords = typeof value === 'string' ? value : value?._id;
             return keywords ? this._showFilter(keywords as string) : this.shows.slice();
           }),
@@ -181,6 +182,8 @@ export class CustomerTicketComponent {
         this.filteredUsers = this.userSearch.valueChanges.pipe(
           startWith(''),
           map(value => {
+            this.summary = undefined;
+            this.selectedUser = undefined;
             const keywords = typeof value === 'string' ? value : value?.username;
             return keywords ? this._userFilter(keywords as string) : this.users.slice();
           }),
@@ -191,11 +194,28 @@ export class CustomerTicketComponent {
       this.dataLoaded = true
     })
   }
-  summary: any
-
+  summary?: {
+    round: Map<number, {
+      tierInfo: Map<string, {
+        tierName: string;
+        freed: number;
+        count: number;
+        price: number;
+        tickets: (AdminTicketAPIObject & { freed?: boolean })[]
+      }>,
+      freed: number;
+      count: number;
+      total: number;
+    }
+    >
+    totalCost?: number
+  }
   userSelected(event: MatAutocompleteSelectedEvent) {
     if (event?.option?.value?._id) {
       this.selectedUser = this.users.find(user => user._id == event?.option?.value?._id)
+    }
+    else {
+      this.summary = undefined
     }
     if (this.selectedUser && this.selectedShow)
       this.summarize()
@@ -207,36 +227,54 @@ export class CustomerTicketComponent {
       let sortedPriceTier = show.priceTiers.sort((a, b) => {
         return a.price - b.price
       })
-      let tempSummary =
+
+      let userTicket =
         this.tickets.filter(ticket => ticket.event?._id == show._id && ticket.purchaseInfo?.purchaser?._id == user._id).
-          sort(ticketCompareByDate).reduce((summary, ticket, ind) => {
-            if (ticket.purchaseInfo) {
-              let purchaseDate = ticket.purchaseInfo.purchaseDate;
+          sort(ticketCompareByDate)
+      let tempSummary = userTicket.reduce((summary, ticket, ind) => {
+        if (ticket.purchaseInfo) {
+          let purchaseDate = ticket.purchaseInfo.purchaseDate;
 
-
-              let saleInfoInd = show.saleInfos.
-                findIndex(info => info.start <= purchaseDate && purchaseDate <= info.end)
-              let roundInfo = summary.round.get(saleInfoInd)
-              let tierName = ticket.priceTier.tierName
-              let price = ticket.priceTier.price
-              if (roundInfo) {
-                let tierInfo = roundInfo.tierInfo.get(tierName)
-                if (tierInfo) {
-                  tierInfo.count += 1
-                }
-                else {
-                  roundInfo.tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
-                }
-              }
-              else {
-                let tierInfo = new Map<string, { tierName: string, count: number, price: number, freed: 0 }>()
-                tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
-                summary.round.set(saleInfoInd, { count: 0, freed: 0, tierInfo: tierInfo })
-              }
-
+          let saleInfoInd = show.saleInfos.
+            findIndex(info => info.start <= purchaseDate && purchaseDate <= info.end)
+          let roundInfo = summary.round.get(saleInfoInd)
+          let tierName = ticket.priceTier.tierName
+          let price = ticket.priceTier.price
+          if (roundInfo) {
+            let tierInfo = roundInfo.tierInfo.get(tierName)
+            if (tierInfo) {
+              tierInfo.count += 1
+              tierInfo.tickets.push(ticket)
             }
-            return summary
-          }, { totalCost: 0, round: new Map<number, { count: number, freed: number, tierInfo: Map<string, { tierName: string, count: number, price: number, freed: number }> }>() })
+            else {
+              roundInfo.tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0, tickets: [ticket] })
+            }
+          }
+          else {
+            let tierInfo = new Map<string, { tierName: string, count: number, price: number, freed: number, tickets: AdminTicketAPIObject[] }>()
+            tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0, tickets: [ticket] })
+            summary.round.set(saleInfoInd, { count: 0, freed: 0, tierInfo: tierInfo, total: 0 })
+          }
+
+        }
+        return summary
+      }, {
+        totalCost: 0,
+        round: new Map<number,
+          {
+            count: number;
+            freed: number;
+            tierInfo: Map<string, {
+              tierName: string,
+              count: number,
+              price: number,
+              freed: number;
+              tickets: (AdminTicketAPIObject & { freed?: boolean })[]
+            }>;
+            total: number;
+          }>()
+
+      })
       tempSummary.totalCost = Array.from(tempSummary.round.entries()).map((round_info) => {
         let round = round_info[0]
         let roundInfo = round_info[1]
@@ -256,25 +294,37 @@ export class CustomerTicketComponent {
           roundInfo.freed = freeCount
           roundInfo.count = totalTickerCount
           for (let priceTier of sortedPriceTier) {
-            if (freeCount <= 0) break;
             let priceTierInfo = tierInfo.get(priceTier.tierName)
-            if (priceTierInfo) {
+            if (!priceTierInfo) break;
+            if (freeCount <= 0) { }
+            else {
               priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
               freeCount -= priceTierInfo.freed
+              priceTierInfo.tickets.sort(ticketCompare)
+              for (let i = 0; i < priceTierInfo.freed; i++) {
+                console.log(priceTierInfo.tickets[i])
+                priceTierInfo.tickets[i].freed = true;
+              }
               tierInfo.set(priceTier.tierName, priceTierInfo)
             }
+            roundInfo.total += (priceTierInfo.count - priceTierInfo.freed) * priceTier.price
           }
           return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)
         }
         return 0
       }).reduce((acc: number, val: number) => acc + val, 0);
+      console.log(tempSummary, tempSummary.round.entries())
       this.summary = tempSummary
     }
   }
 
   showSelected(eventId: string) {
-    if (eventId == undefined) return
-    this.selectedShow = this.shows.find(show => show._id.toString() == eventId)
+    if (eventId != undefined) {
+      this.selectedShow = this.shows.find(show => show._id.toString() == eventId)
+    }
+    else {
+      this.summary = undefined
+    }
     if (this.selectedUser && this.selectedShow)
       this.summarize()
 
