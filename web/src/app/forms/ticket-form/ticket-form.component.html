@@ -12,11 +12,15 @@
         <mat-label>Ticket confirmed by:</mat-label>
         <mat-radio-group formControlName="confirmedBy">
           <mat-radio-button [checked]="" value="">&#40;unconfirmed&#41;</mat-radio-button>
+          @if(ticket.freed != true){
           <mat-radio-button value="fps">FPS</mat-radio-button>
           <mat-radio-button value="payme">PayMe</mat-radio-button>
           <mat-radio-button value="wechatpay">WechatPay</mat-radio-button>
           <mat-radio-button value="alipay">AliPay</mat-radio-button>
-          <mat-radio-button value="free">Free</mat-radio-button>
+          }
+          @else{
+            <mat-radio-button value="free">Free</mat-radio-button>
+          }
         </mat-radio-group>
       </div>
       <br>
@@ -29,6 +33,6 @@
   <mat-card-actions>
     @if(!(ticketForm.controls['confirmedBy'].value || ticketForm.controls['remark'].value)){
     <button mat-stroked-button color="warn" (click)="voidTicket()">void</button>}
-    <button mat-stroked-button color="primary"(click)="submit()">update</button>
+    <button mat-stroked-button color="primary" (click)="submit()">update</button>
   </mat-card-actions>
 </mat-card>

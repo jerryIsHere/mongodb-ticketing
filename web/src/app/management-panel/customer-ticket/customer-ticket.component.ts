@@ -290,17 +290,20 @@ export class CustomerTicketComponent {
             roundInfo.count = totalTickerCount
             return 0
           }
-          let freeCount = Math.floor(totalTickerCount / (buyX + yFree)) * yFree;
+          let freeCount = Math.floor(totalTickerCount / (buyX + yFree) * yFree);
           roundInfo.freed = freeCount
           roundInfo.count = totalTickerCount
+          console.log(sortedPriceTier,tierInfo)
           for (let priceTier of sortedPriceTier) {
             let priceTierInfo = tierInfo.get(priceTier.tierName)
-            if (!priceTierInfo) break;
+            console.log(priceTier, priceTierInfo)
+            if (!priceTierInfo) continue;
             if (freeCount <= 0) { }
             else {
               priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
               freeCount -= priceTierInfo.freed
               priceTierInfo.tickets.sort(ticketCompare)
+              console.log(priceTierInfo.tickets)
               for (let i = 0; i < priceTierInfo.freed; i++) {
                 console.log(priceTierInfo.tickets[i])
                 priceTierInfo.tickets[i].freed = true;
@@ -308,7 +311,9 @@ export class CustomerTicketComponent {
               tierInfo.set(priceTier.tierName, priceTierInfo)
             }
             roundInfo.total += (priceTierInfo.count - priceTierInfo.freed) * priceTier.price
+            console.log(roundInfo.total)
           }
+          tempSummary.round.set(round, roundInfo)
           return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)
         }
         return 0

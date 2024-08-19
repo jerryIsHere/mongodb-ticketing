@@ -30,10 +30,11 @@ export class TicketFormComponent {
   });
   constructor(
     public dialogRef: MatDialogRef<TicketFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public ticket: (AdminTicketAPIObject & WithId),
+    @Inject(MAT_DIALOG_DATA) public ticket: (AdminTicketAPIObject & WithId & {freed?: boolean}),
     private api: ApiService,
     private _formBuilder: FormBuilder
-  ) { }
+  ) { 
+  }
   submit() {
     if (this.ticketForm.valid) {
       this.api.request.patch(`/ticket/${this.ticket._id}?verify`, this.ticketForm.getRawValue()).toPromise().then((result: any) => {

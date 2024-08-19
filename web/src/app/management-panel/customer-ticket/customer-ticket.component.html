@@ -32,32 +32,40 @@
 @if(summary)
 {<mat-action-list>
   @for(roundAndInfo of summary.round.entries(); track roundAndInfo; let isLast = $last){
-  <div mat-subheader> round {{roundAndInfo[0]+1}}: baught: {{roundAndInfo[1].count}} and get {{roundAndInfo[1].freed}}
-    free</div>
-  <div mat-subheader> Total {{roundAndInfo[1].total}}
-    free:</div>
+  <div mat-subheader> round {{roundAndInfo[0]+1}}: get {{roundAndInfo[1].freed}} free
+    out of {{roundAndInfo[1].count}} ticket</div>
+  <div mat-subheader> sum ${{roundAndInfo[1].total}}</div>
   @for(tierInfo of roundAndInfo[1].tierInfo.values(); track tierInfo){
   <div mat-subheader>
-    {{tierInfo.tierName}}&#40;{{tierInfo.price}}&#41;: {{tierInfo.count-tierInfo.freed}}&#40;{{tierInfo.count}} &#41;
+    {{tierInfo.tierName}}&#40;${{tierInfo.price}}&#41;: {{tierInfo.count-tierInfo.freed}} &#40;baught:
+    {{tierInfo.count}}&#41;
   </div>
   @for(ticket of tierInfo.tickets; track ticket){
-  <button mat-list-item color="primary" (click)="openForm(ticket)">
-    {{ticket.seat?.row}}{{ticket.seat?.no}}
-    &emsp;
-    @if(ticket.freed){
-    Free
-    }
-    @else{
-    <mat-icon>receipt_long</mat-icon>
-    }
-    &emsp;
-    @if(ticket.paymentInfo){
-    <span mat-stroked-button color="primary" [matTooltip]="ticketConfirmDateString(ticket)">
-      paid by: {{ticket.paymentInfo?.confirmedBy}}
+  <button mat-list-item lines="3" color="primary" (click)="openForm(ticket)">
+    <div matListItemTitle>
+      {{ticket.seat?.row}}{{ticket.seat?.no}}
+    </div>
+    <div matListItemLine>
+      @if(ticket.freed){
+      free
+      }
+    </div>
+    <div matListItemLine>
+      @if(ticket.paymentInfo){
+      confirmed with: {{ticket.paymentInfo?.confirmedBy}}
       @if(ticket.paymentInfo?.remark){
       &#40;remark: {{ticket.paymentInfo?.remark}}&#41;
       }
-    </span>
+      }
+    </div>
+
+    @if(ticket.freed){
+    <mat-icon matListItemIcon>
+      redeem
+    </mat-icon>
+    }
+    @else{
+    <mat-icon matListItemIcon>receipt_long</mat-icon>
     }
   </button>
   }
