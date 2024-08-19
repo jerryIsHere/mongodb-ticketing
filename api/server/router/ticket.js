@@ -40,9 +40,10 @@ var Ticket;
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
                 let userId = req.session['user']._id;
                 ticket_1.ticketModel.find().findByPurchaser(userId).
-                    then(async (doc) => next({
+                    then(async (doc) => Promise.all(doc?.map(doc => doc.discloseToClient(userId)))).
+                    then(async (tickets) => next({
                     success: true,
-                    data: await Promise.all(doc?.map(doc => doc.discloseToClient(userId)))
+                    data: tickets
                 })).
                     catch(err => next(err));
             }
@@ -121,7 +122,7 @@ var Ticket;
                             res.locals.session ? res.locals.session.startTransaction() : null;
                             return ticket_1.ticketModel.bulkPurchase(userId, ids);
                         }).
-                            then(docs => next({ success: true })).
+                            then(docs => next({ success: true, data: docs })).
                             catch(err => next(err));
                     }
                     else {

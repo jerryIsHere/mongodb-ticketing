@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ApiService } from '../../service/api.service';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatDialog } from '@angular/material/dialog';
-import { ShowAPIObject, VenueAPIObject, TicketAPIObject, SeatAPIObject, IPriceTier, isShowSelling, getSellingInfo, getPurchaserIfAny} from '../../interface-util';
+import { ShowAPIObject, VenueAPIObject, TicketAPIObject, SeatAPIObject, IPriceTier, isShowSelling, getSellingInfo, getPurchaserIfAny } from '../../interface-util';
 import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,7 @@ import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon'
 import { UserSessionService } from '../../service/user-session.service';
 import { TicketSelectedComponent } from '../../snackbar/ticket-selected/ticket-selected.component';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 const defaultShoppingCartSize = 6
 @Component({
@@ -36,7 +36,7 @@ export class BuyTicketComponent {
 
   constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService,
     private _snackBar: MatSnackBar) {
-    
+
   }
   loadData(id: string) {
     var promises: Promise<any>[] = []
@@ -99,7 +99,7 @@ export class BuyTicketComponent {
         this.actionSnackbarRef = undefined
         if (this._id) {
           // commenting this because this exhause server resources
-           if(!action.success)this.loadData(this._id);
+          if (!action.success) this.loadData(this._id);
         }
         this.seatingPlan?.clearSelectedSeat()
       });

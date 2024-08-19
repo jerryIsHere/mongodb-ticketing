@@ -2,7 +2,6 @@
   @if (!userLoaded){
   <mat-spinner></mat-spinner>
   }
-  @else{
   <mat-label>Select user</mat-label>
   <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="auto">
   <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #auto="matAutocomplete"
@@ -11,7 +10,6 @@
     <mat-option [value]="option">{{option.fullname}}&#40;{{option.username}}&#41;</mat-option>
     }
   </mat-autocomplete>
-  }
 </mat-form-field>
 <br>
 <button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
@@ -53,14 +51,15 @@ no data
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Tier </th>
     <td mat-cell *matCellDef="let element"> {{element.priceTier.tierName}} </td>
   </ng-container>
-  <ng-container matColumnDef="occupant.fullname">
+  <ng-container matColumnDef="purchaseInfo.purchaser">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Buyer </th>
     <td mat-cell *matCellDef="let element"
-      [matTooltip]="element.occupant.email + '(' + element.occupant.username + ')'"> {{element.occupant.fullname}} </td>
+      [matTooltip]="element.purchaseInfo.purchaser.email + '(' + element.purchaseInfo.purchaser.username + ')'">
+      {{element.purchaseInfo.purchaser.fullname}} </td>
   </ng-container>
-  <ng-container matColumnDef="purchaseDate">
+  <ng-container matColumnDef="purchaseInfo.purchaseDate">
     <th mat-header-cell *matHeaderCellDef mat-sort-header> Purchase date </th>
-    <td mat-cell *matCellDef="let element"> {{element.purchaseDate  | date : 'short'}} </td>
+    <td mat-cell *matCellDef="let element"> {{element.purchaseInfo.purchaseDate | date : 'short'}} </td>
   </ng-container>
   <ng-container matColumnDef="_id">
     <th mat-header-cell *matHeaderCellDef>Ticket verification
@@ -71,16 +70,18 @@ no data
       </button>
     </td>
   </ng-container>
-  <ng-container matColumnDef="securedBy">
+  <ng-container matColumnDef="paymentInfo.confirmedBy">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Ticket confirmed with
     </th>
     <td mat-cell *matCellDef="let element">
+      @if(element.paymentInfo){
       <span mat-stroked-button color="primary" [matTooltip]="ticketConfirmDateString(element)">
-        {{element.securedBy}}
-        @if(element.remark){
-        &#40;remark: {{element.remark}}&#41;
+        {{element.paymentInfo?.confirmedBy}}
+        @if(element.paymentInfo?.remark){
+        &#40;remark: {{element.paymentInfo?.remark}}&#41;
         }
       </span>
+      }
     </td>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="ticketDataColumn"></tr>

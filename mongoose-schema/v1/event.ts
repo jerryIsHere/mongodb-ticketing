@@ -6,6 +6,9 @@ import mongoose, {
   HydratedDocument,
   QueryWithHelpers,
   Query,
+  CallbackWithoutResultAndOptionalError,
+  Document,
+  FlatRecord,
 } from "mongoose";
 import { IVenue, venueModel } from "./venue";
 import { ticketModel } from "./ticket";
@@ -56,7 +59,7 @@ export const saleInfoSchema = new Schema<ISaleInfo>({
   ticketQuota: {
     type: Number,
     required: true,
-    min: [Number.MIN_VALUE, "Quota must be greater than 0."],
+    min: [-1, "Quota must be greater than or equao to -1."],
   },
   buyX: {
     type: Number,
@@ -174,6 +177,22 @@ eventSchema.path("venueId").validate(async function (val) {
     );
   return true;
 });
+async function deleteReferentialIntegritycheck(this: Document<unknown, {}, FlatRecord<IEvent>> & Omit<FlatRecord<IEvent> & {
+  _id: Types.ObjectId;
+}, keyof IEventMethod> & IEventMethod, next: CallbackWithoutResultAndOptionalError) {
+  const ticketCount = await ticketModel.find().findByEventId(this._id.toString()).countDocuments();
+  if (ticketCount != null && ticketCount > 0) {
+    next(
+      new ReferentialError(
+        `Deletation of ${names.Event.singular_name} with id ${this._id} failed ` +
+        `as ${ticketCount} ticket${ticketCount > 1 ? 's' : ''} depends on it.`
+      )
+    );
+    return
+  }
+  next();
+}
+eventSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
 export const eventModel: EventModel = (mongoose.models[names.Event.singular_name] as EventModel) || model<IEvent, EventModel>(
   names.Event.singular_name,
   eventSchema,

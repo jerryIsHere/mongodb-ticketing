@@ -44,10 +44,11 @@ export namespace Ticket {
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 let userId = (req.session['user'] as any)._id
                 ticketModel.find().findByPurchaser(userId).
-                    then(async doc =>
+                    then(async doc => Promise.all(doc?.map(doc => doc.discloseToClient(userId)))).
+                    then(async tickets =>
                         next({
                             success: true,
-                            data: await Promise.all(doc?.map(doc => doc.discloseToClient(userId)))
+                            data: tickets
                         })).
                     catch(err => next(err))
             }
@@ -132,7 +133,7 @@ export namespace Ticket {
                                 res.locals.session ? res.locals.session.startTransaction() : null;
                                 return ticketModel.bulkPurchase(userId, ids)
                             }).
-                            then(docs => next({ success: true })).
+                            then(docs => next({ success: true, data: docs })).
                             catch(err => next(err))
                     }
                     else { next(new RequestError("Buying ticket requires a user login")) }

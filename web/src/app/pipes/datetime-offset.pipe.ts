@@ -7,7 +7,7 @@ import { DatePipe } from '@angular/common'
 })
 export class DatetimeOffsetPipe implements PipeTransform {
 
-  transform(value: string, ...args: number[]): Date {
+  transform(value: string | Date, ...args: number[]): Date {
     let date = new Date(value)
     args.forEach(minute => {
       date = new Date(date.getTime() + minute * 60000)

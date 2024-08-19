@@ -43,8 +43,8 @@ export class TicketSelectedComponent {
       this.api.request.patch(`/ticket?batch&buy`, {
         ticketIds: this.data.tickets.map(t => t._id)
       }, {}, { showSuccessHandler: false }).toPromise().then((result: any) => {
-        if (result && result.success) {
-          this.router.navigate(['payment-info'], { queryParams: { ids: result.data.map((ticket: TicketAPIObject) => ticket._id), userId: this.userSession.user._id } })
+        if (result && result.success && result.data.length > 0) {
+          this.router.navigate(['event-payment'], { queryParams: { eventId: result.data[0]._id } })
         }
       }).then(result => {
         this.snackRef.dismiss();

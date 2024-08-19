@@ -24,9 +24,10 @@
   @else {
   Ticket of this show is not purchasable right now. <br>
   Sale period:
-  {{event.saleInfos[0].start | date : 'short'}} - {{event.saleInfos[0].end | date : 'short'}}
-  <br>
-  {{event.saleInfos[1].start | date : 'short'}} - {{event.saleInfos[1].end | date : 'short'}}
+  @for(saleInfo of event.saleInfos; track saleInfo){
+    {{saleInfo.start | date : 'short'}} - {{saleInfo.end | date : 'short'}}
+    <br>
+  }
   }
   }
   @else{

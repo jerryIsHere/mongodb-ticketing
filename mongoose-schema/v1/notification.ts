@@ -24,7 +24,7 @@ export const notificationSchema = new Schema<
     email: { type: String, required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },
-    isMessageSent: { type: Boolean, required: true },
+    isMessageSent: { type: Boolean, required: true, default: false },
   },
   {
     methods: {

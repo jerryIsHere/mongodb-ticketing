@@ -50,7 +50,8 @@
                 }
               ],
               "outputHashing": "all",
-              "baseHref": "/web/"
+              "baseHref": "/web/",
+              "sourceMap": true
             },
             "development": {
               "optimization": false,

@@ -27,7 +27,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class SoldTicketListComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
-  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', '_id', 'securedBy'];
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', '_id', 'paymentInfo.confirmedBy'];
   @Output() dataChanged = new EventEmitter()
   @Input()
   get tickets() { return this.ticketDataSource.data }
@@ -64,7 +64,7 @@ export class SoldTicketListComponent {
           }
           return valueString;
         };
-        const dataStr = ['occupant.email', 'occupant.username', ...this.ticketDataColumn].reduce(accumulator, '').toLowerCase();
+        const dataStr = ['purchaseinfo.purchaser.email', 'purchaseinfo.purchaser.username', ...this.ticketDataColumn].reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
         const transformedFilter = filter.split("+").map(f => f.trim().toLowerCase());
         return transformedFilter.filter(f => dataStr.indexOf(f) !== -1).length == transformedFilter.length;

@@ -12,6 +12,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
+import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
+import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
 import { TicketAPIObject, ShowAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
@@ -31,7 +33,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatFormFieldModule,
     MatAutocompleteModule,
     ReactiveFormsModule,
-    AsyncPipe, DatePipe,
+    AsyncPipe, DatePipe, DatetimeOffsetPipe, DatetimeTimezonePipe,
     PaymentMessageComponent],
   templateUrl: './event-payment.component.html',
   styleUrl: './event-payment.component.sass'
@@ -42,9 +44,16 @@ export class EventPaymentComponent {
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', 'securedBy'];
   shows: ShowAPIObject[] = [];
   tickets: TicketAPIObject[] = []
+  showFromQuery?: string
+  selectedShow?: ShowAPIObject
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   showSearch = new FormControl<string | ShowAPIObject>('');
+  @Input()
+  set eventId(eventId: string) {
+    this.showFromQuery = eventId
+    this.showSelected(eventId)
+  }
   filteredShows: Observable<ShowAPIObject[]> = new Observable<ShowAPIObject[]>();
   constructor(public dialog: MatDialog, private api: ApiService) {
     this.loadData()
@@ -138,6 +147,9 @@ export class EventPaymentComponent {
             this.shows.findIndex(show => ticket.event && show._id.toString() == ticket.event._id.toString()) < 0)
             this.shows.push(ticket.event)
         }, this.shows)
+        if (typeof this.showFromQuery === "string") {
+          this.selectedShow = this.shows.find(show => show._id == this.showFromQuery)
+        }
         this.shows.sort((showA, showB) => {
           if (showA.datetime && showB.datetime) {
             return new Date(showA.datetime) > new Date(showB.datetime) ? -1 :
@@ -167,9 +179,10 @@ export class EventPaymentComponent {
     })
   }
   summary: any
-  showSelected(event: MatAutocompleteSelectedEvent) {
-    console.log(event.option.value._id)
-    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.event?._id.toString() == event.option.value._id)
+  showSelected(eventId: string) {
+    if(eventId == undefined) return
+    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.event?._id.toString() == eventId)
+    this.selectedShow = this.shows.find(show => show._id == this.showFromQuery)
     this.summary =
       this.ticketDataSource.data.reduce((summary, ticket, ind) => {
         if (ticket.priceTier.price)

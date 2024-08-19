@@ -203,11 +203,7 @@ export class SeatingPlanComponent {
     let filtered = this.seats?.filter(s => s.coord.sectX == this.selectedSection?.x && s.coord.sectY == this.selectedSection?.y)
     return filtered ? filtered : []
   }
-  isSeatInSelectSection(row: string, col: number) {
-    let seat = this.getSeat(row, col)
-    if (seat) {
-
-    }
+  isSeatInSelectSection(seat: SeatAPIObject) {
     return seat && seat.coord.sectX == this.selectedSection?.x && seat.coord.sectY == this.selectedSection?.y
   }
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

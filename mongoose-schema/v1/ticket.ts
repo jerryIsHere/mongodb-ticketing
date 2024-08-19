@@ -198,13 +198,18 @@ export const tickerSchema = new Schema<
       },
     },
     priceTier: { type: priceTierSchema, required: true },
-    purchaseInfo: { type: purchaseInfoSchema },
+    purchaseInfo: {
+      type: purchaseInfoSchema, required: [function () {
+        return this.paymentInfo != undefined
+      }, "Purchase information cannot be removed once payment is confirmed.\n" +
+      "You must erase payment confirmation info before voiding confrimed ticket."]
+    },
     paymentInfo: { type: paymentInfoSchema },
   },
   {
     statics: {
 
-      async bulkPurchase(userId: string, ticketIds: string[]) {
+      async bulkPurchase(purchaserId: string, ticketIds: string[]) {
         let ticketObjectIds = ticketIds.map(
           (id) => new Types.ObjectId(id)
         );
@@ -234,35 +239,57 @@ export const tickerSchema = new Schema<
             ` ${event.shoppingCartSize} but you are requesting ${ticketIds.length} tickets.`
           );
         let now = new Date();
-        let saleInfo = event.saleInfos.find((info) => {
+        let saleInfoInd = event.saleInfos.findIndex((info) => {
           return info.start <= now && info.end >= new Date();
         });
-        if (saleInfo == null)
+        if (saleInfoInd < 0)
           throw new OperationError(
             `Tickets of event with id ${event._id} is not selling yet.`
           );
-        let userTicketForEventCount = await ticketModel.countDocuments({
-          "paymentInfo.purchaserId": userId,
-        });
-        if (userTicketForEventCount + ticketIds.length >= saleInfo.ticketQuota)
+        let purchaser = await userModel.findById(purchaserId).exec()
+        if (purchaser == null) {
           throw new OperationError(
-            `You have no more ticket quota (${saleInfo.ticketQuota})` +
-            ` for event with id ${event._id}.`
+            `User with id ${purchaserId} not found.`)
+        }
+        let saleInfo = event.saleInfos[saleInfoInd];
+        console.log(saleInfo)
+        let userTicketForEventCount = await ticketModel.find().
+          findByEventId(event._id.toString()).
+          findByPurchaser(purchaser._id.toString()).countDocuments(
+        );
+        console.log(saleInfo)
+        if (saleInfo.ticketQuota > -1 && userTicketForEventCount + ticketIds.length > saleInfo.ticketQuota)
+          throw new OperationError(
+            `You have no more ticket quota (${saleInfo.ticketQuota} for ${saleInfoInd + 1} round selling) ` +
+            `for event with id ${event._id}.`
           );
         let purchaseInfo = new purchaseInfoModel({
-          purchaserId: userId,
+          purchaserId: purchaserId,
           purchaseDate: now,
         });
         purchaseInfo.validate();
-        let purchasedTicket = await Promise.all(
+        let purchasedTickets = await Promise.all(
           tickets.map(ticket => {
             ticket.purchaseInfo = purchaseInfo;
             // validation done with purchaseInfo.validate() and only one filed of ticket is modified.
             // purchaseinfo.validate requires finding user in db, and is slightly expensive
             return ticket.save({ validateBeforeSave: false })
           }))
-
-        return purchasedTicket
+        let disclosableTickets = await Promise.all(purchasedTickets.map(ticket => ticket.disclose()));
+        let notification = new notificationModel({
+          recipientId: purchaserId,
+          email: purchaser.email,
+          title: "Ticket Voided",
+          message:
+            `Dear ${purchaser.fullname}\n` +
+            `${purchasedTickets.length} ticket${purchasedTickets.length > 1 ? 's' : ''} for event ${event.eventname} is  purchased:\n` +
+            disclosableTickets.map(ticket => ticket.seat ? ticket.seat?.row + ticket.seat?.no : null).filter(seatInfo => seatInfo).join(", ") +
+            `\nFor follow-up info, please visit: ${process.env.BASE_PRODUCTION_URI}/payment-info?`
+            + disclosableTickets.map(ticket => 'ids=' + ticket._id.toString()).join('&') + `&userId=${purchaserId}`,
+        });
+        await notification.save();
+        await notification.send();
+        return disclosableTickets
       },
       async batchUpdatePriceTier(
         ticketIds: string[],
@@ -418,7 +445,7 @@ export const tickerSchema = new Schema<
           TickerQueryHelpers
         >;
         return query.find({
-          purchaseInfo: { purchaserId: userId },
+          "purchaseInfo.purchaserId": userId,
         });
       },
     },

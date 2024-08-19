@@ -71,7 +71,7 @@ async function deleteReferentialIntegritycheck(this: Document<unknown, {}, FlatR
   if (seat != null) {
     next(
       new ReferentialError(
-        `Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+        `Deletation of ${names.Venue.singular_name} with id ${this._id} failed ` +
         `as seat with id ${seat.id} depends on it.`
       )
     );

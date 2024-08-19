@@ -45,7 +45,7 @@ exports.saleInfoSchema = new mongoose_1.Schema({
     ticketQuota: {
         type: Number,
         required: true,
-        min: [Number.MIN_VALUE, "Quota must be greater than 0."],
+        min: [-1, "Quota must be greater than or equao to -1."],
     },
     buyX: {
         type: Number,
@@ -147,4 +147,14 @@ exports.eventSchema.path("venueId").validate(async function (val) {
             `as ticket with id ${tickerFromOtherVenue[0]._id} depends on another venue ${tickerFromOtherVenue[0].seat.venueId}.`);
     return true;
 });
+async function deleteReferentialIntegritycheck(next) {
+    const ticketCount = await ticket_1.ticketModel.find().findByEventId(this._id.toString()).countDocuments();
+    if (ticketCount != null && ticketCount > 0) {
+        next(new error_1.ReferentialError(`Deletation of ${schema_names_1.names.Event.singular_name} with id ${this._id} failed ` +
+            `as ${ticketCount} ticket${ticketCount > 1 ? 's' : ''} depends on it.`));
+        return;
+    }
+    next();
+}
+exports.eventSchema.pre("deleteOne", { document: true, query: false }, deleteReferentialIntegritycheck);
 exports.eventModel = mongoose_1.default.models[schema_names_1.names.Event.singular_name] || (0, mongoose_1.model)(schema_names_1.names.Event.singular_name, exports.eventSchema, schema_names_1.names.Event.collection_name);

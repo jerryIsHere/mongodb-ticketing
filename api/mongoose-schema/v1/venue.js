@@ -48,7 +48,7 @@ exports.venueSchema = new mongoose_1.Schema({
 async function deleteReferentialIntegritycheck(next) {
     const seat = await this.findOneSeatAssociate();
     if (seat != null) {
-        next(new error_1.ReferentialError(`Deletation of ${this.constructor.name} with id ${this._id} failed ` +
+        next(new error_1.ReferentialError(`Deletation of ${schema_names_1.names.Venue.singular_name} with id ${this._id} failed ` +
             `as seat with id ${seat.id} depends on it.`));
         return;
     }

@@ -33,22 +33,26 @@
         [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
         <button mat-button style="pointer-events: none;">{{row}}</button>
         @for(col of cols; track col){
-        @if (getSeat(row,col) && isSeatInSelectSection(row, col)) {
-        <button (click)="toggleSelect(getSeat(row,col))" mat-stroked-button
-          [style.background-color]="getTiceket(row,col)?getColorByTicket(getTiceket(row,col)):'grey'" cdkDrag
+        @let buyer = getBuyer(row,col);
+        @let seat = getSeat(row,col);
+        @let ticket = getTiceket(row,col);
+        @let isSelected = isSeatSelected(seat?._id);
+        @if (seat && isSeatInSelectSection(seat)) {
+        <button (click)="toggleSelect(seat)" mat-stroked-button
+          [style.background-color]="ticket && buyer == null?getColorByTicket(ticket):'grey'" cdkDrag
           [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
-          @if (getTiceket(row,col)){
-          @if(getBuyer(row,col)){
-          <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'airline_seat_recline_normal'">
+          @if (ticket){
+          @if(buyer){
+          <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
           </mat-icon>
           }
           @else{
-          <mat-icon [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':'event_seat'"></mat-icon>
+          <mat-icon [fontIcon]="isSelected?'check_circle':'event_seat'"></mat-icon>
           }
           }
           @else{
           <mat-icon
-            [fontIcon]="isSeatSelected(getSeat(row,col)?._id)?'check_circle':isTicketPlanning?'block':'event_seat'">
+            [fontIcon]="isSelected?'check_circle':isTicketPlanning?'block':'event_seat'">
           </mat-icon>
           }
         </button>

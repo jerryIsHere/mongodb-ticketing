@@ -36,7 +36,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class CustomerTicketComponent {
   ticketLoaded = false
   ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
-  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', '_id', 'securedBy'];
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseInfo.purchaseDate', '_id', 'paymentInfo.confirmedBy'];
   users: UserAPIObject[] = [];
   tickets: TicketAPIObject[] = []
   @ViewChild(MatPaginator) paginator?: MatPaginator;
@@ -94,7 +94,7 @@ export class CustomerTicketComponent {
           }
           return valueString;
         };
-        const dataStr = ['occupant.email', 'occupant.username', ...this.ticketDataColumn].reduce(accumulator, '').toLowerCase();
+        const dataStr = ['purchaseinfo.purchaser.email', 'purchaseinfo.purchaser.username', ...this.ticketDataColumn].reduce(accumulator, '').toLowerCase();
         // Transform the filter by converting it to lowercase and removing whitespace.
         const transformedFilter = filter.split("+").map(f => f.trim().toLowerCase());
         return transformedFilter.filter(f => dataStr.indexOf(f) !== -1).length == transformedFilter.length;
@@ -248,8 +248,8 @@ export class CustomerTicketComponent {
             "seat.row+seat.no",
             "priceTier.tierName",
             "priceTier.price",
-            "occupant.username",
-            "occupant.fullname",
+            "purchaser.username",
+            "purchaser.fullname",
             "purchaseDate",
             "confirmationDate",
             "confirmationType",

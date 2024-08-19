@@ -57,10 +57,15 @@
       <mat-error>This field is required</mat-error>
       }
     </mat-form-field>
+    <br>
+    For quota, -1 means ulimited.
+    <br>
+    The second round should have more quota then first round,
+    <br>otherwise users are not able to buy any ticktes at that time.
     @for(saleInfoForm of eventForm.controls['saleInfos'].controls; track saleInfoForm; let idx = $index){
     <form [formGroup]="saleInfoForm">
 
-      {{ idx }} - round
+      {{ idx + 1 }} - round
       <br>
       <mat-form-field>
         <mat-label>Start selling ticket at</mat-label>
@@ -96,6 +101,9 @@
         }
         @if (saleInfoForm.controls['ticketQuota'].hasError('pattern')) {
         <mat-error>Quota should be a number</mat-error>
+        }
+        @if (saleInfoForm.controls['ticketQuota'].hasError('min')) {
+        <mat-error>Quota should be >= -1</mat-error>
         }
       </mat-form-field>
       <br>

@@ -7,7 +7,7 @@ import { IDisclosableUser as User } from '../../../mongoose-schema/v1/user'
 import { ISection, IVenue as Venue } from '../../../mongoose-schema/v1/venue'
 export function
     isShowSelling(show: ShowAPIObject) {
-    return show.saleInfos.filter(info => isShowSellingInThisRound(info)).length > 1
+    return show.saleInfos.filter(info => isShowSellingInThisRound(info)).length > 0
 }
 export function
     isShowSellingInThisRound(saleInfo: ISaleInfo) {
