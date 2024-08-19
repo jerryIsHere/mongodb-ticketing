@@ -175,6 +175,8 @@ export const tickerSchema = new Schema<
           let priceTier = event.priceTiers.find(
             (p) => p.tierName == this.priceTier.tierName
           );
+          // validate priceTier here such that we don't fetch associated event twice in validation step
+          // to reduce round-trip time
           if (priceTier == undefined || priceTier.price != this.priceTier.price)
             throw new ReferentialError(
               `Price tier ${this.priceTier.tierName} doesn't exists in associated event.`
