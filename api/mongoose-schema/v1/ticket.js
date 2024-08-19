@@ -71,6 +71,8 @@ exports.tickerSchema = new mongoose_1.Schema({
                 if (event == null)
                     throw new error_1.ReferentialError(`Event with id ${val} doesn't exists.`);
                 let priceTier = event.priceTiers.find((p) => p.tierName == this.priceTier.tierName);
+                // validate priceTier here such that we don't fetch associated event twice in validation step
+                // to reduce round-trip time
                 if (priceTier == undefined || priceTier.price != this.priceTier.price)
                     throw new error_1.ReferentialError(`Price tier ${this.priceTier.tierName} doesn't exists in associated event.`);
                 return true;
@@ -229,12 +231,27 @@ exports.tickerSchema = new mongoose_1.Schema({
             throw new error_1.OperationError(`Ticker with id ${this._id} has not been sold yet.`);
         },
         async discloseToClient(userId) {
-            let disclosable = await this.disclose();
+            let populated = await this.populate([
+                "event",
+                "seat",
+                "purchaseInfo.purchaser",
+                "paymentInfo.confirmer"
+            ]);
+            let populatedPurchaseInfo = populated.purchaseInfo ?
+                {
+                    ...populated.purchaseInfo.toJSON(), ...{ purchaser: null, purchserId: null }
+                } : undefined;
+            let populatedPaymentInfo = populated.paymentInfo
+                ? {
+                    ...populated.paymentInfo.toJSON(), ...{ confirmer: null, confirmerId: null }
+                } : undefined;
             return {
                 _id: this._id,
-                event: disclosable.event,
-                seat: disclosable.seat,
+                event: populated.event,
+                seat: populated.seat,
                 priceTier: this.priceTier,
+                purchaseInfo: populatedPurchaseInfo,
+                paymentInfo: populatedPaymentInfo,
                 purchased: this.purchaseInfo != undefined,
                 belongsToUser: this.purchaseInfo != undefined &&
                     this.purchaseInfo.purchaserId == userId,

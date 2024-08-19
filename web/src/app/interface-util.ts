@@ -23,10 +23,10 @@ export function showSellingString(saleInfos: ISaleInfo[]): string {
         join("\n")
 
 }
-export function ticketConfirmDateString(ticket: AdminTicketAPIObject): string {
+export function ticketConfirmDateString(ticket: AdminTicketAPIObject | ClientTicketAPIObject): string {
     return ticket.paymentInfo ? 'Ticket confirmed at ' + new Date(ticket.paymentInfo.confirmationDate).toLocaleDateString() : ''
 }
-export function ticketPurchaseDateString(ticket: AdminTicketAPIObject): string {
+export function ticketPurchaseDateString(ticket: AdminTicketAPIObject | ClientTicketAPIObject): string {
     return ticket.purchaseInfo ? new Date(ticket.purchaseInfo.purchaseDate).toLocaleDateString() : ''
 }
 export interface WithId {
@@ -35,14 +35,82 @@ export interface WithId {
 export function getPurchaserIfAny(ticket: TicketAPIObject) {
     return "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser : "purchased" in ticket ? ticket.purchased : null
 }
+export function ticetCompare(ticketA: TicketAPIObject, ticketB: TicketAPIObject, ascending: boolean = true): number {
+    let aLargerThenb = null
+    if(ticketA.priceTier.price > ticketA.priceTier.price){
+        aLargerThenb = true
+    }
+    else if(ticketA.priceTier.price > ticketA.priceTier.price){
+        aLargerThenb = false
+    }
+    else{
+        if ("purchaseInfo" in ticketA && "purchaseInfo" in ticketB && ticketA.purchaseInfo && ticketB.purchaseInfo) {
+            let aDate = new Date(ticketA.purchaseInfo.purchaseDate)
+            let bDate = new Date(ticketB.purchaseInfo.purchaseDate)
+            if (aDate > bDate) {
+                aLargerThenb = true
+            }
+            else if (aDate < bDate) {
+                aLargerThenb = false
+            }
+        }
+        if ("purchaseInfo" in ticketA) {
+            aLargerThenb = true
+        }
+        else if ("purchaseInfo" in ticketB) {
+            aLargerThenb = false
+        }
+    }
+    if ("purchaseInfo" in ticketA) {
+        aLargerThenb = true
+    }
+    else if ("purchaseInfo" in ticketB) {
+        aLargerThenb = false
+    }
+    if (aLargerThenb == null) return 0
+    if (aLargerThenb) {
+        return ascending ? 1 : -1
+    }
+    else {
+        return ascending ? -1 : 1
+    }
+}
+export function ticketCompareByDate(ticketA: TicketAPIObject, ticketB: TicketAPIObject, ascending: boolean = true): number {
+    let aLargerThenb = null
+    if ("purchaseInfo" in ticketA && "purchaseInfo" in ticketB && ticketA.purchaseInfo && ticketB.purchaseInfo) {
+        let aDate = new Date(ticketA.purchaseInfo.purchaseDate)
+        let bDate = new Date(ticketB.purchaseInfo.purchaseDate)
+        if (aDate > bDate) {
+            aLargerThenb = true
+        }
+        else if (aDate < bDate) {
+            aLargerThenb = false
+        }
+    }
+    if ("purchaseInfo" in ticketA) {
+        aLargerThenb = true
+    }
+    else if ("purchaseInfo" in ticketB) {
+        aLargerThenb = false
+    }
+    if (aLargerThenb == null) return 0
+    if (aLargerThenb) {
+        return ascending ? 1 : -1
+    }
+    else {
+        return ascending ? -1 : 1
+    }
+}
 type ShowAPIObject = Show & WithId
 type PurchaseInfoAPIObject = IPopulatedPurchaseInfo<UserAPIObject> & WithId
 type PaymentInfoAPIObject = IPopulatedPaymentInfo<UserAPIObject> & WithId
+type PublicTicketAPIObject = IDisclosableTicket<ShowAPIObject, SeatAPIObject> & WithId
 type AdminTicketAPIObject =
-    (AdminTicket<ShowAPIObject, SeatAPIObject, PurchaseInfoAPIObject, PaymentInfoAPIObject> & WithId)
+    AdminTicket<ShowAPIObject, SeatAPIObject, PurchaseInfoAPIObject, PaymentInfoAPIObject> & WithId
+type ClientTicketAPIObject = IClientTicket<ShowAPIObject, SeatAPIObject> & WithId
 type TicketAPIObject =
-    (IDisclosableTicket<ShowAPIObject, SeatAPIObject> & WithId) |
-    (IClientTicket<ShowAPIObject, SeatAPIObject> & WithId) |
+    PublicTicketAPIObject |
+    ClientTicketAPIObject |
     AdminTicketAPIObject
 type SeatAPIObject = Seat & WithId
 type UserAPIObject = User & WithId
@@ -56,7 +124,8 @@ export {
     UserAPIObject,
     VenueAPIObject,
     ISection,
-    AdminTicket,
+    ClientTicketAPIObject,
+    AdminTicketAPIObject,
     IClientTicket,
     IDisclosableTicket
 }

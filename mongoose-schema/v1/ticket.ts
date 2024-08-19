@@ -47,6 +47,8 @@ export interface IDisclosableTicket<TEvent = HydratedDocument<IEvent>, TSeat = H
 }
 export interface IClientTicket<TEvent = HydratedDocument<IEvent>, TSeat = HydratedDocument<ISeat>> extends IDisclosableTicket<TEvent, TSeat> {
   belongsToUser: boolean;
+  paymentInfo?: IPopulatedPaymentInfo<never>;
+  purchaseInfo?: IPopulatedPurchaseInfo<never>;
 }
 export interface IFullyPopulatedTicket<TEvent = HydratedDocument<IEvent>,
   TSeat = HydratedDocument<ISeat>,
@@ -371,12 +373,27 @@ export const tickerSchema = new Schema<
         throw new OperationError(`Ticker with id ${this._id} has not been sold yet.`);
       },
       async discloseToClient(userId: Types.ObjectId) {
-        let disclosable = await this.disclose();
+        let populated = await this.populate<IFullyPopulatedTicket>([
+          "event",
+          "seat",
+          "purchaseInfo.purchaser",
+          "paymentInfo.confirmer"])
+        let populatedPurchaseInfo: IPopulatedPurchaseInfo<never> | undefined = populated.purchaseInfo ?
+          {
+            ...populated.purchaseInfo.toJSON(), ...{ purchaser: null, purchserId: null }
+          } : undefined
+        let populatedPaymentInfo: IPopulatedPaymentInfo<never> | undefined =
+          populated.paymentInfo
+            ? {
+              ...populated.paymentInfo.toJSON(), ...{ confirmer: null, confirmerId: null }
+            } : undefined
         return {
           _id: this._id,
-          event: disclosable.event,
-          seat: disclosable.seat,
+          event: populated.event,
+          seat: populated.seat,
           priceTier: this.priceTier,
+          purchaseInfo: populatedPurchaseInfo,
+          paymentInfo: populatedPaymentInfo,
           purchased: this.purchaseInfo != undefined,
           belongsToUser:
             this.purchaseInfo != undefined &&

@@ -12,7 +12,7 @@ import {
   MatDialogRef,
   MatDialogModule
 } from '@angular/material/dialog';
-import { AdminTicket, TicketAPIObject, WithId } from '../../interface-util'
+import { AdminTicketAPIObject, WithId } from '../../interface-util'
 
 @Component({
   selector: 'app-ticket-form',
@@ -30,7 +30,7 @@ export class TicketFormComponent {
   });
   constructor(
     public dialogRef: MatDialogRef<TicketFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public ticket: (AdminTicket & WithId),
+    @Inject(MAT_DIALOG_DATA) public ticket: (AdminTicketAPIObject & WithId),
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) { }

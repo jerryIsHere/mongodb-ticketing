@@ -14,7 +14,7 @@ import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
-import { TicketAPIObject, ShowAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface-util'
+import { ClientTicketAPIObject, ShowAPIObject, ticketCompareByDate, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -22,6 +22,7 @@ import { map, startWith } from 'rxjs/operators';
 import dateFormat, { masks } from "dateformat";
 import { PaymentMessageComponent } from '../payment-message/payment-message.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { count } from 'console';
 
 @Component({
   selector: 'app-event-payment',
@@ -40,10 +41,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class EventPaymentComponent {
   loaded = false
-  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
-  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', 'securedBy'];
+  ticketDataSource: MatTableDataSource<ClientTicketAPIObject> = new MatTableDataSource<ClientTicketAPIObject>()
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', 'confirmedBy'];
   shows: ShowAPIObject[] = [];
-  tickets: TicketAPIObject[] = []
+  tickets: ClientTicketAPIObject[] = []
   showFromQuery?: string
   selectedShow?: ShowAPIObject
   @ViewChild(MatPaginator) paginator?: MatPaginator;
@@ -116,13 +117,13 @@ export class EventPaymentComponent {
       this.ticketDataSource.filter = filterValue.trim().toLowerCase();
     }
   }
-  openForm(data: TicketAPIObject) {
+  openForm(data: ClientTicketAPIObject) {
     const dialogRef = this.dialog.open(TicketFormComponent, {
       data: JSON.parse(JSON.stringify(data)),
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      let ticket = result as TicketAPIObject
+      let ticket = result as ClientTicketAPIObject
       if (ticket) {
         if (result.voided) {
           this.tickets = this.tickets.filter(t => t._id != ticket._id)
@@ -142,7 +143,7 @@ export class EventPaymentComponent {
         this.ticketDataSource.data = result.data.slice()
         this.tickets = result.data.slice()
         this.shows = [];
-        result.data.reduce((_: ShowAPIObject[], ticket: TicketAPIObject, __: number) => {
+        result.data.reduce((_: ShowAPIObject[], ticket: ClientTicketAPIObject, __: number) => {
           if (ticket.event &&
             this.shows.findIndex(show => ticket.event && show._id.toString() == ticket.event._id.toString()) < 0)
             this.shows.push(ticket.event)
@@ -178,33 +179,96 @@ export class EventPaymentComponent {
       }
     })
   }
-  summary: any
-  showSelected(eventId: string) {
-    if(eventId == undefined) return
-    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.event?._id.toString() == eventId)
-    this.selectedShow = this.shows.find(show => show._id == this.showFromQuery)
-    this.summary =
-      this.ticketDataSource.data.reduce((summary, ticket, ind) => {
-        if (ticket.priceTier.price)
-          summary.totalCost += Number(ticket.priceTier.price)
-        if (ticket.priceTier.tierName && ticket.priceTier.price) {
-          let tierCount = summary.tierCount.get(ticket.priceTier.tierName)
-          if (tierCount) {
-            tierCount.count += 1
-            summary.tierCount.set(ticket.priceTier.tierName, tierCount)
-          }
-          else {
-            summary.tierCount.set(ticket.priceTier.tierName, { tierName: ticket.priceTier.tierName, count: 1, price: ticket.priceTier.price })
-          }
-        }
-
-        return summary
-      }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0 })
+  summary?: {
+    round: Map<number, {
+      tierInfo: Map<string, {
+        tierName: string;
+        freed: number;
+        count: number;
+        price: number;
+      }>,
+      freed: number;
+      count: number;
+    }
+    >
+    totalCost?: number
   }
-  ticketConfirmDateString(ticket: TicketAPIObject): string {
+  showSelected(eventId: string) {
+    if (eventId == undefined) return
+    this.ticketDataSource.data = this.tickets.filter(ticket => ticket.event?._id.toString() == eventId)
+    this.selectedShow = this.shows.find(show => show._id == eventId)
+    if (this.selectedShow) {
+      let show = this.selectedShow
+      let sortedPriceTier = show.priceTiers.sort((a, b) => {
+        return a.price - b.price
+      })
+      let tempSummary =
+        this.ticketDataSource.data.sort(ticketCompareByDate).reduce((summary, ticket, ind) => {
+          if (ticket.purchaseInfo) {
+            let purchaseDate = ticket.purchaseInfo.purchaseDate;
+
+
+            let saleInfoInd = show.saleInfos.
+              findIndex(info => info.start <= purchaseDate && purchaseDate <= info.end)
+            let roundInfo = summary.round.get(saleInfoInd)
+            let tierName = ticket.priceTier.tierName
+            let price = ticket.priceTier.price
+            if (roundInfo) {
+              let tierInfo = roundInfo.tierInfo.get(tierName)
+              if (tierInfo) {
+                tierInfo.count += 1
+              }
+              else {
+                roundInfo.tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
+              }
+            }
+            else {
+              let tierInfo = new Map<string, { tierName: string, count: number, price: number, freed: 0 }>()
+              tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
+              summary.round.set(saleInfoInd, { count: 0, freed: 0, tierInfo: tierInfo })
+            }
+
+          }
+          return summary
+        }, { totalCost: 0, round: new Map<number, { count: number, freed: number, tierInfo: Map<string, { tierName: string, count: number, price: number, freed: number }> }>() })
+      tempSummary.totalCost = Array.from(tempSummary.round.entries()).map((round_info) => {
+        let round = round_info[0]
+        let roundInfo = round_info[1]
+        let tierInfo = roundInfo.tierInfo
+        let saleInfo
+        if (round > -1 && round < show.saleInfos.length) {
+          saleInfo = show.saleInfos[round]
+          let buyX = saleInfo.buyX
+          let yFree = saleInfo.yFree
+          let totalTickerCount = Array.from(tierInfo.values()).map(info => info.count).reduce((acc: number, val: number) => acc + val, 0)
+          if (buyX == 0 || yFree == 0) {
+            roundInfo.freed = 0
+            roundInfo.count = totalTickerCount
+            return 0
+          }
+          let freeCount = Math.floor(totalTickerCount / (buyX + yFree)) * yFree;
+          roundInfo.freed = freeCount
+          roundInfo.count = totalTickerCount
+          for (let priceTier of sortedPriceTier) {
+            if (freeCount <= 0) break;
+            let priceTierInfo = tierInfo.get(priceTier.tierName)
+            if (priceTierInfo) {
+              priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
+              freeCount -= priceTierInfo.freed
+              tierInfo.set(priceTier.tierName, priceTierInfo)
+            }
+          }
+          return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)
+        }
+        return 0
+      }).reduce((acc: number, val: number) => acc + val, 0);
+      this.summary = tempSummary
+    }
+  }
+  ticketConfirmDateString(ticket: ClientTicketAPIObject): string {
     return ticketConfirmDateString(ticket)
   }
-  ticketPurchaseDateString(ticket: TicketAPIObject): string {
+  ticketPurchaseDateString(ticket: ClientTicketAPIObject): string {
     return ticketPurchaseDateString(ticket)
   }
 }

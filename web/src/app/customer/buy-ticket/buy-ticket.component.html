@@ -1,13 +1,13 @@
 @if(userSession.user){
 <span>
-  You may pick seat for sale by clicking on:
-  <mat-icon fontIcon="event_seat"></mat-icon>
+  You may pick seat for sale by clicking on the seat no
+
   &#9;&#9;
   &#40;
-  <mat-icon fontIcon="block"></mat-icon> : Seat not for sale
-  <mat-icon fontIcon="airline_seat_recline_normal"></mat-icon> : Seat already sold
+  <mat-icon fontIcon="block"></mat-icon> : Ticket already sold
   &#41;
 </span>
+<br>
 @if(seats && venue && event){
   {{event.eventname}}
   @if(isShowSelling(event)){

@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { TicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface-util'
+import { AdminTicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString, ticketCompareByDate, ShowAPIObject } from '../../interface-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -35,23 +35,32 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class CustomerTicketComponent {
   ticketLoaded = false
-  ticketDataSource: MatTableDataSource<TicketAPIObject> = new MatTableDataSource<TicketAPIObject>()
+  ticketDataSource: MatTableDataSource<AdminTicketAPIObject> = new MatTableDataSource<AdminTicketAPIObject>()
   ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseInfo.purchaseDate', '_id', 'paymentInfo.confirmedBy'];
   users: UserAPIObject[] = [];
-  tickets: TicketAPIObject[] = []
+  tickets: AdminTicketAPIObject[] = []
+  shows: ShowAPIObject[] = [];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   userSearch = new FormControl<string | UserAPIObject>('');
+  showSearch = new FormControl<string | ShowAPIObject>('');
   filteredUsers: Observable<UserAPIObject[]> = new Observable<UserAPIObject[]>();
+  filteredShows: Observable<ShowAPIObject[]> = new Observable<ShowAPIObject[]>();
+  selectedUser?: UserAPIObject;
+  selectedShow?: ShowAPIObject
 
   constructor(public dialog: MatDialog, private api: ApiService) {
     this.loadData()
   }
 
-  displayFn(user: UserAPIObject): string {
+  showDisplayFn(event: ShowAPIObject): string {
+    return event && event.eventname ? event.eventname : '';
+  }
+
+  userDisplayFn(user: UserAPIObject): string {
     return user ? (user.fullname ? user.fullname : '') + (user.username ? `(${user.username})` : '') : '';
   }
-  private _filter(keywords: string): UserAPIObject[] {
+  private _userFilter(keywords: string): UserAPIObject[] {
     const filterValue = keywords.toLowerCase();
     if (this.users) {
       return this.users.filter(user =>
@@ -60,6 +69,18 @@ export class CustomerTicketComponent {
         user.email?.toLowerCase()?.includes(filterValue) ||
         user.username?.toLowerCase()?.includes(filterValue) ||
         user._id?.toLowerCase()?.includes(filterValue)
+      );
+    }
+    else {
+      return []
+    }
+  }
+  private _showFilter(keywords: string): ShowAPIObject[] {
+    const filterValue = keywords.toLowerCase();
+    if (this.shows) {
+      return this.shows.filter(event =>
+        event.eventname?.toLowerCase().includes(filterValue) ||
+        event._id?.toLowerCase()?.includes(filterValue)
       );
     }
     else {
@@ -108,13 +129,13 @@ export class CustomerTicketComponent {
       this.ticketDataSource.filter = filterValue.trim().toLowerCase();
     }
   }
-  openForm(data: TicketAPIObject) {
+  openForm(data: AdminTicketAPIObject) {
     const dialogRef = this.dialog.open(TicketFormComponent, {
       data: JSON.parse(JSON.stringify(data)),
       autoFocus: false
     });
     dialogRef.afterClosed().subscribe((result: any) => {
-      let ticket = result as TicketAPIObject
+      let ticket = result as AdminTicketAPIObject
       if (ticket) {
         if (result.voided) {
           this.tickets = this.tickets.filter(t => t._id != ticket._id)
@@ -124,7 +145,7 @@ export class CustomerTicketComponent {
           if (ticketInd > -1) this.tickets[ticketInd] = ticket
         }
         if (this.summary?.userId) {
-          this.summarizeUser(this.summary.userId)
+          this.summarize(this.summary.userId)
         }
         else {
           this.ticketDataSource.data = this.tickets.slice()
@@ -132,9 +153,21 @@ export class CustomerTicketComponent {
       }
     })
   }
-  userLoaded = false
+  dataLoaded = false
   loadData() {
     let promises = []
+    promises.push(this.api.request.get("/event?list").toPromise().then((result: any) => {
+      if (result && result.data) {
+        this.shows = result.data
+        this.filteredShows = this.showSearch.valueChanges.pipe(
+          startWith(''),
+          map(value => {
+            const keywords = typeof value === 'string' ? value : value?._id;
+            return keywords ? this._showFilter(keywords as string) : this.shows.slice();
+          }),
+        );
+      }
+    }))
     promises.push(this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
       if (result && result.data) {
         this.ticketLoaded = true
@@ -144,49 +177,112 @@ export class CustomerTicketComponent {
     }))
     promises.push(this.api.request.get("/user?list").toPromise().then((result: any) => {
       if (result && result.data) {
-        this.userLoaded = true
         this.users = result.data
         this.filteredUsers = this.userSearch.valueChanges.pipe(
           startWith(''),
           map(value => {
             const keywords = typeof value === 'string' ? value : value?.username;
-            return keywords ? this._filter(keywords as string) : this.users.slice();
+            return keywords ? this._userFilter(keywords as string) : this.users.slice();
           }),
         );
       }
     }))
-    return Promise.all(promises)
+    return Promise.all(promises).then(_ => {
+      this.dataLoaded = true
+    })
   }
   summary: any
 
   userSelected(event: MatAutocompleteSelectedEvent) {
-    if (event?.option?.value?._id) this.summarizeUser(event?.option?.value?._id)
+    if (event?.option?.value?._id) {
+      this.selectedUser = this.users.find(user => user._id == event?.option?.value?._id)
+    }
+    if (this.selectedUser && this.selectedShow)
+      this.summarize()
   }
-  summarizeUser(userId: string) {
-    this.ticketDataSource.data = this.tickets.filter(ticket => "purchaseInfo" in ticket &&
-      ticket.purchaseInfo?.purchaser?._id.toString() == userId)
-    this.summary =
-      this.ticketDataSource.data.reduce((summary, ticket, ind) => {
-        if (ticket.priceTier.price)
-          summary.totalCost += Number(ticket.priceTier.price)
-        if (ticket.priceTier.tierName && ticket.priceTier.price) {
-          let tierCount = summary.tierCount.get(ticket.priceTier.tierName)
-          if (tierCount) {
-            tierCount.count += 1
-            summary.tierCount.set(ticket.priceTier.tierName, tierCount)
-          }
-          else {
-            summary.tierCount.set(ticket.priceTier.tierName, { tierName: ticket.priceTier.tierName, count: 1, price: ticket.priceTier.price })
-          }
-        }
+  summarize() {
+    if (this.selectedUser && this.selectedShow) {
+      let show = this.selectedShow
+      let user = this.selectedUser
+      let sortedPriceTier = show.priceTiers.sort((a, b) => {
+        return a.price - b.price
+      })
+      let tempSummary =
+        this.tickets.filter(ticket => ticket.event?._id == show._id && ticket.purchaseInfo?.purchaser?._id == user._id).
+          sort(ticketCompareByDate).reduce((summary, ticket, ind) => {
+            if (ticket.purchaseInfo) {
+              let purchaseDate = ticket.purchaseInfo.purchaseDate;
 
-        return summary
-      }, { tierCount: new Map<string, { tierName: string, count: number, price: number }>(), totalCost: 0, userId: userId })
+
+              let saleInfoInd = show.saleInfos.
+                findIndex(info => info.start <= purchaseDate && purchaseDate <= info.end)
+              let roundInfo = summary.round.get(saleInfoInd)
+              let tierName = ticket.priceTier.tierName
+              let price = ticket.priceTier.price
+              if (roundInfo) {
+                let tierInfo = roundInfo.tierInfo.get(tierName)
+                if (tierInfo) {
+                  tierInfo.count += 1
+                }
+                else {
+                  roundInfo.tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
+                }
+              }
+              else {
+                let tierInfo = new Map<string, { tierName: string, count: number, price: number, freed: 0 }>()
+                tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
+                summary.round.set(saleInfoInd, { count: 0, freed: 0, tierInfo: tierInfo })
+              }
+
+            }
+            return summary
+          }, { totalCost: 0, round: new Map<number, { count: number, freed: number, tierInfo: Map<string, { tierName: string, count: number, price: number, freed: number }> }>() })
+      tempSummary.totalCost = Array.from(tempSummary.round.entries()).map((round_info) => {
+        let round = round_info[0]
+        let roundInfo = round_info[1]
+        let tierInfo = roundInfo.tierInfo
+        let saleInfo
+        if (round > -1 && round < show.saleInfos.length) {
+          saleInfo = show.saleInfos[round]
+          let buyX = saleInfo.buyX
+          let yFree = saleInfo.yFree
+          let totalTickerCount = Array.from(tierInfo.values()).map(info => info.count).reduce((acc: number, val: number) => acc + val, 0)
+          if (buyX == 0 || yFree == 0) {
+            roundInfo.freed = 0
+            roundInfo.count = totalTickerCount
+            return 0
+          }
+          let freeCount = Math.floor(totalTickerCount / (buyX + yFree)) * yFree;
+          roundInfo.freed = freeCount
+          roundInfo.count = totalTickerCount
+          for (let priceTier of sortedPriceTier) {
+            if (freeCount <= 0) break;
+            let priceTierInfo = tierInfo.get(priceTier.tierName)
+            if (priceTierInfo) {
+              priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
+              freeCount -= priceTierInfo.freed
+              tierInfo.set(priceTier.tierName, priceTierInfo)
+            }
+          }
+          return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)
+        }
+        return 0
+      }).reduce((acc: number, val: number) => acc + val, 0);
+      this.summary = tempSummary
+    }
   }
-  ticketConfirmDateString(ticket: TicketAPIObject): string {
+
+  showSelected(eventId: string) {
+    if (eventId == undefined) return
+    this.selectedShow = this.shows.find(show => show._id.toString() == eventId)
+    if (this.selectedUser && this.selectedShow)
+      this.summarize()
+
+  }
+  ticketConfirmDateString(ticket: AdminTicketAPIObject): string {
     return ticketConfirmDateString(ticket)
   }
-  ticketPurchaseDateString(ticket: TicketAPIObject): string {
+  ticketPurchaseDateString(ticket: AdminTicketAPIObject): string {
     return ticketPurchaseDateString(ticket)
   }
   downloadUserDataCSV() {
@@ -197,22 +293,7 @@ export class CustomerTicketComponent {
             "latestTicketRemark",].join(","),
           ...this.users.map(user => {
             let sortedTicket = this.tickets.filter(ticket =>
-              "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaser?._id.toString() == user._id).sort((ticketA, ticketB) => {
-                if ("purchaseInfo" in ticketA && "purchaseInfo" in ticketB && ticketA.purchaseInfo && ticketB.purchaseInfo) {
-                  return new Date(ticketA.purchaseInfo.purchaseDate) > new Date(ticketB.purchaseInfo.purchaseDate) ? -1 :
-                    new Date(ticketA.purchaseInfo.purchaseDate) < new Date(ticketB.purchaseInfo.purchaseDate) ? 1 : 0
-                }
-                if ("purchaseInfo" in ticketA) {
-                  return -1
-                }
-                else if ("purchaseInfo" in ticketB) {
-                  return 1
-                }
-                else {
-                  return 0
-                }
-              }
-              )
+              "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaser?._id.toString() == user._id).sort(ticketCompareByDate)
             let lastTicket = sortedTicket.length > 0 && "purchaseInfo" in sortedTicket[0] ? sortedTicket[0] : null
             return [
               user._id,

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/seatUI/seating-plan/seating-plan.component.scss"],
+  "sourcesContent": ["mat-list-item {\n  button{\n    max-width: 36px !important;\n    max-height: 36px !important;\n    min-width: 36px !important;\n    min-height: 36px !important;\n  }\n}\n"],
+  "mappings": "AACE,cAAA,OACE,UAAA,eACA,WAAA,eACA,UAAA,eACA,WAAA",
+  "names": []
+}

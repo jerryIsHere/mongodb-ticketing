@@ -1,17 +1,31 @@
+@if (!dataLoaded){
+<mat-spinner></mat-spinner>
+}
+@else {
 <mat-form-field>
-  @if (!userLoaded){
-  <mat-spinner></mat-spinner>
-  }
   <mat-label>Select user</mat-label>
-  <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="auto">
-  <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #auto="matAutocomplete"
-    [displayWith]="displayFn">
+  <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="userAuto">
+  <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #userAuto="matAutocomplete"
+    [displayWith]="userDisplayFn">
     @for (option of filteredUsers | async; track option) {
     <mat-option [value]="option">{{option.fullname}}&#40;{{option.username}}&#41;</mat-option>
     }
   </mat-autocomplete>
 </mat-form-field>
 <br>
+<mat-form-field>
+  <mat-label>Select event</mat-label>
+  <input type="text" matInput [formControl]="showSearch" [matAutocomplete]="showAuto">
+  <mat-autocomplete (optionSelected)="showSelected($event.option.value._id)" autoActiveFirstOption
+    #showAuto="matAutocomplete" [displayWith]="showDisplayFn">
+    @for (option of filteredShows | async; track option) {
+    <mat-option [value]="option">{{option.eventname}}</mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>
+<br>
+
+}
 <button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
 <button mat-stroked-button color="primary" (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>

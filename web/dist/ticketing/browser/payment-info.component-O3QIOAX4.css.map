@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/customer/payment-info/payment-info.component.scss"],
+  "sourcesContent": ["tr.strikethrough ::before {\n  /* Create a new element that       */\n  content: \"\";\n  position: absolute;\n  display: block;\n  left: 0;\n  top: 50%;\n  width: 100%;\n  /* …with the top across the middle */\n  border-bottom: 1px solid #000;\n  /* …and with a border on the top   */\n}\n\ntd {\n  position: relative;\n}\n"],
+  "mappings": "iBAAA,EAAA,CAAA,cAAA,QAEE,QAAA,GACA,SAAA,SACA,QAAA,MACA,KAAA,EACA,IAAA,IACA,MAAA,KAEA,cAAA,IAAA,MAAA,KAIF,GACE,SAAA",
+  "names": []
+}
