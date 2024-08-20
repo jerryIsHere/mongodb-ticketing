@@ -27,7 +27,8 @@ Ticket bought:
 <br>
 
 @for(roundAndInfo of summary.round.entries(); track roundAndInfo){
-round {{roundAndInfo[0]+1}}: baught: {{roundAndInfo[1].count}} and get {{roundAndInfo[1].freed}} free:
+Round {{roundAndInfo[0]+1}}: get {{roundAndInfo[1].freed}} free
+out of {{roundAndInfo[1].count}} ticket
 <br>
 @for(tierCount of roundAndInfo[1].tierInfo.values(); track tierCount){
 {{tierCount.tierName}}&#40;{{tierCount.price}}&#41;: {{tierCount.count-tierCount.freed}}&#40;{{tierCount.count}} &#41;

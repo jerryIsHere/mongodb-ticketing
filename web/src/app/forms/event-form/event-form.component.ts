@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../service/api.service';
-import { IPriceTier, ShowAPIObject, VenueAPIObject } from '../../interface-util';
+import { IPriceTier, ShowAPIObject, VenueAPIObject } from '../../api-util';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import {
   MAT_DIALOG_DATA,

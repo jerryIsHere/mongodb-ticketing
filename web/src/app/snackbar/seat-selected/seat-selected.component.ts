@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { IPriceTier, SeatAPIObject, TicketAPIObject } from '../../interface-util';
+import { IPriceTier, SeatAPIObject, TicketAPIObject } from '../../api-util';
 import {
   MAT_SNACK_BAR_DATA,
   MatSnackBarRef,

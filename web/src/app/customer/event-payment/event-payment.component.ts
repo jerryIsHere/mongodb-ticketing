@@ -14,7 +14,7 @@ import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
-import { ClientTicketAPIObject, ShowAPIObject, ticketCompareByDate, ticketConfirmDateString, ticketPurchaseDateString } from '../../interface-util'
+import { ClientTicketAPIObject, ShowAPIObject, summarizeTicket, ticketCompareByDate, ticketConfirmDateString, ticketPurchaseDateString } from '../../api-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -199,71 +199,8 @@ export class EventPaymentComponent {
     this.selectedShow = this.shows.find(show => show._id == eventId)
     if (this.selectedShow) {
       let show = this.selectedShow
-      let sortedPriceTier = show.priceTiers.sort((a, b) => {
-        return a.price - b.price
-      })
-      let tempSummary =
-        this.ticketDataSource.data.sort(ticketCompareByDate).reduce((summary, ticket, ind) => {
-          if (ticket.purchaseInfo) {
-            let purchaseDate = ticket.purchaseInfo.purchaseDate;
-
-
-            let saleInfoInd = show.saleInfos.
-              findIndex(info => info.start <= purchaseDate && purchaseDate <= info.end)
-            let roundInfo = summary.round.get(saleInfoInd)
-            let tierName = ticket.priceTier.tierName
-            let price = ticket.priceTier.price
-            if (roundInfo) {
-              let tierInfo = roundInfo.tierInfo.get(tierName)
-              if (tierInfo) {
-                tierInfo.count += 1
-              }
-              else {
-                roundInfo.tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
-              }
-            }
-            else {
-              let tierInfo = new Map<string, { tierName: string, count: number, price: number, freed: 0 }>()
-              tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0 })
-              summary.round.set(saleInfoInd, { count: 0, freed: 0, tierInfo: tierInfo })
-            }
-
-          }
-          return summary
-        }, { totalCost: 0, round: new Map<number, { count: number, freed: number, tierInfo: Map<string, { tierName: string, count: number, price: number, freed: number }> }>() })
-      tempSummary.totalCost = Array.from(tempSummary.round.entries()).map((round_info) => {
-        let round = round_info[0]
-        let roundInfo = round_info[1]
-        let tierInfo = roundInfo.tierInfo
-        let saleInfo
-        if (round > -1 && round < show.saleInfos.length) {
-          saleInfo = show.saleInfos[round]
-          let buyX = saleInfo.buyX
-          let yFree = saleInfo.yFree
-          let totalTickerCount = Array.from(tierInfo.values()).map(info => info.count).reduce((acc: number, val: number) => acc + val, 0)
-          if (buyX == 0 || yFree == 0) {
-            roundInfo.freed = 0
-            roundInfo.count = totalTickerCount
-            return 0
-          }
-          let freeCount = Math.floor(totalTickerCount / (buyX + yFree) * yFree);
-          roundInfo.freed = freeCount
-          roundInfo.count = totalTickerCount
-          for (let priceTier of sortedPriceTier) {
-            let priceTierInfo = tierInfo.get(priceTier.tierName)
-            if (!priceTierInfo) continue;
-            if (freeCount <= 0) { }
-            else {
-              priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
-              freeCount -= priceTierInfo.freed
-              tierInfo.set(priceTier.tierName, priceTierInfo)
-            }
-          }
-          return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)
-        }
-        return 0
-      }).reduce((acc: number, val: number) => acc + val, 0);
-      this.summary = tempSummary
+      let showTickets = this.ticketDataSource.data
+      this.summary = summarizeTicket<ClientTicketAPIObject>(showTickets, show)
     }
   }
   ticketConfirmDateString(ticket: ClientTicketAPIObject): string {

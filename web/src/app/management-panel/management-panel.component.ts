@@ -1,5 +1,5 @@
 import { Component, ViewChild, viewChild, } from '@angular/core';
-import { ShowAPIObject, VenueAPIObject, IPriceTier, TicketAPIObject } from '../interface-util'
+import { ShowAPIObject, VenueAPIObject, IPriceTier, TicketAPIObject } from '../api-util'
 import { EventListComponent } from './event-list/event-list.component';
 import { MatDialog } from '@angular/material/dialog';
 import { VenueListComponent } from './venue-list/venue-list.component';

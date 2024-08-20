@@ -12,7 +12,7 @@ import {
   MatDialogRef,
   MatDialogModule
 } from '@angular/material/dialog';
-import { AdminTicketAPIObject, WithId } from '../../interface-util'
+import { AdminTicketAPIObject, WithId } from '../../api-util'
 
 @Component({
   selector: 'app-ticket-form',

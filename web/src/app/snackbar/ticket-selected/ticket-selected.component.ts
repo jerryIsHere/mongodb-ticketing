@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { TicketAPIObject } from '../../interface-util';
+import { TicketAPIObject } from '../../api-util';
 import {
   MAT_SNACK_BAR_DATA,
   MatSnackBarRef,

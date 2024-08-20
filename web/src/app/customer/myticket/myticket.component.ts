@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
-import { TicketAPIObject } from '../../interface-util'
+import { TicketAPIObject } from '../../api-util'
 import { ApiService } from '../../service/api.service';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 

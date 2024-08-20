@@ -83,21 +83,43 @@ exports.eventSchema = new mongoose_1.Schema({
     priceTiers: {
         type: [priceTier_1.priceTierSchema],
         required: true,
-        validate: {
-            validator: (val) => val.length > 0,
-            message: "At least one price tier should be provided.",
-        },
+        validate: [{
+                validator: (val) => val.length > 0,
+                message: "At least one price tier should be provided.",
+            }, {
+                validator: async function (val) {
+                    let ticketNotInPriceTier = await ticket_1.ticketModel
+                        .findOne({
+                        eventId: this._id,
+                        $nor: val.map((pt) => {
+                            return { $and: [{ "priceTier.tierName": pt.tierName }, { "priceTier.price": pt.price }] };
+                        }),
+                    })
+                        .then();
+                    if (ticketNotInPriceTier == null) {
+                        return true;
+                    }
+                    throw new error_1.ReferentialError(`This price tier update does not consider ` +
+                        `${schema_names_1.names.Ticket.singular_name} with id ${ticketNotInPriceTier.id} ` +
+                        `(at ${ticketNotInPriceTier.priceTier.tierName} $${ticketNotInPriceTier.priceTier.price}).`);
+                }
+            }]
     },
     saleInfos: {
         type: [exports.saleInfoSchema],
         required: true,
         validate: {
-            validator: (val) => {
+            validator: async function (val) {
                 if (val.length < 1)
                     throw new error_1.ValidationError("At least one sale info should be provided.");
-                // TODO: check that sale date is not overlapping
-                if (false)
-                    throw new error_1.ValidationError("At least one sale info should be provided.");
+                val.forEach((infoA, ind) => {
+                    [...val].splice(ind, 1).forEach(infoB => {
+                        if ((infoA.start < infoB.start && infoA.end >= infoB.start)
+                            || (infoA.end > infoB.end && infoA.start <= infoB.end))
+                            throw new error_1.ValidationError("Ticket selling rounds should not overlap.");
+                    });
+                });
+                //TODO check if a sold ticket is not included in new sales round
                 return true;
             },
         },

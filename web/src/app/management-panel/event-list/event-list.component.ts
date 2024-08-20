@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 import { DatetimeOffsetPipe } from '../../pipes/datetime-offset.pipe';
 import { DatetimeTimezonePipe } from '../../pipes/datetime-timezone.pipe';
-import { ShowAPIObject, VenueAPIObject, isShowSelling, showSellingString } from '../../interface-util'
+import { ShowAPIObject, VenueAPIObject, isShowSelling, showSellingString } from '../../api-util'
 import { ApiService } from '../../service/api.service';
 import { EventFormComponent } from '../../forms/event-form/event-form.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';

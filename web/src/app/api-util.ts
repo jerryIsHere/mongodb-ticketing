@@ -37,13 +37,13 @@ export function getPurchaserIfAny(ticket: TicketAPIObject) {
 }
 export function ticketCompare(ticketA: TicketAPIObject, ticketB: TicketAPIObject, ascending: boolean = true): number {
     let aLargerThenb = null
-    if(ticketA.priceTier.price > ticketA.priceTier.price){
+    if (ticketA.priceTier.price > ticketA.priceTier.price) {
         aLargerThenb = true
     }
-    else if(ticketA.priceTier.price > ticketA.priceTier.price){
+    else if (ticketA.priceTier.price > ticketA.priceTier.price) {
         aLargerThenb = false
     }
-    else{
+    else {
         if ("purchaseInfo" in ticketA && "purchaseInfo" in ticketB && ticketA.purchaseInfo && ticketB.purchaseInfo) {
             let aDate = new Date(ticketA.purchaseInfo.purchaseDate)
             let bDate = new Date(ticketB.purchaseInfo.purchaseDate)
@@ -100,6 +100,103 @@ export function ticketCompareByDate(ticketA: TicketAPIObject, ticketB: TicketAPI
     else {
         return ascending ? -1 : 1
     }
+}
+export function summarizeTicket<T extends AdminTicketAPIObject | ClientTicketAPIObject>(ticket: T[], show: ShowAPIObject) {
+    let sortedPriceTier = show.priceTiers.sort((a, b) => {
+        return a.price - b.price
+    })
+    let sortedTicket = [...ticket].sort(ticketCompareByDate)
+    let summary = sortedTicket.reduce((summary, ticket, ind) => {
+        if (ticket.purchaseInfo) {
+            let purchaseDate = ticket.purchaseInfo.purchaseDate;
+
+            let saleInfoInd = show.saleInfos.
+                findIndex(info => info.start <= purchaseDate && purchaseDate <= info.end)
+            let roundInfo = summary.round.get(saleInfoInd)
+            let tierName = ticket.priceTier.tierName
+            let price = ticket.priceTier.price
+            if (roundInfo) {
+                let tierInfo = roundInfo.tierInfo.get(tierName)
+                if (tierInfo) {
+                    tierInfo.count += 1
+                    tierInfo.tickets.push(ticket)
+                }
+                else {
+                    roundInfo.tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0, tickets: [ticket] })
+                }
+            }
+            else {
+                let tierInfo = new Map<string, { tierName: string, count: number, price: number, freed: number, tickets: T[] }>()
+                tierInfo.set(tierName, { tierName: tierName, count: 1, price: price, freed: 0, tickets: [ticket] })
+                summary.round.set(saleInfoInd, { count: 0, freed: 0, tierInfo: tierInfo, total: 0 })
+            }
+
+        }
+        return summary
+    }, {
+        totalCost: 0,
+        round: new Map<number,
+            {
+                count: number;
+                freed: number;
+                tierInfo: Map<string, {
+                    tierName: string,
+                    count: number,
+                    price: number,
+                    freed: number;
+                    tickets: (T & { freed?: boolean })[]
+                }>;
+                total: number;
+            }>()
+
+    })
+    summary.totalCost = Array.from(summary.round.entries()).map((round_info) => {
+        let round = round_info[0]
+        let roundInfo = round_info[1]
+        let tierInfo = roundInfo.tierInfo
+        let saleInfo
+        if (round > -1 && round < show.saleInfos.length) {
+            saleInfo = show.saleInfos[round]
+            let buyX = saleInfo.buyX
+            let yFree = saleInfo.yFree
+            let totalTickerCount = Array.from(tierInfo.values()).map(info => info.count).reduce((acc: number, val: number) => acc + val, 0)
+            if (buyX == 0 || yFree == 0) {
+                roundInfo.freed = 0
+                roundInfo.count = totalTickerCount
+                return 0
+            }
+            let quotient = Math.floor(totalTickerCount / (buyX + yFree))
+            let reminder = totalTickerCount % (buyX + yFree)
+            let freeCount = quotient * yFree +
+                Math.max(reminder - buyX, 0)
+            roundInfo.freed = freeCount
+            roundInfo.count = totalTickerCount
+            console.log(sortedPriceTier, tierInfo)
+            for (let priceTier of sortedPriceTier) {
+                let priceTierInfo = tierInfo.get(priceTier.tierName)
+                console.log(priceTier, priceTierInfo)
+                if (!priceTierInfo) continue;
+                if (freeCount <= 0) { }
+                else {
+                    priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
+                    freeCount -= priceTierInfo.freed
+                    priceTierInfo.tickets.sort(ticketCompare)
+                    console.log(priceTierInfo.tickets)
+                    for (let i = 0; i < priceTierInfo.freed; i++) {
+                        console.log(priceTierInfo.tickets[i])
+                        priceTierInfo.tickets[i].freed = true;
+                    }
+                    tierInfo.set(priceTier.tierName, priceTierInfo)
+                }
+                roundInfo.total += (priceTierInfo.count - priceTierInfo.freed) * priceTier.price
+                console.log(roundInfo.total)
+            }
+            summary.round.set(round, roundInfo)
+            return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)
+        }
+        return 0
+    }).reduce((acc: number, val: number) => acc + val, 0);
+    return summary
 }
 type ShowAPIObject = Show & WithId
 type PurchaseInfoAPIObject = IPopulatedPurchaseInfo<UserAPIObject> & WithId

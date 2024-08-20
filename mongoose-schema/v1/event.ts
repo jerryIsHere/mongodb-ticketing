@@ -104,21 +104,43 @@ export const eventSchema = new Schema<
     priceTiers: {
       type: [priceTierSchema],
       required: true,
-      validate: {
+      validate: [{
         validator: (val: IPriceTier[]) => val.length > 0,
         message: "At least one price tier should be provided.",
-      },
+      }, {
+        validator: async function (val: IPriceTier[]) {
+          let ticketNotInPriceTier = await ticketModel
+            .findOne({
+              eventId: (this as any)._id,
+              $nor: val.map((pt) => {
+                return { $and: [{ "priceTier.tierName": pt.tierName }, { "priceTier.price": pt.price }] };
+              }),
+            })
+            .then();
+          if (ticketNotInPriceTier == null) {
+            return true
+          }
+          throw new ReferentialError(`This price tier update does not consider ` +
+            `${names.Ticket.singular_name} with id ${ticketNotInPriceTier.id} ` +
+            `(at ${ticketNotInPriceTier.priceTier.tierName} $${ticketNotInPriceTier.priceTier.price}).`);
+        }
+      }]
     },
     saleInfos: {
       type: [saleInfoSchema],
       required: true,
       validate: {
-        validator: (val: ISaleInfo[]) => {
+        validator: async function (val: ISaleInfo[]) {
           if (val.length < 1)
             throw new ValidationError("At least one sale info should be provided.");
-          // TODO: check that sale date is not overlapping
-          if (false)
-            throw new ValidationError("At least one sale info should be provided.");
+          val.forEach((infoA, ind) => {
+            [...val].splice(ind, 1).forEach(infoB => {
+              if ((infoA.start < infoB.start && infoA.end >= infoB.start)
+                || (infoA.end > infoB.end && infoA.start <= infoB.end))
+                throw new ValidationError("Ticket selling rounds should not overlap.");
+            })
+          })
+          //TODO check if a sold ticket is not included in new sales round
           return true;
         },
       },
