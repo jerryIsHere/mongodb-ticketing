@@ -134,7 +134,7 @@ export const eventSchema = new Schema<
           if (val.length < 1)
             throw new ValidationError("At least one sale info should be provided.");
           val.forEach((infoA, ind) => {
-            [...val].splice(ind, 1).forEach(infoB => {
+            [...val].slice(ind).forEach(infoB => {
               if ((infoA.start < infoB.start && infoA.end >= infoB.start)
                 || (infoA.end > infoB.end && infoA.start <= infoB.end))
                 throw new ValidationError("Ticket selling rounds should not overlap.");

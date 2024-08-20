@@ -9,30 +9,36 @@
 </span>
 <br>
 @if(seats && venue && event){
-  {{event.eventname}}
-  @if(isShowSelling(event)){
-  <br>
-  <br>
-  <app-seating-plan #seatingPlan [priceTiers]="event.priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-    isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()" (selectedSectionChange)="clearAction()"
-    [(selectedSeatIds)]="sectionSelectedSeatIds" [limit]="userSession.user? shoppingCartSize: 0">
-  </app-seating-plan>
-  Select seats with text: 
-  <button mat-stroked-button color="primary"(click)="openForm()">seats in this section</button> / 
-  <button mat-stroked-button color="primary"(click)="openForm(false)">any seats</button>
-  }
-  @else {
-  Ticket of this show is not purchasable right now. <br>
-  Sale period:
-  @for(saleInfo of event.saleInfos; track saleInfo){
-    {{saleInfo.start | date : 'short'}} - {{saleInfo.end | date : 'short'}}
-    <br>
-  }
-  }
-  }
-  @else{
-  <mat-spinner></mat-spinner>
-  }
+{{event.eventname}}
+@if(isShowSelling(event)){
+<br>
+<br>
+<app-seating-plan #seatingPlan [priceTiers]="event.priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
+  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()"
+  (selectedSectionChange)="clearAction()" [(selectedSeatIds)]="sectionSelectedSeatIds"
+  [limit]="userSession.user? shoppingCartSize: 0">
+</app-seating-plan>
+Select seats with text:
+<button mat-stroked-button color="primary" (click)="openForm()">seats in this section</button> /
+<button mat-stroked-button color="primary" (click)="openForm(false)">any seats</button>
+}
+@else {
+Ticket of this show is not purchasable right now. <br>
+Sale period:
+@for(saleInfo of event.saleInfos; track saleInfo){
+{{saleInfo.start | date : 'short'}} - {{saleInfo.end | date : 'short'}}
+<br>
+}
+}
+@if(shoppingCartSize == 0){
+<br>
+The show has temporially stop selling as the shopping cart size is set to 0.<br>
+(please contact admin for details)
+}
+}
+@else{
+<mat-spinner></mat-spinner>
+}
 }
 @else{
 You must login before you can start selecting seat for ticketing
