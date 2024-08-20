@@ -7,16 +7,21 @@ import { SeatFormComponent } from '../../forms/seat-form/seat-form.component';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
 import { MatButtonModule } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
-import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon'
 import { UserSessionService } from '../../service/user-session.service';
+import {
+  MatBottomSheet,
+  MatBottomSheetModule,
+  MatBottomSheetRef,
+} from '@angular/material/bottom-sheet';
+
 import { TicketSelectedComponent } from '../../snackbar/ticket-selected/ticket-selected.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-buy-ticket',
   standalone: true,
-  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe, MatIconModule, MatProgressSpinnerModule],
+  imports: [MatGridListModule, MatButtonModule, SeatingPlanComponent, DatePipe, MatIconModule, MatProgressSpinnerModule, MatBottomSheetModule],
   templateUrl: './buy-ticket.component.html',
   styleUrl: './buy-ticket.component.sass'
 })
@@ -34,7 +39,7 @@ export class BuyTicketComponent {
   }
 
   constructor(private api: ApiService, public dialog: MatDialog, public userSession: UserSessionService,
-    private _snackBar: MatSnackBar) {
+    private _bottomSheet: MatBottomSheet) {
 
   }
   loadData(id: string) {
@@ -68,12 +73,12 @@ export class BuyTicketComponent {
       }
     })
   }
-  actionSnackbarRef?: MatSnackBarRef<TicketSelectedComponent>
+  actionBtmSheetRef?: MatBottomSheetRef<TicketSelectedComponent>
   sectionSelectedSeatIds: Set<string> = new Set<string>()
   shoppingCartSize?: number
   checkAction() {
     let tickets: TicketAPIObject[] = [];
-    // combine tickets from seating plan and 
+    // combine tickets from seat selected in section with button + seat selected outside section with text command
     [...this.seatingPlan && this.seatingPlan.selectedSeatIds ? Array.from(this.seatingPlan.selectedSeatIds.values()) : [],
     ...this.otherSelectedSeatIds.map(seat => seat._id)
     ].map(sid => this.tickets.find(t => t.seat?._id.toString() == sid)).filter(ticket => ticket != undefined).forEach(t => {
@@ -81,9 +86,10 @@ export class BuyTicketComponent {
         tickets.push(t)
     })
     console.log(tickets)
-    let seatInfo = this.otherSelectedSeatIds.map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seat?._id.toString() == seat._id) } })
-      .map(seatNticket => { return { ...seatNticket, ...{ priceTier: this.event?.priceTiers.find(p => p.tierName == seatNticket.ticket?.priceTier.tierName) } } })
-      .map(info => info.seat.row + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
+    let seatInfo = this.otherSelectedSeatIds.
+      map(seat => { return { seat: seat, ticket: this.tickets.find(t => t.seat?._id.toString() == seat._id) } }).
+      map(seatNticket => { return { ...seatNticket, ...{ priceTier: seatNticket.ticket?.priceTier } } }).
+      map(info => info.seat.row + info.seat.no + (info.priceTier && info.priceTier?.tierName ? `(${info.priceTier?.tierName})` : ""))
     let action = {
       tickets: tickets,
       limit: this.shoppingCartSize,
@@ -91,12 +97,13 @@ export class BuyTicketComponent {
       success: false,
       reload: false,
     }
-    if (this.actionSnackbarRef == undefined && this.seatingPlan) {
-      this.actionSnackbarRef = this._snackBar.openFromComponent(TicketSelectedComponent, {
-        data: action
+    if (this.actionBtmSheetRef == undefined && this.seatingPlan) {
+      this.actionBtmSheetRef = this._bottomSheet.open(TicketSelectedComponent, {
+        data: action,
+        hasBackdrop: false,
       });
-      this.actionSnackbarRef.afterDismissed().subscribe((response) => {
-        this.actionSnackbarRef = undefined
+      this.actionBtmSheetRef.afterDismissed().subscribe((response) => {
+        this.actionBtmSheetRef = undefined
         if (this._id) {
           // commenting this because this exhause server resources
           if (!action.success) this.loadData(this._id);
@@ -104,13 +111,13 @@ export class BuyTicketComponent {
         this.seatingPlan?.clearSelectedSeat()
       });
     }
-    else if (this.actionSnackbarRef && this.seatingPlan) {
+    else if (this.actionBtmSheetRef && this.seatingPlan) {
       if (tickets.length == 0) {
-        this.actionSnackbarRef.dismiss()
+        this.actionBtmSheetRef.dismiss()
       }
       else {
-        this.actionSnackbarRef.instance.data.tickets = tickets
-        this.actionSnackbarRef.instance.data.seatInfo = seatInfo
+        this.actionBtmSheetRef.instance.data.tickets = tickets
+        this.actionBtmSheetRef.instance.data.seatInfo = seatInfo
       }
     }
   }

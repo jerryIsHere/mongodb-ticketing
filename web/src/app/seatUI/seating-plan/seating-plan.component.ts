@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, SimpleChanges, booleanAttribute } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild, booleanAttribute } from '@angular/core';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,16 +9,19 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select'
 import { FormsModule } from '@angular/forms';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { NgxImageZoomModule } from 'ngx-image-zoom';
 import { IPriceTier, VenueAPIObject, TicketAPIObject, SeatAPIObject, ISection, getPurchaserIfAny } from '../../api-util';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import PhotoSwipe from 'photoswipe';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+
 const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors for pricetiers
 type Section = { x: number, y: number }
 @Component({
   selector: 'app-seating-plan',
   standalone: true,
   imports: [DragDropModule, MatTooltipModule, MatButtonModule, MatListModule, MatIconModule, MatChipsModule,
-    MatSelectModule, FormsModule, MatCardModule, MatGridListModule, NgxImageZoomModule],
+    MatSelectModule, FormsModule, MatCardModule, MatGridListModule],
   templateUrl: './seating-plan.component.html',
   styleUrl: './seating-plan.component.scss'
 })
@@ -206,7 +209,16 @@ export class SeatingPlanComponent {
   isSeatInSelectSection(seat: SeatAPIObject) {
     return seat && seat.coord.sectX == this.selectedSection?.x && seat.coord.sectY == this.selectedSection?.y
   }
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {
+  isMobile: boolean = false
+  constructor(private router: Router, private activatedRoute: ActivatedRoute, private ngZone: NgZone, private responsive: BreakpointObserver) {
+    responsive.observe([
+      Breakpoints.HandsetLandscape,
+      Breakpoints.HandsetPortrait,
+    ]).subscribe(result => {
+      if (result.matches) {
+        this.isMobile = true
+      }
+    });
 
   }
   setRoute() {
@@ -264,5 +276,30 @@ export class SeatingPlanComponent {
       return true;
     }
     return false
+  }
+  @ViewChild('venueGalleryHref') venueGallery?: ElementRef;
+  onGalleryload(event: Event) {
+    let loadedImage: HTMLImageElement = (event.currentTarget as HTMLImageElement);
+    if (this.venueGallery) {
+      this.venueGallery.nativeElement.dataset.pswpWidth = loadedImage.width
+      this.venueGallery.nativeElement.dataset.pswpHeight = loadedImage.width
+    }
+  }
+  ngAfterContentChecked() {
+    this.ngZone.runOutsideAngular(() => {
+      const lightbox = new PhotoSwipeLightbox({
+        gallery: '#venue-gallery a',
+        pswpModule: PhotoSwipe,
+        initialZoomLevel: 'fill',
+      })
+      lightbox.init()
+    })
+
+    if (this.venueGallery) {
+      let loadedImage = this.venueGallery.nativeElement.children[0]
+      console.log(loadedImage, this.venueGallery)
+      this.venueGallery.nativeElement.dataset.pswpWidth = loadedImage.width * 1.1
+      this.venueGallery.nativeElement.dataset.pswpHeight = loadedImage.height * 1.1
+    }
   }
 }

@@ -1,5 +1,5 @@
-<div style="flex-direction: row; display: flex;">
-  <div style="flex: 1">
+<div [style.flex-direction]="isMobile?'column':'row'" style="display: flex;">
+  <div style="flex: 1;">
     <div style="flex-direction: row; display: flex;">
       <mat-form-field style="flex: 1">
         <mat-label>Venue section</mat-label>
@@ -41,7 +41,7 @@
         <button (click)="toggleSelect(seat)" mat-stroked-button
           [style.background-color]="ticket && !buyer?getColorByTicket(ticket):'grey'"
           [style.border-color]="ticket && buyer?getColorByTicket(ticket):undefined"
-          [style.color]="ticket && buyer?getColorByTicket(ticket):undefined"  cdkDrag
+          [style.color]="ticket && buyer?getColorByTicket(ticket):undefined" cdkDrag
           [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
           @if (ticket){
           @if(buyer){
@@ -76,11 +76,12 @@
       }
     </mat-list>
   </div>
-  @if(selectedSection?.options?.thumbImageURL && selectedSection?.options?.fullImageURL){
-  <div style="flex: 1">
-    <lib-ngx-image-zoom zoomMode="click" [enableScrollZoom]="true"
-      [thumbImage]="selectedSection?.options?.thumbImageURL" [fullImage]="selectedSection?.options?.fullImageURL">
-    </lib-ngx-image-zoom>
+  @if(selectedSection && selectedSection.options && selectedSection.options.thumbImageURL){
+  <div style="flex: 1" id="venue-gallery">
+    <a [href]="selectedSection.options.thumbImageURL" target="_blank" #venueGalleryHref>
+      <img (onload)="onGalleryload($event)" style="max-height: 75vh; max-width:100%"
+        [src]="selectedSection.options.thumbImageURL" />
+    </a>
   </div>
   }
 </div>

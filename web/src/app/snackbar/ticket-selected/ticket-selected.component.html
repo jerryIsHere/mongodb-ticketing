@@ -2,8 +2,11 @@
 {{data.tickets.length }} ticket{{data.tickets.length >1? 's':''}}
 selected &#40;up to {{limit}}&#41;
 (cost: {{totalCost()}})
-<span matSnackBarActions style="color: white">
-  <button matSnackBarAction style="color: white" mat-stroked-button color="primary" (click)="buy()" [disabled]="doing">
+<br>
+<!-- print ticket no? -->
+<br>
+<span>
+  <button matSnackBarAction mat-stroked-button color="primary" (click)="buy()" [disabled]="doing">
     @if(doing){
     <mat-spinner></mat-spinner>
     }
@@ -11,7 +14,7 @@ selected &#40;up to {{limit}}&#41;
     }
   </button>
   <button matSnackBarAction style="color: red" color="warning" mat-stroked-button (click)="
-  snackRef.dismiss()"> cancel
+  btmSheetRef.dismiss()"> cancel
   </button>
 </span>
 }

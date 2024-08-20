@@ -2,14 +2,19 @@
 <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 }
 <mat-toolbar>
-  <a mat-stroked-button color="primary" href="/">HK City Choir Ticketing</a>
+  <a mat-stroked-button color="primary" href="/">
+    @if(isMobile){<mat-icon>home</mat-icon>}
+    @else{HK City Choir Ticketing}</a>
   <span style="flex: 1 1 auto;"></span>
   <a mat-stroked-button color="primary" *ngIf="userSession.user" [routerLink]="['/']"
     [color]="router.isActive('/', true)?'accent':''">Events</a>
   <a mat-stroked-button color="primary" *ngIf="userSession.user" [routerLink]="['/event-payment']"
     [color]="router.isActive('/event-payment', false)?'accent':''">My Ticket</a>
   <a mat-stroked-button color="primary" *ngIf="userSession.user?.hasAdminRight" [routerLink]="['/management']"
-    [color]="router.isActive('/management', false)?'accent':''">Management Panel</a>
+    [color]="router.isActive('/management', false)?'accent':''">
+    
+    @if(isMobile){<mat-icon>admin_panel_settings</mat-icon>}
+    @else{Management Panel}</a>
 
   <a mat-stroked-button color="primary" *ngIf="userSession.user?.isCustomerSupport"
     [routerLink]="['/management/customer-ticket', ]">

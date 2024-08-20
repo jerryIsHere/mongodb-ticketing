@@ -4,7 +4,8 @@
 
   &#9;&#9;
   &#40;
-  <mat-icon fontIcon="block"></mat-icon> : Ticket already sold
+  <br>
+  Ticket already sold: <mat-icon fontIcon="block"></mat-icon>
   &#41;
 </span>
 <br>
@@ -12,15 +13,15 @@
 {{event.eventname}}
 @if(isShowSelling(event)){
 <br>
+Select seats with text:
+<button mat-stroked-button color="primary" (click)="openForm()">seats in this section</button> /
+<button mat-stroked-button color="primary" (click)="openForm(false)">any seats</button>
 <br>
 <app-seating-plan #seatingPlan [priceTiers]="event.priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
   isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()"
   (selectedSectionChange)="clearAction()" [(selectedSeatIds)]="sectionSelectedSeatIds"
   [limit]="userSession.user? shoppingCartSize: 0">
 </app-seating-plan>
-Select seats with text:
-<button mat-stroked-button color="primary" (click)="openForm()">seats in this section</button> /
-<button mat-stroked-button color="primary" (click)="openForm(false)">any seats</button>
 }
 @else {
 Ticket of this show is not purchasable right now. <br>

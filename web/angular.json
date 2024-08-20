@@ -31,7 +31,8 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/indigo-pink.css",
-              "src/styles.sass"
+              "src/styles.sass",
+              "node_modules/photoswipe/dist/photoswipe.css"
             ],
             "scripts": []
           },
@@ -96,7 +97,8 @@
             "styles": [
               "@angular/material/prebuilt-themes/indigo-pink.css",
               "node_modules/material-design-icons/iconfont/material-icons.css",
-              "src/styles.sass"
+              "src/styles.sass",
+              "node_modules/photoswipe/dist/photoswipe.css"
             ],
             "scripts": []
           }

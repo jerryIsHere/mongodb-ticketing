@@ -60,9 +60,9 @@
     </div>
     <div matListItemLine>
       @if(ticket.paymentInfo){
-      confirmed with: {{ticket.paymentInfo?.confirmedBy}}
-      @if(ticket.paymentInfo?.remark){
-      &#40;remark: {{ticket.paymentInfo?.remark}}&#41;
+      confirmed with: {{ticket.paymentInfo.confirmedBy}}
+      @if(ticket.paymentInfo.remark){
+      &#40;remark: {{ticket.paymentInfo.remark}}&#41;
       }
       }
     </div>

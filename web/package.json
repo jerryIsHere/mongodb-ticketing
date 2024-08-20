@@ -24,10 +24,11 @@
     "@types/gapi.drive": "^0.0.9",
     "@types/google.accounts": "^0.0.14",
     "@types/google.picker": "^0.0.42",
+    "@types/photoswipe": "^4.1.6",
     "cookie-store": "^4.0.0-next.4",
     "dateformat": "^5.0.3",
     "material-icons": "^1.13.12",
-    "ngx-image-zoom": "^3.0.0",
+    "photoswipe": "^5.4.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"

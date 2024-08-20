@@ -141,8 +141,8 @@
       <mat-error>Quota should be a number</mat-error>
       }
 
-      @if (eventForm.controls['duration'].hasError('max')) {
-        <mat-error>Shopping cart should be smaller then {{shoppingCartSizeLimit}}</mat-error>
+      @if (eventForm.controls['shoppingCartSize'].hasError('max')) {
+        <mat-error>should be &#60;= {{shoppingCartSizeLimit}}</mat-error>
         }
     </mat-form-field>
     <br>
