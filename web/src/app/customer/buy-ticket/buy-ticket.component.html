@@ -14,8 +14,11 @@
 @if(isShowSelling(event)){
 <br>
 Select seats with text:
+<br>
 <button mat-stroked-button color="primary" (click)="openForm()">seats in this section</button> /
 <button mat-stroked-button color="primary" (click)="openForm(false)">any seats</button>
+<br>
+Select seats by tapping on seating plan:
 <br>
 <app-seating-plan #seatingPlan [priceTiers]="event.priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
   isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()"
