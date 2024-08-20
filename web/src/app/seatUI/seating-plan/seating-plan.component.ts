@@ -24,7 +24,7 @@ type Section = { x: number, y: number }
 })
 export class SeatingPlanComponent {
   private _venue: VenueAPIObject | undefined
-  get venue() : VenueAPIObject | undefined { return this._venue }
+  get venue(): VenueAPIObject | undefined { return this._venue }
   @Input() set venue(value: VenueAPIObject) {
     this._venue = value
     this.tryInitialSectionSelection()
@@ -68,7 +68,7 @@ export class SeatingPlanComponent {
     if (seat) {
       let ticket = this.getTiceket(seat._id)
       let buyer = this.getBuyer(seat._id)
-      let isTicketAvaliable = buyer === null || buyer === false || buyer == undefined
+      let isTicketAvaliable = buyer === null
       let isSeatSelling = ticket != null
       if (
         !(this.soldTicketDisabled && !isTicketAvaliable) &&
@@ -118,10 +118,10 @@ export class SeatingPlanComponent {
     this.priceTiersColors = new Map<string, string>()
     var colors = "" + (' ' + colorshex).slice(1);
     for (let priceTier of value) {
-        let c = colors.slice(0, 6)
-        this.priceTiersColors.set(priceTier.tierName, c)
-        if (colors.length <= 6) break;
-        colors = colors.slice(6, colors.length)
+      let c = colors.slice(0, 6)
+      this.priceTiersColors.set(priceTier.tierName, c)
+      if (colors.length <= 6) break;
+      colors = colors.slice(6, colors.length)
     }
   }
   priceTiersColors: Map<string, string> = new Map<string, string>()

@@ -75,6 +75,7 @@ export class BuyTicketComponent {
   shoppingCartSize: number = defaultShoppingCartSize
   checkAction() {
     let tickets: TicketAPIObject[] = [];
+    // combine tickets from seating plan and 
     [...this.seatingPlan && this.seatingPlan.selectedSeatIds ? Array.from(this.seatingPlan.selectedSeatIds.values()) : [],
     ...this.outsideSelectedSeat.map(seat => seat._id)
     ].map(sid => this.tickets.find(t => t.seat?._id.toString() == sid)).filter(ticket => ticket != undefined).forEach(t => {
@@ -122,15 +123,10 @@ export class BuyTicketComponent {
         autoFocus: false
       });
       dialogRef.afterClosed().subscribe((rowsNcols: { row: string, no: string }[]) => {
-        let avalibleSeat: any[] = rowsNcols.map((rc) => {
-          let seat = this.seats?.filter(s => s.row == rc.row && s.no == Number(rc.no))
-          if (seat && seat.length > 0) {
-            return seat[0]
-          }
-          else {
-            return null
-          }
-        }).filter((seat) => seat != null && this.seatingPlan && this.seatingPlan.getTiceket(seat._id) != null && this.seatingPlan.getBuyer(seat._id) == null)
+        let avalibleSeat: any[] = rowsNcols.
+          map((rc) => this.seats?.find(s => s.row == rc.row && s.no == Number(rc.no))).
+          filter((seat) => seat != null && this.seatingPlan && this.seatingPlan.getTiceket(seat._id) != null
+            && this.seatingPlan.getBuyer(seat._id) == null)
         let seatInside: any[] = avalibleSeat.filter(s => s.coord.sectX == this.seatingPlan?.selectedSection?.x && s.coord.sectY == this.seatingPlan?.selectedSection?.y)
         if (!checkSection) {
           this.outsideSelectedSeat = avalibleSeat.filter(s => !(s.coord.sectX == this.seatingPlan?.selectedSection?.x && s.coord.sectY == this.seatingPlan?.selectedSection?.y))

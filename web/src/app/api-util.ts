@@ -33,7 +33,13 @@ export interface WithId {
     _id: string
 }
 export function getPurchaserIfAny(ticket: TicketAPIObject) {
-    return "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser : "purchased" in ticket ? ticket.purchased : null
+    return "purchaseInfo" in ticket && ticket.purchaseInfo != undefined ? ticket.purchaseInfo.purchaser :
+        "purchased" in ticket ? ticket.purchased ? true : null
+            : null
+}
+export function isTicketSelling(ticket: TicketAPIObject) {
+    let purchaser = getPurchaserIfAny(ticket)
+    return purchaser != true && typeof purchaser != "object"
 }
 export function ticketCompare(ticketA: TicketAPIObject, ticketB: TicketAPIObject, ascending: boolean = true): number {
     let aLargerThenb = null
@@ -171,25 +177,20 @@ export function summarizeTicket<T extends AdminTicketAPIObject | ClientTicketAPI
                 Math.max(reminder - buyX, 0)
             roundInfo.freed = freeCount
             roundInfo.count = totalTickerCount
-            console.log(sortedPriceTier, tierInfo)
             for (let priceTier of sortedPriceTier) {
                 let priceTierInfo = tierInfo.get(priceTier.tierName)
-                console.log(priceTier, priceTierInfo)
                 if (!priceTierInfo) continue;
                 if (freeCount <= 0) { }
                 else {
                     priceTierInfo.freed = priceTierInfo.count < freeCount ? priceTierInfo.count : freeCount;
                     freeCount -= priceTierInfo.freed
                     priceTierInfo.tickets.sort(ticketCompare)
-                    console.log(priceTierInfo.tickets)
                     for (let i = 0; i < priceTierInfo.freed; i++) {
-                        console.log(priceTierInfo.tickets[i])
                         priceTierInfo.tickets[i].freed = true;
                     }
                     tierInfo.set(priceTier.tierName, priceTierInfo)
                 }
                 roundInfo.total += (priceTierInfo.count - priceTierInfo.freed) * priceTier.price
-                console.log(roundInfo.total)
             }
             summary.round.set(round, roundInfo)
             return Array.from(tierInfo.values()).reduce((acc: number, pt) => acc + (pt.count - pt.freed) * pt.price, 0)

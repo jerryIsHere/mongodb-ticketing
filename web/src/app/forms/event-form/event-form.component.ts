@@ -112,7 +112,7 @@ export class EventFormComponent {
   addPriceTier(event: MatChipInputEvent) {
     const value = (event.value || '').trim().split(':');
     let tierName = value[0].trim()
-    let price = Number(value[1].trim())
+    let price = Number(value[1].replaceAll('$', '').trim())
     if (!Array.isArray(this.data.event.priceTiers)) this.data.event.priceTiers = []
     if (value && Number.isInteger(price) &&
       this.data.event.priceTiers &&

@@ -22,29 +22,29 @@
     }
   </mat-autocomplete>
 </mat-form-field>
-<br>
 }
 @if(priceTiersColors && selectedShow){
-<mat-chip-listbox style="flex: 1; position: sticky; top: 5px; z-index: 100;">
+<mat-chip-listbox style="display: inline-flex; flex: 1; position: sticky; top: 5px; z-index: 100;">
   @for(priceTier of selectedShow.priceTiers; track priceTier){
   <mat-chip [style.background-color]="priceTier.tierName?'#'+priceTiersColors.get(priceTier.tierName):''">
     {{priceTier.tierName}}:${{priceTier.price}}</mat-chip>
   }
 </mat-chip-listbox>
 }
+<br>
 <button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
 <button mat-stroked-button color="primary" (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 <br>
 @if(summary)
 {
 @for(roundAndInfo of summary.round.entries(); track roundAndInfo; let isLast = $last){
-<h2 mat-subheader>Round {{roundAndInfo[0]+1}}: get {{roundAndInfo[1].freed}} free
-  out of {{roundAndInfo[1].count}} ticket</h2>
-<h3 mat-subheader> sum ${{roundAndInfo[1].total}}</h3>
+<h2 mat-subheader>Round {{roundAndInfo[0]+1}}: ${{roundAndInfo[1].total}}</h2>
+<h3 mat-subheader> get {{roundAndInfo[1].freed}} free
+  out of {{roundAndInfo[1].count}} ticket</h3>
 <mat-action-list>
   @for(tierInfo of roundAndInfo[1].tierInfo.values(); track tierInfo){
   <div mat-subheader>
-    {{tierInfo.tierName}}&#40;${{tierInfo.price}}&#41;: {{tierInfo.count-tierInfo.freed}} &#40;baught:
+    {{tierInfo.tierName}}: {{tierInfo.count-tierInfo.freed}} &#40;baught:
     {{tierInfo.count}}&#41;
   </div>
   @for(ticket of tierInfo.tickets; track ticket){
@@ -73,7 +73,12 @@
     </mat-icon>
     }
     @else{
-    <mat-icon matListItemIcon>receipt_long</mat-icon>
+    <mat-icon matListItemIcon>attach_money</mat-icon>
+    }
+    @if(ticket.paymentInfo){
+    <div matListItemMeta>
+      <mat-icon>price_check</mat-icon>
+    </div>
     }
   </button>
   }

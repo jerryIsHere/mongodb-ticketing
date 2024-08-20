@@ -54,6 +54,8 @@ export class SeatFormComponent {
         let startNo = start.match(/[\d]+/)
         let endRow = end ? end.match(/[A-Z]+/) : startRow
         let endNo = end ? end.match(/[\d]+/) : startNo
+        //matching a1-14 same as a1-a14
+        if(!endRow && startRow)endRow = startRow
 
         if (startRow && startNo && endRow && endNo && Number.isInteger(Number(startNo[0])) && Number.isInteger(Number(endNo[0]))) {
           let rows: string[] = [startRow[0]]
