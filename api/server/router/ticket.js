@@ -33,7 +33,7 @@ var Ticket;
             if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
                 ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
                     $match: {
-                        eventId: req.query.eventId
+                        eventId: new mongodb_1.ObjectId(req.query.eventId)
                     }
                 }, { fullyPopulate: false })).
                     then(async (docs) => next({
@@ -45,7 +45,7 @@ var Ticket;
                 let userId = req.session['user']._id;
                 ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
                     $match: {
-                        "purchaseInfo.purchaserId": userId
+                        "purchaseInfo.purchaserId": new mongodb_1.ObjectId(userId)
                     }
                 }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
                     then(async (tickets) => next({
@@ -63,7 +63,7 @@ var Ticket;
                     $match: {
                         $and: [
                             ...[{ purchaseInfo: { $ne: null } }],
-                            ...eventId ? [{ eventId: eventId }] : []
+                            ...eventId ? [{ eventId: new mongodb_1.ObjectId(eventId) }] : []
                         ]
                     }
                 }, { fullyPopulate: showOccupant })).
@@ -103,7 +103,7 @@ var Ticket;
             let showOccupant = shouldShowOccupant(req.session);
             ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
                 $match: {
-                    _id: req.params.ticketId
+                    _id: new mongodb_1.ObjectId(req.params.ticketId)
                 }
             }, { fullyPopulate: showOccupant, })).
                 then(async (docs) => docs.length > 0 ?

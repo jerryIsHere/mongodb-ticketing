@@ -75,8 +75,6 @@ export const lookupQuery = (condition: PipelineStage, param: { fullyPopulate: bo
     ...[
       { $set: { 'event': { $first: '$event' } } },
       { $set: { 'seat': { $first: '$seat' } } },
-      { $set: { 'priceTier': { $first: '$priceTier' } } },
-
     ]
   ]
 

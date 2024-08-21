@@ -61,7 +61,6 @@ const lookupQuery = (condition, param) => {
         ...[
             { $set: { 'event': { $first: '$event' } } },
             { $set: { 'seat': { $first: '$seat' } } },
-            { $set: { 'priceTier': { $first: '$priceTier' } } },
         ]
     ];
 };

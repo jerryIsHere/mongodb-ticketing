@@ -39,7 +39,7 @@ export namespace Ticket {
             if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
                 ticketModel.aggregate<IDisclosableTicket>(lookupQuery({
                     $match: {
-                        eventId: req.query.eventId
+                        eventId: new ObjectId(req.query.eventId)
                     }
                 }, { fullyPopulate: false })).
                     then(async docs =>
@@ -52,7 +52,7 @@ export namespace Ticket {
                 let userId = (req.session['user'] as any)._id
                 ticketModel.aggregate<IClientTicket>(lookupQuery({
                     $match: {
-                        "purchaseInfo.purchaserId": userId
+                        "purchaseInfo.purchaserId": new ObjectId(userId)
                     }
                 }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
                     then(async tickets =>
@@ -71,7 +71,7 @@ export namespace Ticket {
                     $match: {
                         $and: [
                             ...[{ purchaseInfo: { $ne: null } }],
-                            ...eventId ? [{ eventId: eventId }] : []
+                            ...eventId ? [{ eventId: new ObjectId(eventId) }] : []
                         ]
                     }
                 }, { fullyPopulate: showOccupant })).
@@ -114,7 +114,7 @@ export namespace Ticket {
 
             ticketModel.aggregate<IFullyPopulatedTicket<IEvent, ISeat, IPopulatedPurchaseInfo<IUser>, IPopulatedPaymentInfo<IUser>>>(lookupQuery({
                 $match: {
-                    _id: req.params.ticketId
+                    _id: new ObjectId(req.params.ticketId)
                 }
             }, { fullyPopulate: showOccupant, })).
                 then(async docs =>
