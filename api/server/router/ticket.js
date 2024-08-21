@@ -31,16 +31,23 @@ var Ticket;
         });
         ticket.get("/", async (req, res, next) => {
             if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
-                ticket_1.ticketModel.find().findByEventId(req.query.eventId).
+                ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
+                    $match: {
+                        eventId: req.query.eventId
+                    }
+                }, { fullyPopulate: false })).
                     then(async (docs) => next({
-                    success: true, data: await Promise.all(docs?.map(doc => doc.disclose()))
+                    success: true, data: docs
                 })).
                     catch(err => next(err));
             }
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
                 let userId = req.session['user']._id;
-                ticket_1.ticketModel.find().findByPurchaser(userId).
-                    then(async (doc) => Promise.all(doc?.map(doc => doc.discloseToClient(userId)))).
+                ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
+                    $match: {
+                        "purchaseInfo.purchaserId": userId
+                    }
+                }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
                     then(async (tickets) => next({
                     success: true,
                     data: tickets
@@ -49,13 +56,20 @@ var Ticket;
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session);
-                let query = ticket_1.ticketModel.find();
+                let eventId;
                 if (req.query.eventId != undefined && typeof req.query.eventId === "string")
-                    query.findByEventId(req.query.eventId);
-                query.findSold().
+                    eventId = req.query.eventId;
+                ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
+                    $match: {
+                        $and: [
+                            ...[{ purchaseInfo: { $ne: null } }],
+                            ...eventId ? [{ eventId: eventId }] : []
+                        ]
+                    }
+                }, { fullyPopulate: showOccupant })).
                     then(async (doc) => next({
                     success: true,
-                    data: await Promise.all(doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose()))
+                    data: doc
                 })).
                     catch(err => next(err));
             }
@@ -73,21 +87,31 @@ var Ticket;
                 }
                 else {
                     let userId = req.session["user"]._id;
-                    ticket_1.ticketModel.find({ _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) } }).
+                    ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
+                        $match: {
+                            _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) }
+                        }
+                    }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
                         then(async (docs) => next({
                         sucess: true,
-                        data: await Promise.all(docs.map(doc => doc.discloseToClient(userId)))
+                        data: docs
                     }));
                 }
             }
         });
         ticket.get("/:ticketId", async (req, res, next) => {
             let showOccupant = shouldShowOccupant(req.session);
-            ticket_1.ticketModel.findById(req.params.eventId).
-                then(async (doc) => next({
-                success: true,
-                data: await (showOccupant ? doc?.fullyPopulate() : doc?.disclose())
-            })).
+            ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
+                $match: {
+                    _id: req.params.ticketId
+                }
+            }, { fullyPopulate: showOccupant, })).
+                then(async (docs) => docs.length > 0 ?
+                next({
+                    success: true,
+                    data: docs[0]
+                }) :
+                ticketNotFound(req.params.ticketId)).
                 catch(err => next(err));
         });
         ticket.post("/", async (req, res, next) => {

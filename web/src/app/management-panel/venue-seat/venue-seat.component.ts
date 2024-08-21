@@ -129,7 +129,7 @@ export class VenueSeatComponent {
       this.optionForm.controls["horizontalOrder"].setValue(section.options.horizontalOrder)
       this.optionForm.controls["verticleOrder"].setValue(section.options.verticleOrder)
       this.optionForm.controls["thumbImageURL"].setValue(section.options.thumbImageURL)
-      this.optionForm.controls["fullImageURL"].setValue(section.options.fullImageURL)
+      this.optionForm.controls["seatAlign"].setValue(section.options.seatAlign)
     }
     else {
       this.optionForm.controls["horizontalOrder"].setValue("LTR")

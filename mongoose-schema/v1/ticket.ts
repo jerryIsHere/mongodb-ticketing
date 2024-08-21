@@ -9,12 +9,79 @@ import {
   QueryWithHelpers,
   FlatRecord,
   CallbackWithoutResultAndOptionalError,
+  PipelineStage,
 } from "mongoose";
 import { ISeat, ISeatMethod, seatModel } from "./seat";
 import { IUser, userModel } from "./user";
 import { notificationModel } from "./notification";
 import { names } from "../schema-names";
 import { OperationError, ReferentialError } from "../error";
+import { ObjectId } from "mongodb";
+
+
+export const lookupQuery = (condition: PipelineStage, param: { fullyPopulate: boolean, checkIfBelongsToUser?: string }): PipelineStage[] => {
+  return [
+    ...[
+      condition,
+      {
+        $lookup:
+        {
+          from: names.Event.collection_name,
+          localField: "eventId",
+          foreignField: "_id",
+          as: "event",
+        }
+      },
+      {
+        $lookup:
+        {
+          from: names.Seat.collection_name,
+          localField: "seatId",
+          foreignField: "_id",
+          as: "seat",
+        }
+      },
+    ],
+    ...param.checkIfBelongsToUser ? [
+      { $set: { 'belongsToUser': { $cond: { if: { $eq: ["$purchaseInfo.purchserId", new ObjectId(param.checkIfBelongsToUser)] }, then: true, else: false } } } },
+    ] : [],
+    ...param.fullyPopulate ? [
+      {
+        $lookup:
+        {
+          from: names.User.collection_name,
+          localField: "purchaseInfo.purchserId",
+          foreignField: "_id",
+          as: "purchaser",
+        }
+      },
+      { $set: { 'purchaser': { $first: '$purchaser' } } },
+      {
+        $lookup:
+        {
+          from: names.User.collection_name,
+          localField: "paymentInfo.confirmerId",
+          foreignField: "_id",
+          as: "confirmer",
+        }
+      },
+      { $set: { 'purchaser': { $first: '$purchaser' } } },
+
+    ] :
+      [
+        { $set: { 'purchased': { $cond: { if: { $ne: ["$purchaseInfo.purchserId", null] }, then: true, else: false } } } },
+        { $project: { occupantId: 0 } },
+      ],
+    ...[
+      { $set: { 'event': { $first: '$event' } } },
+      { $set: { 'seat': { $first: '$seat' } } },
+      { $set: { 'priceTier': { $first: '$priceTier' } } },
+
+    ]
+  ]
+
+}
+
 export interface IPurchaseInfo {
   purchaseDate: Date;
   purchaserId: Types.ObjectId;
@@ -374,6 +441,7 @@ export const tickerSchema = new Schema<
         }
         throw new OperationError(`Ticker with id ${this._id} has not been sold yet.`);
       },
+      // the following populate function have serious performance drawback in free tier vercel and mongodb atlas setup
       async discloseToClient(userId: Types.ObjectId) {
         let populated = await this.populate<IFullyPopulatedTicket>([
           "event",

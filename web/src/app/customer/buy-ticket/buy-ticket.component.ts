@@ -49,7 +49,7 @@ export class BuyTicketComponent {
         this.event = result.data
         if (this.event && this.event.shoppingCartSize) {
           let quota = getSellingInfo(this.event)?.ticketQuota
-          this.shoppingCartSize = quota != undefined && Number(this.event.shoppingCartSize) > Number(quota) ? quota : this.event.shoppingCartSize
+          this.shoppingCartSize = quota != undefined && quota > 0 && Number(this.event.shoppingCartSize) > Number(quota) ? quota : this.event.shoppingCartSize
         }
         return result.data
       }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paymentInfoModel = exports.purchaseInfoModel = exports.ticketModel = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = exports.vendors = void 0;
+exports.paymentInfoModel = exports.purchaseInfoModel = exports.ticketModel = exports.tickerSchema = exports.paymentInfoSchema = exports.purchaseInfoSchema = exports.vendors = exports.lookupQuery = void 0;
 const event_1 = require("./event");
 const priceTier_1 = require("./priceTier");
 const mongoose_1 = require("mongoose");
@@ -9,6 +9,63 @@ const user_1 = require("./user");
 const notification_1 = require("./notification");
 const schema_names_1 = require("../schema-names");
 const error_1 = require("../error");
+const mongodb_1 = require("mongodb");
+const lookupQuery = (condition, param) => {
+    return [
+        ...[
+            condition,
+            {
+                $lookup: {
+                    from: schema_names_1.names.Event.collection_name,
+                    localField: "eventId",
+                    foreignField: "_id",
+                    as: "event",
+                }
+            },
+            {
+                $lookup: {
+                    from: schema_names_1.names.Seat.collection_name,
+                    localField: "seatId",
+                    foreignField: "_id",
+                    as: "seat",
+                }
+            },
+        ],
+        ...param.checkIfBelongsToUser ? [
+            { $set: { 'belongsToUser': { $cond: { if: { $eq: ["$purchaseInfo.purchserId", new mongodb_1.ObjectId(param.checkIfBelongsToUser)] }, then: true, else: false } } } },
+        ] : [],
+        ...param.fullyPopulate ? [
+            {
+                $lookup: {
+                    from: schema_names_1.names.User.collection_name,
+                    localField: "purchaseInfo.purchserId",
+                    foreignField: "_id",
+                    as: "purchaser",
+                }
+            },
+            { $set: { 'purchaser': { $first: '$purchaser' } } },
+            {
+                $lookup: {
+                    from: schema_names_1.names.User.collection_name,
+                    localField: "paymentInfo.confirmerId",
+                    foreignField: "_id",
+                    as: "confirmer",
+                }
+            },
+            { $set: { 'purchaser': { $first: '$purchaser' } } },
+        ] :
+            [
+                { $set: { 'purchased': { $cond: { if: { $ne: ["$purchaseInfo.purchserId", null] }, then: true, else: false } } } },
+                { $project: { occupantId: 0 } },
+            ],
+        ...[
+            { $set: { 'event': { $first: '$event' } } },
+            { $set: { 'seat': { $first: '$seat' } } },
+            { $set: { 'priceTier': { $first: '$priceTier' } } },
+        ]
+    ];
+};
+exports.lookupQuery = lookupQuery;
 exports.vendors = ["fps", "payme", "wechatpay", "alipay", "free"];
 exports.purchaseInfoSchema = new mongoose_1.Schema({
     purchaseDate: { type: Date, requried: true },
@@ -230,6 +287,7 @@ exports.tickerSchema = new mongoose_1.Schema({
             }
             throw new error_1.OperationError(`Ticker with id ${this._id} has not been sold yet.`);
         },
+        // the following populate function have serious performance drawback in free tier vercel and mongodb atlas setup
         async discloseToClient(userId) {
             let populated = await this.populate([
                 "event",
