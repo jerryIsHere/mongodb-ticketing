@@ -12,7 +12,7 @@ let ticketNotFound = (id: string) => { throw new RequestError(`Ticket with id ${
 export namespace Ticket {
     export function RouterFactory(): Express.Router {
         var ticket = Router()
-        var shouldShowOccupant = (session?: SessionData) => {
+        var shouldShowOccupant = (session: SessionData) => {
             if (session && session.user)
                 return session.user.hasAdminRight || session.user.isCustomerSupport
             return false
@@ -33,7 +33,7 @@ export namespace Ticket {
         })
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
-            if (req.query.eventId && typeof req.query.eventId == "string") {
+            if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
                 ticketModel.find().findByEventId(req.query.eventId).
                     then(async docs =>
                         next({
@@ -54,7 +54,10 @@ export namespace Ticket {
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session)
-                ticketModel.find().findSold().
+                let query = ticketModel.find()
+                if (req.query.eventId != undefined && typeof req.query.eventId === "string")
+                    query.findByEventId(req.query.eventId)
+                query.findSold().
                     then(async doc =>
                         next({
                             success: true,
@@ -168,7 +171,7 @@ export namespace Ticket {
                                 }
                                 ticketDoc.paymentInfo = info
                             }
-                            else{
+                            else {
                                 ticketDoc.paymentInfo = undefined
                             }
                             return ticketDoc.save()

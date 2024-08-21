@@ -41,7 +41,7 @@ export class TicketSelectedComponent {
         ticketIds: this.data.tickets.map(t => t._id)
       }, {}, { showSuccessHandler: false }).toPromise().then((result: any) => {
         if (result && result.success && result.data.length > 0) {
-          this.router.navigate(['event-payment'], { queryParams: { eventId: result.data[0]._id } })
+          this.router.navigate(['event-payment'], { queryParams: { eventId: result.data[0].event._id } })
         }
       }).then(result => {
         this.btmSheetRef.dismiss();

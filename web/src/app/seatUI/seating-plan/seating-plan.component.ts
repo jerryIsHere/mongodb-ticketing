@@ -297,7 +297,6 @@ export class SeatingPlanComponent {
 
     if (this.venueGallery) {
       let loadedImage = this.venueGallery.nativeElement.children[0]
-      console.log(loadedImage, this.venueGallery)
       this.venueGallery.nativeElement.dataset.pswpWidth = loadedImage.width * 1.1
       this.venueGallery.nativeElement.dataset.pswpHeight = loadedImage.height * 1.1
     }

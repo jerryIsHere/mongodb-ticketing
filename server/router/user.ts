@@ -3,6 +3,7 @@ import * as Express from "express-serve-static-core";
 import { Database, RequestError } from "../database/database";
 import { v1 } from '../../mongoose-schema/schema'
 import { IDisclosableUser, userModel } from "../../mongoose-schema/v1/user";
+import { SessionData } from "express-session";
 declare module "express-session" {
   interface SessionData {
     user?: IDisclosableUser | null;
@@ -12,6 +13,11 @@ declare module "express-session" {
 export namespace User {
   export function RouterFactory(): Express.Router {
     var user = Router();
+    var canManipulateUser = (session: SessionData) => {
+      if (session && session.user)
+        return session.user.hasAdminRight || session.user.isCustomerSupport
+      return false
+    }
     user.use((req: Request, res: Response, next) => {
       if (req.method == 'POST' && req.query.register != undefined && req.session.user?.hasAdminRight != true) {
         res.status(401).json({ success: false, reason: "Unauthorized access" })
@@ -65,6 +71,8 @@ export namespace User {
       const newPassword = req.body.newPassword;
 
       if (resetToken && newPassword) {
+        if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true" && !canManipulateUser(req.session))
+          return next(new RequestError("User password could only be changed by admin."))
         try {
           const validUser = await userModel.findOne({ resetToken: resetToken }).exec();
           if (!validUser) return next(new RequestError("Invalid or expired reset token."));
@@ -110,8 +118,10 @@ export namespace User {
             }).
             catch(err => next(err))
         }
-        else if (req.query.password != undefined) {
-          userModel.findOne({ username: req.body.username },
+        else if (req.body.password != undefined) {
+          if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true" && !canManipulateUser(req.session))
+            return next(new RequestError("User password could only be changed by admin."))
+          userModel.findOne({ username: req.params.username },
             req.body
           ).
             then(async doc => {
@@ -120,7 +130,7 @@ export namespace User {
             }).
             then((doc) => {
               if (doc) {
-                updateSession(req, res, doc?.disclose())
+                if (req.session.user?.username == req.params.username) updateSession(req, res, doc?.disclose())
                 next({ success: true, data: req.session.user })
               }
             }).
@@ -156,7 +166,7 @@ export namespace User {
         res.clearCookie("user");
         next({ success: true });
       } else if (req.query.register != undefined) {
-        if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true")
+        if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true" && !canManipulateUser(req.session))
           return next(new RequestError("New user registration is not avaliable."))
         if (
           req.body.username &&
@@ -164,7 +174,7 @@ export namespace User {
           req.body.email &&
           req.body.password
         ) {
-          var user = new userModel(res, {
+          var user = new userModel({
             username: req.body.username,
             fullname: req.body.fullname,
             email: req.body.email,

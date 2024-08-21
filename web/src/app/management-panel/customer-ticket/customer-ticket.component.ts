@@ -53,7 +53,7 @@ export class CustomerTicketComponent {
   filteredShows: Observable<ShowAPIObject[]> = new Observable<ShowAPIObject[]>();
   selectedUser?: UserAPIObject;
   selectedShow?: ShowAPIObject
-  priceTiersColors?: Map<string, string> 
+  priceTiersColors?: Map<string, string>
 
   constructor(public dialog: MatDialog, private api: ApiService) {
     this.loadData()
@@ -280,7 +280,7 @@ export class CustomerTicketComponent {
               user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss') : '',
               lastTicket ? lastTicket.purchaseInfo ? dateFormat(new Date(lastTicket.purchaseInfo.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
               lastTicket ? lastTicket.paymentInfo ? dateFormat(new Date(lastTicket.paymentInfo.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
-              lastTicket ? lastTicket.paymentInfo?.confirmer?.username : '',
+              lastTicket ? lastTicket.paymentInfo?.confirmedBy : '',
               lastTicket ? lastTicket.paymentInfo?.remark : '',
 
             ].map(value => value ? value : '').join(",")
@@ -323,7 +323,7 @@ export class CustomerTicketComponent {
               dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
             "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
               dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
-            "paymentInfo" in ticket ? ticket.paymentInfo?.confirmer?.username : '',
+            "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
             "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
             ].map(value => value ? value : '').join(",")
           )
@@ -336,5 +336,95 @@ export class CustomerTicketComponent {
       document.body.appendChild(link);
       link.click();
     })
+  }
+  downloadEventDataCSV() {
+    if (this.selectedShow) {
+      let show = this.selectedShow
+      this.api.request.get(`/ticket?eventId=${show._id}&sold`).toPromise().then((result: any) => {
+        let eventSoldTicket: AdminTicketAPIObject[] = result.data
+        let userSoldTicket = eventSoldTicket.reduce((bin, ticket) => {
+          if (ticket.purchaseInfo && ticket.purchaseInfo.purchaser) {
+            let userId = ticket.purchaseInfo.purchaser._id
+            let userTickets = bin.get(userId)
+            if (userTickets) {
+              userTickets.push(ticket)
+              bin.set(userId, userTickets)
+            }
+            else {
+              bin.set(userId, [ticket])
+            }
+          }
+          return bin
+        }, new Map<string, AdminTicketAPIObject[]>())
+        function* userRow() {
+          for (let userTickets of userSoldTicket.values()) {
+            let user = userTickets[0].purchaseInfo?.purchaser
+            if (user) {
+              let userSummary = summarizeTicket(userTickets, show);
+              yield ""
+              yield `ticket info of ${user.fullname} (${user.username}) total: $${userSummary.totalCost}`
+              for (let roundNinfo of userSummary.round.entries()) {
+                yield `round ${roundNinfo[0] + 1} sum: $${roundNinfo[1].total} free: ${roundNinfo[1].freed}/${roundNinfo[1].count}`
+                for (let tierNinfo of roundNinfo[1].tierInfo.entries()) {
+                  yield `tier ${tierNinfo[0]} sum: $${(tierNinfo[1].count - tierNinfo[1].freed) * tierNinfo[1].price
+                    } free: ${tierNinfo[1].freed}/${tierNinfo[1].count}`
+                  for (let ticket of tierNinfo[1].tickets) {
+                    yield [ticket._id,
+                    ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
+                    ticket.priceTier.tierName,
+                    ticket.freed ? "free" : ticket.priceTier.price,
+                    "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaseDate ?
+                      dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
+                    "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
+                      dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
+                    "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
+                    "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
+                    ].map(value => value ? value : '').join(",")
+                  }
+                }
+              }
+            }
+          }
+        }
+        var data = "data:text/csv;charset=utf-8," +
+          [
+            "event info",
+            [
+              "_id",
+              "eventname",
+              "datetime",
+              "duration",
+              "price tiers",
+              // "saleInfos",
+            ].join(","),
+            [
+              show._id.toString(),
+              show.eventname,
+              dateFormat(new Date(show.datetime)),
+              show.duration + " m",
+              show.priceTiers.map(pt => `${pt.tierName}:$${pt.price}`).join(' & '),
+              // show.saleInfos,
+            ].join(","),
+            "",
+            [
+              "_id",
+              "seat.row+seat.no",
+              "priceTier.tierName",
+              "priceTier.price",
+              "purchaseDate",
+              "confirmationDate",
+              "confirmationType",
+              "remark"].join(","),
+            ...userRow(),
+          ].join("\n")
+        console.log(data)
+        var link = document.createElement("a");
+        link.setAttribute("href", encodeURI(data));
+        link.setAttribute("download", `ticketing-${show.eventname}-${new Date().toLocaleDateString()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+      })
+    }
   }
 }

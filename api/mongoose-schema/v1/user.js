@@ -27,7 +27,7 @@ exports.userSchema = new mongoose_1.Schema({
     },
     singingPart: { type: String },
     saltedpassword: { type: String, required: true },
-    verified: { type: Boolean, required: true },
+    verified: { type: Boolean, required: true, default: false },
     verificationToken: { type: String },
     resetToken: { type: String },
     lastLoginDate: { type: Date },

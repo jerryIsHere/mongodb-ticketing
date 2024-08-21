@@ -17,64 +17,66 @@
         }
       </mat-chip-listbox>
     </div>
-    <mat-list>
-      @if(this.selectedSection?.options?.seatAlign){
-      }
-      @else{
-      <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
-        <button mat-button color="primary" style="pointer-events: none;"></button>
-        @for(col of cols; track col){
-        <button mat-stroked-button color="primary" style="pointer-events: none;">{{col}}</button>
-        }
-      </mat-list-item>
-      }
-      @for(row of rows; track row){
-      <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
-        [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
-        <button mat-button style="pointer-events: none;">{{row}}</button>
-        @for(col of cols; track col){
-        @let buyer = getBuyer(row,col);
-        @let seat = getSeat(row,col);
-        @let ticket = getTiceket(row,col);
-        @let isSelected = isSeatSelected(seat?._id);
-        @if (seat && isSeatInSelectSection(seat)) {
-        <button (click)="toggleSelect(seat)" mat-stroked-button
-          [style.background-color]="ticket && !buyer?getColorByTicket(ticket):'grey'"
-          [style.border-color]="ticket && buyer?getColorByTicket(ticket):undefined"
-          [style.color]="ticket && buyer?getColorByTicket(ticket):undefined" cdkDrag
-          [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
-          @if (ticket){
-          @if(buyer){
-          <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
-          </mat-icon>
-          }
-          @else{
-          @if(isSelected){
-          <mat-icon [fontIcon]="'check_circle'">
-          </mat-icon>
-          }
-          @else {
-          {{row+col}}
-          }
-          }
-          }
-          @else {
-          <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
-          </mat-icon>
-          }
-        </button>
-        }
-        @else if(this.selectedSection?.options?.seatAlign){
+    <div class="seating-plan">
+      <div>
+        @if(this.selectedSection?.options?.seatAlign){
         }
         @else{
-        <button mat-stroked-button color="primary" style="background-color: transparent" cdkDrag
-          [cdkDragDisabled]="seatingPlanEditing" disabled>
-        </button>
+        <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
+          <button mat-button color="primary" style="pointer-events: none;"></button>
+          @for(col of cols; track col){
+          <button mat-stroked-button color="primary" style="pointer-events: none;">{{col}}</button>
+          }
+        </mat-list-item>
         }
+        @for(row of rows; track row){
+        <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
+          [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
+          <button mat-button style="pointer-events: none;">{{row}}</button>
+          @for(col of cols; track col){
+          @let buyer = getBuyer(row,col);
+          @let seat = getSeat(row,col);
+          @let ticket = getTiceket(row,col);
+          @let isSelected = isSeatSelected(seat?._id);
+          @if (seat && isSeatInSelectSection(seat)) {
+          <button (click)="toggleSelect(seat)" mat-stroked-button
+            [style.background-color]="ticket && !buyer?getColorByTicket(ticket):'grey'"
+            [style.border-color]="ticket && buyer?getColorByTicket(ticket):undefined"
+            [style.color]="ticket && buyer?getColorByTicket(ticket):undefined" cdkDrag
+            [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
+            @if (ticket){
+            @if(buyer){
+            <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
+            </mat-icon>
+            }
+            @else{
+            @if(isSelected){
+            <mat-icon [fontIcon]="'check_circle'">
+            </mat-icon>
+            }
+            @else {
+            {{row+col}}
+            }
+            }
+            }
+            @else {
+            <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
+            </mat-icon>
+            }
+          </button>
+          }
+          @else if(this.selectedSection?.options?.seatAlign){
+          }
+          @else{
+          <button mat-stroked-button color="primary" style="background-color: transparent" cdkDrag
+            [cdkDragDisabled]="seatingPlanEditing" disabled>
+          </button>
+          }
+          }
+        </mat-list-item>
         }
-      </mat-list-item>
-      }
-    </mat-list>
+      </div>
+    </div>
   </div>
   @if(selectedSection && selectedSection.options && selectedSection.options.thumbImageURL){
   <div style="flex: 1" id="venue-gallery">

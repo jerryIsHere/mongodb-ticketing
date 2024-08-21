@@ -30,7 +30,7 @@ var Ticket;
             }
         });
         ticket.get("/", async (req, res, next) => {
-            if (req.query.eventId && typeof req.query.eventId == "string") {
+            if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
                 ticket_1.ticketModel.find().findByEventId(req.query.eventId).
                     then(async (docs) => next({
                     success: true, data: await Promise.all(docs?.map(doc => doc.disclose()))
@@ -49,7 +49,10 @@ var Ticket;
             }
             else if (req.query.sold != undefined) {
                 let showOccupant = shouldShowOccupant(req.session);
-                ticket_1.ticketModel.find().findSold().
+                let query = ticket_1.ticketModel.find();
+                if (req.query.eventId != undefined && typeof req.query.eventId === "string")
+                    query.findByEventId(req.query.eventId);
+                query.findSold().
                     then(async (doc) => next({
                     success: true,
                     data: await Promise.all(doc?.map(doc => showOccupant ? doc.fullyPopulate() : doc.disclose()))

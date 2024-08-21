@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../service/api.service';
+import { ChangePasswordComponent } from './change-password/change-password.component';
 
 interface IDataListControl {
   loadData: () => Promise<any>,
@@ -68,5 +69,8 @@ export class ManagementPanelComponent {
   }
   createUser() {
     const dialogRef = this.dialog.open(RegisterFormComponent);
+  }
+  ChangePassword() {
+    const dialogRef = this.dialog.open(ChangePasswordComponent);
   }
 }

@@ -34,6 +34,9 @@
 <br>
 <button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
 <button mat-stroked-button color="primary" (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
+@if(selectedShow){
+  <button mat-stroked-button color="primary" (click)="downloadEventDataCSV()">Export {{selectedShow.eventname}} data</button>
+}
 <br>
 @if(summary)
 {

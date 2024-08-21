@@ -148,8 +148,9 @@ export class EventPaymentComponent {
             this.shows.findIndex(show => ticket.event && show._id.toString() == ticket.event._id.toString()) < 0)
             this.shows.push(ticket.event)
         }, this.shows)
-        if (typeof this.showFromQuery === "string") {
-          this.selectedShow = this.shows.find(show => show._id == this.showFromQuery)
+        if(this.showFromQuery){
+          console.log(this.showFromQuery, this.shows)
+          this.showSelected(this.showFromQuery)
         }
         this.shows.sort((showA, showB) => {
           if (showA.datetime && showB.datetime) {
@@ -197,10 +198,12 @@ export class EventPaymentComponent {
     if (eventId == undefined) return
     this.ticketDataSource.data = this.tickets.filter(ticket => ticket.event?._id.toString() == eventId)
     this.selectedShow = this.shows.find(show => show._id == eventId)
+    console.log(this.selectedShow)
     if (this.selectedShow) {
       let show = this.selectedShow
       let showTickets = this.ticketDataSource.data
       this.summary = summarizeTicket<ClientTicketAPIObject>(showTickets, show)
+      console.log(this.summary)
     }
   }
   ticketConfirmDateString(ticket: ClientTicketAPIObject): string {
