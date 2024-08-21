@@ -49,7 +49,7 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
       required: true,
       validate: {
         validator(val: string) {
-          return REGEX.EMAIL.test(val);
+          return REGEX.EMAIL.test(val.toLocaleLowerCase());
         },
         message: "User email is not in a valid format.",
       },

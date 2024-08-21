@@ -19,7 +19,7 @@ export abstract class Database {
 
     public static mongodb: Db;
 
-    public static async init() {
+    public static async init(uri = undefined) {
         console.log("Database init: ", Database.uri)
         await this.mongo.connect();
         // Send a ping to confirm a successful connection

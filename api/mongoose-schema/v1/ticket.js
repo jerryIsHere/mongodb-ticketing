@@ -342,6 +342,26 @@ exports.tickerSchema.pre('updateOne', { document: false, query: true }, () => {
     throw new Error("Please use find(ById) and chain save afterwards, as referential checking needs documents");
 });
 exports.tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
+exports.tickerSchema.pre("deleteMany", async function (next) {
+    let ids = this.getQuery()._id.$in;
+    if (ids) {
+        for (let id of ids) {
+            let ticket = await exports.ticketModel.findById(id).exec();
+            if (ticket?.purchaseInfo) {
+                next(new error_1.ReferentialError(`Deletation of ${schema_names_1.names.Ticket.singular_name} with id ${ticket._id} failed ` +
+                    `as it has been sold.`));
+                return;
+            }
+        }
+        next();
+    }
+});
+exports.tickerSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+    if (this.purchaseInfo) {
+        next(new error_1.ReferentialError(`Deletation of ${schema_names_1.names.Ticket.singular_name} with id ${this._id} failed ` +
+            `as it has been sold.`));
+    }
+});
 exports.ticketModel = (0, mongoose_1.model)(schema_names_1.names.Ticket.singular_name, exports.tickerSchema, schema_names_1.names.Ticket.collection_name);
 exports.purchaseInfoModel = (0, mongoose_1.model)("Purchase", exports.purchaseInfoSchema);
 exports.paymentInfoModel = (0, mongoose_1.model)("Payment", exports.paymentInfoSchema);

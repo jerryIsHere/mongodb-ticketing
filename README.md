@@ -2,7 +2,9 @@ please populate ./credential/.env
 node version: v20.11.1
 please run npm install in both `./` and `./web`
 frontend is also served by express with `npm run start`
-node ./tools/user.js N Suffix
+node ./tools/user.js --N Suffix
+N length of password
+Suffix add suffix to login user name of every created user
 [
   {
     $lookup:

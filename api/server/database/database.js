@@ -9,7 +9,7 @@ class Database {
         `mongodb+srv://${process.env.mongo_username}:${process.env.mongo_password}@atlascluster.gbqtcg3.mongodb.net/?retryWrites=true&w=majority`;
     static mongo = new mongodb_1.MongoClient(Database.uri);
     static mongodb;
-    static async init() {
+    static async init(uri = undefined) {
         console.log("Database init: ", Database.uri);
         await this.mongo.connect();
         // Send a ping to confirm a successful connection

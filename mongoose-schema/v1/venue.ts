@@ -40,7 +40,6 @@ export const venueSchema = new Schema<IVenue, VenueModel, IVenueMethod>(
               }),
             })
             .then();
-          console.log(this, seatNotInSections)
           if (seatNotInSections == null) {
             return true
           }

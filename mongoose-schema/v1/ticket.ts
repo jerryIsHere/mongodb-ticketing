@@ -7,6 +7,8 @@ import {
   Model,
   HydratedDocument,
   QueryWithHelpers,
+  FlatRecord,
+  CallbackWithoutResultAndOptionalError,
 } from "mongoose";
 import { ISeat, ISeatMethod, seatModel } from "./seat";
 import { IUser, userModel } from "./user";
@@ -500,6 +502,34 @@ tickerSchema.pre('updateOne', { document: false, query: true }, () => {
 })
 tickerSchema.index({ eventId: 1, seatId: 1 }, { unique: true });
 
+tickerSchema.pre("deleteMany", async function (next: CallbackWithoutResultAndOptionalError) {
+  let ids = this.getQuery()._id.$in
+  if (ids) {
+    for (let id of ids) {
+      let ticket = await ticketModel.findById(id).exec()
+      if (ticket?.purchaseInfo) {
+        next(
+          new ReferentialError(
+            `Deletation of ${names.Ticket.singular_name} with id ${ticket._id} failed ` +
+            `as it has been sold.`
+          )
+        );
+        return;
+      }
+    }
+    next()
+  }
+});
+tickerSchema.pre("deleteOne", { document: true, query: false }, async function (next: CallbackWithoutResultAndOptionalError) {
+  if (this.purchaseInfo) {
+    next(
+      new ReferentialError(
+        `Deletation of ${names.Ticket.singular_name} with id ${this._id} failed ` +
+        `as it has been sold.`
+      )
+    );
+  }
+});
 export const ticketModel: TicketModel = model<ITicket, TicketModel>(
   names.Ticket.singular_name,
   tickerSchema,

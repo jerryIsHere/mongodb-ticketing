@@ -24,7 +24,6 @@ exports.venueSchema = new mongoose_1.Schema({
                     }),
                 })
                     .then();
-                console.log(this, seatNotInSections);
                 if (seatNotInSections == null) {
                     return true;
                 }

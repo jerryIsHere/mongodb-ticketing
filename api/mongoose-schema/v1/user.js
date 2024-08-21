@@ -20,7 +20,7 @@ exports.userSchema = new mongoose_1.Schema({
         required: true,
         validate: {
             validator(val) {
-                return regex_1.REGEX.EMAIL.test(val);
+                return regex_1.REGEX.EMAIL.test(val.toLocaleLowerCase());
             },
             message: "User email is not in a valid format.",
         },
