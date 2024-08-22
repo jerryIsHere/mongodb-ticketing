@@ -114,6 +114,8 @@ exports.eventSchema = new mongoose_1.Schema({
                     throw new error_1.ValidationError("At least one sale info should be provided.");
                 val.forEach((infoA, ind) => {
                     [...val].slice(ind).forEach(infoB => {
+                        if (infoA.start > infoB.start)
+                            throw new error_1.ValidationError("Ticket selling rounds' start date are not in ascending order.");
                         if ((infoA.start < infoB.start && infoA.end >= infoB.start)
                             || (infoA.end > infoB.end && infoA.start <= infoB.end))
                             throw new error_1.ValidationError("Ticket selling rounds should not overlap.");

@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../service/api.service';
-import { IPriceTier, ShowAPIObject, VenueAPIObject } from '../../api-util';
+import { IPriceTier, ISaleInfo, ShowAPIObject, VenueAPIObject } from '../../api-util';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import {
   MAT_DIALOG_DATA,
@@ -34,25 +34,8 @@ export class EventFormComponent {
     eventname: new FormControl(this.data.event.eventname, [Validators.required]),
     datetime: new FormControl(this.data.event.datetime ? tolocaltimezone(new Date(this.data.event.datetime)).toISOString().split('Z')[0] : '', [Validators.required,]),
     saleInfos: new FormArray(
-      [0, 1].map(i =>
-        this.data.event?.saleInfos && this.data.event.saleInfos[i] ?
-          this._formBuilder.group(
-            {
-              start: new FormControl(tolocaltimezone(new Date(this.data.event.saleInfos[i].start)).toISOString().split('Z')[0], [Validators.required,]),
-              end: new FormControl(tolocaltimezone(new Date(this.data.event.saleInfos[i].end)).toISOString().split('Z')[0], [Validators.required,]),
-              ticketQuota: new FormControl(this.data.event.saleInfos[i].ticketQuota, [Validators.required, Validators.min(-1), Validators.pattern("^[-]?[0-9]*$"),]),
-              buyX: new FormControl(this.data.event.saleInfos[i].buyX, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
-              yFree: new FormControl(this.data.event.saleInfos[i].yFree, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
-            }) :
-          this._formBuilder.group(
-            {
-              start: new FormControl('', [Validators.required,]),
-              end: new FormControl('', [Validators.required,]),
-              ticketQuota: new FormControl('', [Validators.required, Validators.min(-1), Validators.pattern("^[-]?[0-9]*$"),]),
-              buyX: new FormControl('', [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
-              yFree: new FormControl('', [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
-            })
-      )
+      this.data.event?.saleInfos ? this.data.event?.saleInfos.map(info => this.infoFormBuilder(info)) :
+        [0, 1].map(i => this.infoFormBuilder())
     ),
     priceTiers: new FormArray(
       this.data.event?.priceTiers ? this.data.event.priceTiers.map(priceTier =>
@@ -72,6 +55,23 @@ export class EventFormComponent {
     private api: ApiService,
     private _formBuilder: FormBuilder
   ) {
+  }
+  infoFormBuilder(saleInfo: ISaleInfo | undefined = undefined) {
+    let formValue = {
+      start: saleInfo ? tolocaltimezone(new Date(saleInfo.start)).toISOString().split('Z')[0] : '',
+      end: saleInfo ? tolocaltimezone(new Date(saleInfo.end)).toISOString().split('Z')[0] : '',
+      buyX: saleInfo?.buyX,
+      yFree: saleInfo?.yFree,
+      ticketQuota: saleInfo?.ticketQuota
+    }
+    return this._formBuilder.group(
+      {
+        start: new FormControl(formValue.start, [Validators.required,]),
+        end: new FormControl(formValue.end, [Validators.required,]),
+        ticketQuota: new FormControl(formValue.ticketQuota, [Validators.required, Validators.min(-1), Validators.pattern("^[-]?[0-9]*$"),]),
+        buyX: new FormControl(formValue.buyX, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+        yFree: new FormControl(formValue.yFree, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+      })
   }
   submit() {
     console.log(this.eventForm.controls["eventname"].value)

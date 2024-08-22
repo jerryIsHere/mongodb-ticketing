@@ -63,7 +63,11 @@
     The second round should have more quota then first round,
     <br>otherwise users are not able to buy any ticktes at that time.
     @for(saleInfoForm of eventForm.controls['saleInfos'].controls; track saleInfoForm; let idx = $index){
-    <form [formGroup]="saleInfoForm">
+    <form [formGroup]="saleInfoForm"style="position: relative">
+      <button style="position: absolute; top: 5px; right: 5px;" mat-icon-button
+        (click)="eventForm.controls['saleInfos'].controls.splice(idx,1)">
+        <mat-icon>close</mat-icon>
+      </button>
 
       {{ idx + 1 }} - round
       <br>
@@ -131,6 +135,8 @@
       </mat-form-field>
     </form>
     }
+    <button mat-button (click)="eventForm.controls['saleInfos'].controls.push(infoFormBuilder())">Add round</button>
+    <br>
     <mat-form-field>
       <mat-label>Shopping cart size</mat-label>
       <input matInput formControlName="shoppingCartSize" required>
@@ -142,8 +148,8 @@
       }
 
       @if (eventForm.controls['shoppingCartSize'].hasError('max')) {
-        <mat-error>should be &#60;= {{shoppingCartSizeLimit}}</mat-error>
-        }
+      <mat-error>should be &#60;= {{shoppingCartSizeLimit}}</mat-error>
+      }
     </mat-form-field>
     <br>
     <mat-form-field>
