@@ -60,8 +60,12 @@
             }
             }
             @else {
-            <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
+            @if(isSelected){
+            <mat-icon [fontIcon]="'check_circle'">
             </mat-icon>
+            }
+            @else {
+            }
             }
           </button>
           }

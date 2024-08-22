@@ -33,10 +33,6 @@ export interface WithId {
     _id: string
 }
 export function getPurchaserIfAny(ticket: TicketAPIObject) {
-    if(ticket.seat?.row == "C" && ticket.seat?.no == 7)
-    console.log(ticket, "purchaseInfo" in ticket && ticket.purchaseInfo != undefined ? ticket.purchaseInfo.purchaser :
-        "purchased" in ticket ? ticket.purchased ? true : null
-            : null)
     return "purchaseInfo" in ticket && ticket.purchaseInfo != undefined ? ticket.purchaseInfo.purchaser :
         "purchased" in ticket ? ticket.purchased ? true : null
             : null
