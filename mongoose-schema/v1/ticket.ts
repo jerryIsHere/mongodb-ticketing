@@ -69,8 +69,23 @@ export const lookupQuery = (condition: PipelineStage, param: { fullyPopulate: bo
 
     ] :
       [
-        { $set: { 'purchased': { $cond: { if: { $ne: ["$purchaseInfo.purchserId", null] }, then: true, else: false } } } },
-        { $project: { occupantId: 0 } },
+        {
+          $set: {
+            'purchased': {
+              $cond: [
+                {
+                  "$ifNull": [
+                    "$purchaseInfo.purchaserId",
+                    false
+                  ]
+                },
+                true,
+                false
+              ]
+            }
+          }
+        },
+        { $project: { purchaseInfo: 0 } },
       ],
     ...[
       { $set: { 'event': { $first: '$event' } } },
