@@ -35,7 +35,8 @@
 <button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
 <button mat-stroked-button color="primary" (click)="downloadSoldTicketDataCSV()">Export ticket data</button>
 @if(selectedShow){
-  <button mat-stroked-button color="primary" (click)="downloadEventDataCSV()">Export {{selectedShow.eventname}} data</button>
+<button mat-stroked-button color="primary" (click)="downloadEventDataCSV()">Export {{selectedShow.eventname}}
+  data</button>
 }
 <br>
 @if(summary)
@@ -43,11 +44,11 @@
 @for(roundAndInfo of summary.round.entries(); track roundAndInfo; let isLast = $last){
 <h2 mat-subheader>Round {{roundAndInfo[0]+1}}: ${{roundAndInfo[1].total}}</h2>
 <h3 mat-subheader> get {{roundAndInfo[1].freed}} free
-  out of {{roundAndInfo[1].count}} ticket</h3>
+  out of {{roundAndInfo[1].count}} ticket{{roundAndInfo[1].count>1?'s':''}}</h3>
 <mat-action-list>
   @for(tierInfo of roundAndInfo[1].tierInfo.values(); track tierInfo){
   <div mat-subheader>
-    {{tierInfo.tierName}}: {{tierInfo.count-tierInfo.freed}} &#40;baught:
+    {{tierInfo.tierName}}: {{tierInfo.count-tierInfo.freed}} &#40;bought:
     {{tierInfo.count}}&#41;
   </div>
   @for(ticket of tierInfo.tickets; track ticket){
