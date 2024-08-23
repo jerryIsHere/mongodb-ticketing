@@ -50,22 +50,22 @@ export const lookupQuery = (condition: PipelineStage, param: { fullyPopulate: bo
         $lookup:
         {
           from: names.User.collection_name,
-          localField: "purchaseInfo.purchserId",
+          localField: "purchaseInfo.purchaserId",
           foreignField: "_id",
-          as: "purchaser",
+          as: "purchaseInfo.purchaser",
         }
       },
-      { $set: { 'purchaser': { $first: '$purchaser' } } },
+      { $set: { 'purchaseInfo.purchaser': { $first: '$purchaseInfo.purchaser' } } },
       {
         $lookup:
         {
           from: names.User.collection_name,
           localField: "paymentInfo.confirmerId",
           foreignField: "_id",
-          as: "confirmer",
+          as: "paymentInfo.confirmer",
         }
       },
-      { $set: { 'purchaser': { $first: '$purchaser' } } },
+      { $set: { 'paymentInfo.confirmer': { $first: '$paymentInfo.confirmer' } } },
 
     ] :
       [
