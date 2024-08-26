@@ -15,10 +15,10 @@ let ticketNotFound = (id: string) => { throw new RequestError(`Ticket with id ${
 export namespace Ticket {
     export function RouterFactory(): Express.Router {
         var ticket = Router()
-        var shouldShowOccupant = (session: SessionData) => {
-            if (session && session.user)
-                return session.user.hasAdminRight || session.user.isCustomerSupport
-            return false
+        var shouldShowOccupant = (session: SessionData): "full" | "none" => {
+            if (session && session.user && (session.user.hasAdminRight || session.user.isCustomerSupport))
+                return "full"
+            return "none"
         }
 
         ticket.use((req: Request, res: Response, next) => {
@@ -41,7 +41,7 @@ export namespace Ticket {
                     $match: {
                         eventId: new ObjectId(req.query.eventId)
                     }
-                }, { fullyPopulate: false })).
+                }, { populateType: "none" })).
                     then(async docs =>
                         next({
                             success: true, data: docs
@@ -54,7 +54,7 @@ export namespace Ticket {
                     $match: {
                         "purchaseInfo.purchaserId": new ObjectId(userId)
                     }
-                }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
+                }, { populateType: "purchaser", checkIfBelongsToUser: userId })).
                     then(async tickets =>
                         next({
                             success: true,
@@ -74,7 +74,7 @@ export namespace Ticket {
                             ...eventId ? [{ eventId: new ObjectId(eventId) }] : []
                         ]
                     }
-                }, { fullyPopulate: showOccupant })).
+                }, { populateType: showOccupant })).
                     then(async doc =>
                         next({
                             success: true,
@@ -99,7 +99,7 @@ export namespace Ticket {
                         $match: {
                             _id: { $in: ids.map(id => new ObjectId(id)) }
                         }
-                    }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
+                    }, { populateType: "none", checkIfBelongsToUser: userId })).
                         then(async docs =>
                             next({
                                 sucess: true,
@@ -116,7 +116,7 @@ export namespace Ticket {
                 $match: {
                     _id: new ObjectId(req.params.ticketId)
                 }
-            }, { fullyPopulate: showOccupant, })).
+            }, { populateType: showOccupant, })).
                 then(async docs =>
                     docs.length > 0 ?
                         next({

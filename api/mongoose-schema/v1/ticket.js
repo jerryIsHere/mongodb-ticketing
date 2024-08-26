@@ -11,6 +11,73 @@ const schema_names_1 = require("../schema-names");
 const error_1 = require("../error");
 const mongodb_1 = require("mongodb");
 const lookupQuery = (condition, param) => {
+    const populatePurchaserPipeline = [{
+            $lookup: {
+                from: schema_names_1.names.User.collection_name,
+                localField: "purchaseInfo.purchaserId",
+                foreignField: "_id",
+                as: "purchaseInfo.purchaser",
+            }
+        },
+        { $set: { 'purchaseInfo.purchaser': { $first: '$purchaseInfo.purchaser' } } },];
+    const populateConfirmerPipelinhe = [{
+            $lookup: {
+                from: schema_names_1.names.User.collection_name,
+                localField: "purchaseInfo.purchaserId",
+                foreignField: "_id",
+                as: "purchaseInfo.purchaser",
+            }
+        },
+        { $set: { 'purchaseInfo.purchaser': { $first: '$purchaseInfo.purchaser' } } },];
+    const hidePurchaseInfoPipeline = [{
+            $set: {
+                'purchased': {
+                    $cond: [
+                        {
+                            "$ifNull": [
+                                "$purchaseInfo.purchaserId",
+                                false
+                            ]
+                        },
+                        true,
+                        false
+                    ]
+                }
+            }
+        },
+        { $project: { purchaseInfo: 0 } },];
+    const hidePaymentInfoPipeline = [{
+            $set: {
+                'confirmed': {
+                    $cond: [
+                        {
+                            "$ifNull": [
+                                "$paymentInfo.confirmerId",
+                                false
+                            ]
+                        },
+                        true,
+                        false
+                    ]
+                }
+            }
+        },
+        { $project: { paymentInfo: 0 } },];
+    let populatePipeline;
+    switch (param.populateType) {
+        case "full":
+            populatePipeline = [...populatePurchaserPipeline, ...populateConfirmerPipelinhe];
+            break;
+        case "purchaser":
+            populatePipeline = [...populatePurchaserPipeline, ...hidePaymentInfoPipeline];
+            break;
+        case "confirmer":
+            populatePipeline = [...hidePurchaseInfoPipeline, ...populateConfirmerPipelinhe];
+            break;
+        default:
+            populatePipeline = [...hidePurchaseInfoPipeline, ...hidePaymentInfoPipeline];
+            break;
+    }
     return [
         ...[
             condition,
@@ -34,45 +101,7 @@ const lookupQuery = (condition, param) => {
         ...param.checkIfBelongsToUser ? [
             { $set: { 'belongsToUser': { $cond: { if: { $eq: ["$purchaseInfo.purchserId", new mongodb_1.ObjectId(param.checkIfBelongsToUser)] }, then: true, else: false } } } },
         ] : [],
-        ...param.fullyPopulate ? [
-            {
-                $lookup: {
-                    from: schema_names_1.names.User.collection_name,
-                    localField: "purchaseInfo.purchaserId",
-                    foreignField: "_id",
-                    as: "purchaseInfo.purchaser",
-                }
-            },
-            { $set: { 'purchaseInfo.purchaser': { $first: '$purchaseInfo.purchaser' } } },
-            {
-                $lookup: {
-                    from: schema_names_1.names.User.collection_name,
-                    localField: "paymentInfo.confirmerId",
-                    foreignField: "_id",
-                    as: "paymentInfo.confirmer",
-                }
-            },
-            { $set: { 'paymentInfo.confirmer': { $first: '$paymentInfo.confirmer' } } },
-        ] :
-            [
-                {
-                    $set: {
-                        'purchased': {
-                            $cond: [
-                                {
-                                    "$ifNull": [
-                                        "$purchaseInfo.purchaserId",
-                                        false
-                                    ]
-                                },
-                                true,
-                                false
-                            ]
-                        }
-                    }
-                },
-                { $project: { purchaseInfo: 0 } },
-            ],
+        ...populatePipeline,
         ...[
             { $set: { 'event': { $first: '$event' } } },
             { $set: { 'seat': { $first: '$seat' } } },

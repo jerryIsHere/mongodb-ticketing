@@ -11,9 +11,9 @@ var Ticket;
     function RouterFactory() {
         var ticket = (0, express_1.Router)();
         var shouldShowOccupant = (session) => {
-            if (session && session.user)
-                return session.user.hasAdminRight || session.user.isCustomerSupport;
-            return false;
+            if (session && session.user && (session.user.hasAdminRight || session.user.isCustomerSupport))
+                return "full";
+            return "none";
         };
         ticket.use((req, res, next) => {
             if (req.method == 'PATCH' && req.query.buy != undefined) {
@@ -35,7 +35,7 @@ var Ticket;
                     $match: {
                         eventId: new mongodb_1.ObjectId(req.query.eventId)
                     }
-                }, { fullyPopulate: false })).
+                }, { populateType: "none" })).
                     then(async (docs) => next({
                     success: true, data: docs
                 })).
@@ -47,7 +47,7 @@ var Ticket;
                     $match: {
                         "purchaseInfo.purchaserId": new mongodb_1.ObjectId(userId)
                     }
-                }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
+                }, { populateType: "purchaser", checkIfBelongsToUser: userId })).
                     then(async (tickets) => next({
                     success: true,
                     data: tickets
@@ -66,7 +66,7 @@ var Ticket;
                             ...eventId ? [{ eventId: new mongodb_1.ObjectId(eventId) }] : []
                         ]
                     }
-                }, { fullyPopulate: showOccupant })).
+                }, { populateType: showOccupant })).
                     then(async (doc) => next({
                     success: true,
                     data: doc
@@ -91,7 +91,7 @@ var Ticket;
                         $match: {
                             _id: { $in: ids.map(id => new mongodb_1.ObjectId(id)) }
                         }
-                    }, { fullyPopulate: false, checkIfBelongsToUser: userId })).
+                    }, { populateType: "none", checkIfBelongsToUser: userId })).
                         then(async (docs) => next({
                         sucess: true,
                         data: docs
@@ -105,7 +105,7 @@ var Ticket;
                 $match: {
                     _id: new mongodb_1.ObjectId(req.params.ticketId)
                 }
-            }, { fullyPopulate: showOccupant, })).
+            }, { populateType: showOccupant, })).
                 then(async (docs) => docs.length > 0 ?
                 next({
                     success: true,
