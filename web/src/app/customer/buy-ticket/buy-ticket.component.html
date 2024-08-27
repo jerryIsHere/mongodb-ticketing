@@ -21,7 +21,7 @@ Select seats with text:
 Select seats by tapping on seating plan:
 <br>
 <app-seating-plan #seatingPlan [priceTiers]="event.priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
-  isTicketPlanning soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()"
+  soldTicketDisabled reservedSeatDisabled (selectedSeatIdsChange)="checkAction()"
   (selectedSectionChange)="clearAction()" [(selectedSeatIds)]="sectionSelectedSeatIds"
   [limit]="userSession.user? shoppingCartSize: 0">
 </app-seating-plan>

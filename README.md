@@ -4,6 +4,7 @@ please run npm install in both `./` and `./web`
 frontend is also served by express with `npm run start`
 node ./tools/user.js --N Suffix
 N length of password
+node --env-file ./credential/.env ./api/mongoose-schema/v1/tools/clone_venue.js
 Suffix add suffix to login user name of every created user
 [
   {

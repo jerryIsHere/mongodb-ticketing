@@ -147,7 +147,7 @@ var Ticket;
                             then(_session => {
                             res.locals.session = _session;
                             res.locals.session ? res.locals.session.startTransaction() : null;
-                            return ticket_1.ticketModel.bulkPurchase(userId, ids);
+                            return ticket_1.ticketModel.bulkPurchase(userId, ids, _session);
                         }).
                             then(docs => next({ success: true, data: docs })).
                             catch(err => next(err));

@@ -58,6 +58,46 @@
       }
     </mat-form-field>
     <br>
+    <mat-form-field>
+      <mat-label>Cooldown</mat-label>
+      <input matInput formControlName="shoppingCartCooldown" required>
+      @if (eventForm.controls['shoppingCartCooldown'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+      @if (eventForm.controls['shoppingCartCooldown'].hasError('min')) {
+      <mat-error>Cooldown should be  &#60;= 0</mat-error>
+      }
+      @if (eventForm.controls['shoppingCartCooldown'].hasError('pattern')) {
+      <mat-error>Cooldown should be a number</mat-error>
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>Shopping cart size</mat-label>
+      <input matInput formControlName="shoppingCartSize" required>
+      @if (eventForm.controls['shoppingCartSize'].hasError('required')) {
+      <mat-error>Quota field is required</mat-error>
+      }
+      @if (eventForm.controls['shoppingCartSize'].hasError('pattern')) {
+      <mat-error>Quota should be a number</mat-error>
+      }
+
+      @if (eventForm.controls['shoppingCartSize'].hasError('max')) {
+      <mat-error>should be &#60;= {{shoppingCartSizeLimit}}</mat-error>
+      }
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>Venue</mat-label>
+      <mat-select formControlName="venueId" required>
+        @for (venue of data.venues; track venue) {
+        <mat-option [value]="venue._id">{{venue?.venuename}}</mat-option>}
+      </mat-select>
+      @if (eventForm.controls['datetime'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
     For quota, -1 means ulimited.
     <br>
     The second round should have more quota then first round,
@@ -136,33 +176,6 @@
     </form>
     }
     <button mat-button (click)="eventForm.controls['saleInfos'].controls.push(infoFormBuilder())">Add round</button>
-    <br>
-    <mat-form-field>
-      <mat-label>Shopping cart size</mat-label>
-      <input matInput formControlName="shoppingCartSize" required>
-      @if (eventForm.controls['shoppingCartSize'].hasError('required')) {
-      <mat-error>Quota field is required</mat-error>
-      }
-      @if (eventForm.controls['shoppingCartSize'].hasError('pattern')) {
-      <mat-error>Quota should be a number</mat-error>
-      }
-
-      @if (eventForm.controls['shoppingCartSize'].hasError('max')) {
-      <mat-error>should be &#60;= {{shoppingCartSizeLimit}}</mat-error>
-      }
-    </mat-form-field>
-    <br>
-    <mat-form-field>
-      <mat-label>Venue</mat-label>
-      <mat-select formControlName="venueId" required>
-        @for (venue of data.venues; track venue) {
-        <mat-option [value]="venue._id">{{venue?.venuename}}</mat-option>}
-      </mat-select>
-      @if (eventForm.controls['datetime'].hasError('required')) {
-      <mat-error>This field is required</mat-error>
-      }
-    </mat-form-field>
-    <br>
   </form>
 </mat-dialog-content>
 <mat-dialog-actions>

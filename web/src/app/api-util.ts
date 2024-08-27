@@ -166,17 +166,21 @@ export function summarizeTicket<T extends AdminTicketAPIObject | ClientTicketAPI
             let buyX = saleInfo.buyX
             let yFree = saleInfo.yFree
             let totalTickerCount = Array.from(tierInfo.values()).map(info => info.count).reduce((acc: number, val: number) => acc + val, 0)
+            let freeCount
             if (buyX == 0 || yFree == 0) {
                 roundInfo.freed = 0
                 roundInfo.count = totalTickerCount
-                return 0
+                freeCount = 0
             }
-            let quotient = Math.floor(totalTickerCount / (buyX + yFree))
-            let reminder = totalTickerCount % (buyX + yFree)
-            let freeCount = quotient * yFree +
-                Math.max(reminder - buyX, 0)
-            roundInfo.freed = freeCount
-            roundInfo.count = totalTickerCount
+            else {
+                let quotient = Math.floor(totalTickerCount / (buyX + yFree))
+                let reminder = totalTickerCount % (buyX + yFree)
+                freeCount = quotient * yFree +
+                    Math.max(reminder - buyX, 0)
+                roundInfo.freed = freeCount
+                roundInfo.count = totalTickerCount
+
+            }
             for (let priceTier of sortedPriceTier) {
                 let priceTierInfo = tierInfo.get(priceTier.tierName)
                 if (!priceTierInfo) continue;
@@ -197,6 +201,7 @@ export function summarizeTicket<T extends AdminTicketAPIObject | ClientTicketAPI
         }
         return 0
     }).reduce((acc: number, val: number) => acc + val, 0);
+    console.log(summary)
     return summary
 }
 type ShowAPIObject = Show & WithId

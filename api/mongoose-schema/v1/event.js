@@ -66,6 +66,11 @@ exports.eventSchema = new mongoose_1.Schema({
         required: true,
         min: [Number.MIN_VALUE, "Duration must be greater than 0."],
     },
+    shoppingCartCooldown: {
+        type: Number,
+        required: true,
+        min: [0, "Shopping cart cooldown must be >= 0."],
+    },
     shoppingCartSize: {
         type: Number,
         required: true,

@@ -202,9 +202,9 @@ exports.tickerSchema = new mongoose_1.Schema({
     paymentInfo: { type: exports.paymentInfoSchema },
 }, {
     statics: {
-        async bulkPurchase(purchaserId, ticketIds) {
+        async bulkPurchase(purchaserId, ticketIds, session) {
             let ticketObjectIds = ticketIds.map((id) => new mongoose_1.Types.ObjectId(id));
-            let tickets = await exports.ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }).exec();
+            let tickets = await exports.ticketModel.find({ _id: { $in: ticketObjectIds }, purchaseInfo: { $exists: false } }, null, { session: session }).exec();
             if (tickets.length != ticketIds.length) {
                 let idsPurchaseable = tickets.map(model => model._id.toString());
                 let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id));
@@ -213,7 +213,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                     `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.`);
             }
             let events = await event_1.eventModel
-                .find({ _id: { $in: tickets.map((t) => t.eventId) } })
+                .find({ _id: { $in: tickets.map((t) => t.eventId) } }, null, { session: session })
                 .lean()
                 .exec();
             if (events.length != 1)
@@ -234,13 +234,16 @@ exports.tickerSchema = new mongoose_1.Schema({
             }
             let saleInfo = event.saleInfos[saleInfoInd];
             console.log(saleInfo);
-            let userTicketForEventCount = await exports.ticketModel.find().
+            let userTicketForEvent = await exports.ticketModel.find({}, null, { session: session }).
                 findByEventId(event._id.toString()).
-                findByPurchaser(purchaser._id.toString()).countDocuments();
+                findByPurchaser(purchaser._id.toString());
             console.log(saleInfo);
-            if (saleInfo.ticketQuota > -1 && userTicketForEventCount + ticketIds.length > saleInfo.ticketQuota)
+            if (saleInfo.ticketQuota > -1 && userTicketForEvent.length + ticketIds.length > saleInfo.ticketQuota)
                 throw new error_1.OperationError(`You have no more ticket quota (${saleInfo.ticketQuota} for ${saleInfoInd + 1} round selling) ` +
                     `for event with id ${event._id}.`);
+            if (userTicketForEvent.filter(ticket => ticket.purchaseInfo && (now.getTime() - ticket.purchaseInfo.purchaseDate.getTime()) / 60000 < event.shoppingCartCooldown).length > 0)
+                throw new error_1.OperationError(`You must wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown > 1 ? "s" : ''} ` +
+                    `between two ticket purchase.`);
             let purchaseInfo = new exports.purchaseInfoModel({
                 purchaserId: purchaserId,
                 purchaseDate: now,
@@ -250,7 +253,7 @@ exports.tickerSchema = new mongoose_1.Schema({
                 ticket.purchaseInfo = purchaseInfo;
                 // validation done with purchaseInfo.validate() and only one filed of ticket is modified.
                 // purchaseinfo.validate requires finding user in db, and is slightly expensive
-                return ticket.save({ validateBeforeSave: false });
+                return ticket.save({ validateBeforeSave: false, session: session });
             }));
             let disclosableTickets = await Promise.all(purchasedTickets.map(ticket => ticket.disclose()));
             let notification = new notification_1.notificationModel({

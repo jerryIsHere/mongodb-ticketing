@@ -54,7 +54,8 @@ export class ManagementPanelComponent {
     },
     soldTickets: {
       loadData: () => {
-        return this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
+        return Promise.resolve([])
+        this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
           if (result && result.data)
             this.soldTickets = result.data
           if (this.soldTicketListComp) this.soldTicketListComp.loaded = true;

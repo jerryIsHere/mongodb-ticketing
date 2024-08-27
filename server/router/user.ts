@@ -51,7 +51,7 @@ export namespace User {
           const validUser =
             req.body.email != undefined ?
               await userModel.findOne({ email: req.body.email }).exec() :
-              await userModel.findOne({ username: req.body.username }).exec();
+              await userModel.findOne({ username: req.body.username.toLowerCase() }).exec();
           if (!validUser) {
             next(new RequestError("User not found."));
             // Send the password reset email containing the reset token
@@ -99,7 +99,7 @@ export namespace User {
     user.patch("/:username", async (req: Request, res: Response, next) => {
       if (req.params.username && typeof req.params.username == "string") {
         if (req.query.profile != undefined) {
-          userModel.findOne({ username: req.body.username }).
+          userModel.findOne({ username: req.body.username.toLowerCase() }).
             then(user => {
               if (user) {
                 let profile =
@@ -121,7 +121,7 @@ export namespace User {
         else if (req.body.password != undefined) {
           if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true" && !canManipulateUser(req.session))
             return next(new RequestError("User password could only be changed by admin."))
-          userModel.findOne({ username: req.params.username },
+          userModel.findOne({ username: req.params.username.toLowerCase() },
             req.body
           ).
             then(async doc => {

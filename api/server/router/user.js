@@ -45,7 +45,7 @@ var User;
                 // Generate a password reset token and save it in the user in the database
                 const validUser = req.body.email != undefined ?
                     await user_1.userModel.findOne({ email: req.body.email }).exec() :
-                    await user_1.userModel.findOne({ username: req.body.username }).exec();
+                    await user_1.userModel.findOne({ username: req.body.username.toLowerCase() }).exec();
                 if (!validUser) {
                     next(new database_1.RequestError("User not found."));
                     // Send the password reset email containing the reset token
@@ -94,7 +94,7 @@ var User;
         user.patch("/:username", async (req, res, next) => {
             if (req.params.username && typeof req.params.username == "string") {
                 if (req.query.profile != undefined) {
-                    user_1.userModel.findOne({ username: req.body.username }).
+                    user_1.userModel.findOne({ username: req.body.username.toLowerCase() }).
                         then(user => {
                         if (user) {
                             let profile = Object.fromEntries(changeableField.map(key => [key, req.body[key]]));
@@ -116,7 +116,7 @@ var User;
                 else if (req.body.password != undefined) {
                     if (process.env.ALLOW_USER_REGISTRATION?.toLocaleLowerCase() != "true" && !canManipulateUser(req.session))
                         return next(new database_1.RequestError("User password could only be changed by admin."));
-                    user_1.userModel.findOne({ username: req.params.username }, req.body).
+                    user_1.userModel.findOne({ username: req.params.username.toLowerCase() }, req.body).
                         then(async (doc) => {
                         await doc?.setSaltedPassword(req.body.password);
                         return doc;

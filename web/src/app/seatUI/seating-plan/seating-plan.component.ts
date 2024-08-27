@@ -16,7 +16,7 @@ import PhotoSwipe from 'photoswipe';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
 const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors for pricetiers
-type Section = { x: number, y: number }
+
 @Component({
   selector: 'app-seating-plan',
   standalone: true,
@@ -173,7 +173,7 @@ export class SeatingPlanComponent {
   // }
   // init() {
   // }
-  compareSection(option: Section, value: Section) { return option.x == value.x && option.y == value.y }
+  compareSection(option: ISection, value: ISection) { return option.x == value.x && option.y == value.y }
   getSeat(row: string, col: number) {
     var search = this.seats.filter(s => s.row == row && s.no == col)
     return search.length > 0 ? search[0] : null
@@ -240,7 +240,7 @@ export class SeatingPlanComponent {
       this.tickets &&
       this.selectedSection === undefined &&
       !this.trySelectSectionWithQuery() &&
-      !this.trySelectSectionWithMostTicket()
+      !this.trySelectSectionWithPriority()
     ) {
       this.selectedSection = this.venue.sections[0]
     }
@@ -257,20 +257,35 @@ export class SeatingPlanComponent {
     }
     return false
   }
-  trySelectSectionWithMostTicket(): boolean {
+  sectionWithTicket() {
+    return this.venue?.sections.filter((section: ISection) =>
+      this.tickets?.find(ticket => ticket.seat &&
+        ticket.seat.coord.sectX == section.x &&
+        ticket.seat.coord.sectY == section.y) != null
+    )
+  }
+  trySelectSectionWithPriority(): boolean {
     if (this.venue && this.venue.sections && Array.isArray(this.venue.sections) && this.tickets) {
+      let tickets = this.tickets
       let sortedSection = this.venue.sections.slice()
-      let isTicketAvaliableNFromSection = (section: { x: number, y: number }) => {
+      let isTicketAvaliableNFromSection = (section: ISection) => {
         return (ticket: TicketAPIObject) => {
-          return !getPurchaserIfAny(ticket) && ticket.seat &&
+          return ticket.seat &&
             ticket.seat.coord.sectX == section.x &&
-            ticket.seat.coord.sectY == section.y
+            ticket.seat.coord.sectY == section.y &&
+            !getPurchaserIfAny(ticket)
         }
       }
       this.selectedSection =
-        this.venue.sections.sort((sectionA, sectionB) =>
-          (this.tickets ? this.tickets.filter(isTicketAvaliableNFromSection(sectionB)).length : 0) -
-          (this.tickets ? this.tickets.filter(isTicketAvaliableNFromSection(sectionA)).length : 0)
+        this.venue.sections.sort((sectionA, sectionB) => {
+          let avaliableTicketAtSectionA = tickets.filter(isTicketAvaliableNFromSection(sectionA)).length
+          let avaliableTicketAtSectionB = tickets.filter(isTicketAvaliableNFromSection(sectionB)).length
+          if (avaliableTicketAtSectionA == 0) return 1
+          if (avaliableTicketAtSectionB == 0) return -1
+          if (sectionA.x != sectionB.x) return sectionA.x - sectionB.x
+          return avaliableTicketAtSectionB - avaliableTicketAtSectionA
+
+        }
 
         )[0]
       return true;

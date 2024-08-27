@@ -296,9 +296,12 @@ export class CustomerTicketComponent {
       link.click();
     })
   }
-  downloadSoldTicketDataCSV() {
-    this.loadData().then(() => {
-      var data = "data:text/csv;charset=utf-8," +
+  downloadEventSoldTicketDataCSV() {
+    if (this.selectedShow) {
+      let show = this.selectedShow
+      this.api.request.get(`/ticket?eventId=${show._id}`).toPromise().then((result: any) => {
+        let eventSoldTicket: AdminTicketAPIObject[] = result.data
+        var data = "data:text/csv;charset=utf-8," +
         [
           ["_id",
             "event.eventname",
@@ -311,7 +314,7 @@ export class CustomerTicketComponent {
             "confirmationDate",
             "confirmationType",
             "remark"].join(","),
-          ...this.tickets.map(ticket =>
+          ...eventSoldTicket.map(ticket =>
             [ticket._id,
             ticket?.event?.eventname,
             ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
@@ -331,11 +334,12 @@ export class CustomerTicketComponent {
 
       var link = document.createElement("a");
       link.setAttribute("href", encodeURI(data));
-      link.setAttribute("download", `ticketing-${new Date().toLocaleDateString()}.csv`);
+      link.setAttribute("download", `ticketing-${show.eventname}-${new Date().toLocaleDateString()}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
-    })
+      })
+    }
   }
   downloadEventDataCSV() {
     if (this.selectedShow) {
@@ -364,10 +368,10 @@ export class CustomerTicketComponent {
               yield ""
               yield `ticket info of ${user.fullname} (${user.username}) total: $${userSummary.totalCost}`
               for (let roundNinfo of userSummary.round.entries()) {
-                yield `round ${roundNinfo[0] + 1} sum: $${roundNinfo[1].total} free: ${roundNinfo[1].freed}/${roundNinfo[1].count}`
+                yield `round ${roundNinfo[0] + 1} [sum: $${roundNinfo[1].total}] [free/total: ${roundNinfo[1].freed}/${roundNinfo[1].count}]`
                 for (let tierNinfo of roundNinfo[1].tierInfo.entries()) {
                   yield `tier ${tierNinfo[0]} sum: $${(tierNinfo[1].count - tierNinfo[1].freed) * tierNinfo[1].price
-                    } free: ${tierNinfo[1].freed}/${tierNinfo[1].count}`
+                    } free/total: ${tierNinfo[1].freed}/${tierNinfo[1].count}`
                   for (let ticket of tierNinfo[1].tickets) {
                     yield [ticket._id,
                     ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
@@ -420,7 +424,7 @@ export class CustomerTicketComponent {
         console.log(data)
         var link = document.createElement("a");
         link.setAttribute("href", encodeURI(data));
-        link.setAttribute("download", `ticketing-${show.eventname}-${new Date().toLocaleDateString()}.csv`);
+        link.setAttribute("download", `ticketing-${show.eventname}-groupbyuser-${new Date().toLocaleDateString()}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();

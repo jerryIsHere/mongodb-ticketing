@@ -1,6 +1,7 @@
 @if(seats && venue){
+{{venue.venuename}}
 <app-seating-plan #seatingPlan (selectedSectionChange)="onSelectedSectionChange($event)" [venue]="venue"
-  [seats]="seats" ticketIrrelavent>
+  [seats]="seats" isTicketPlanning ticketIrrelavent>
 </app-seating-plan>
 }
 @else{

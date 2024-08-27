@@ -1,15 +1,17 @@
 <div [style.flex-direction]="isMobile?'column':'row'" style="display: flex;">
   <div style="flex: 1;">
     <div style="flex-direction: row; display: flex;">
+      @if(venue && tickets){
       <mat-form-field style="flex: 1">
         <mat-label>Venue section</mat-label>
         <mat-select [(ngModel)]="selectedSection" (selectionChange)="selectedSection = $event.value;render();setRoute()"
           [compareWith]="compareSection">
-          @for(section of venue?.sections; track section){
+          @for(section of isTicketPlanning? venue.sections : sectionWithTicket(); track section){
           <mat-option [value]="section">{{section.x}}-{{section.y}}</mat-option>
           }
         </mat-select>
       </mat-form-field>
+      }
       <mat-chip-listbox style="flex: 1">
         @for( priceTier of priceTiers; track priceTier){
         <mat-chip [style.background-color]="priceTier.tierName?'#'+priceTiersColors.get(priceTier.tierName):''">
@@ -17,7 +19,7 @@
         }
       </mat-chip-listbox>
     </div>
-    <div class="seating-plan">
+    <div class="seating-plan" [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
       <div>
         @if(this.selectedSection?.options?.seatAlign){
         }
@@ -30,8 +32,7 @@
         </mat-list-item>
         }
         @for(row of rows; track row){
-        <mat-list-item cdkDropList cdkDropListOrientation="horizontal"
-          [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
+        <mat-list-item cdkDropList cdkDropListOrientation="horizontal">
           <button mat-button style="pointer-events: none;">{{row}}</button>
           @for(col of cols; track col){
           @let buyer = getBuyer(row,col);

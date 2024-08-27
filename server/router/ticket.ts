@@ -163,7 +163,7 @@ export namespace Ticket {
                             then(_session => {
                                 res.locals.session = _session;
                                 res.locals.session ? res.locals.session.startTransaction() : null;
-                                return ticketModel.bulkPurchase(userId, ids)
+                                return ticketModel.bulkPurchase(userId, ids, _session)
                             }).
                             then(docs => next({ success: true, data: docs })).
                             catch(err => next(err))

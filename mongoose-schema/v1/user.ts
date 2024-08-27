@@ -42,7 +42,7 @@ export interface UserModel extends Model<IUser, {}, IUserMethod> {
 }
 export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
   {
-    username: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     fullname: { type: String, required: true },
     email: {
       type: String,
@@ -56,7 +56,7 @@ export const userSchema = new Schema<IUser, UserModel, IUserMethod>(
     },
     singingPart: { type: String },
     saltedpassword: { type: String, required: true },
-    verified: { type: Boolean, required: true , default: false},
+    verified: { type: Boolean, required: true, default: false },
     verificationToken: { type: String },
     resetToken: { type: String },
     lastLoginDate: { type: Date },
@@ -129,7 +129,7 @@ userSchema.static("verify", async function verify(verificationToken: string) {
 userSchema.static(
   "login",
   async function login(username: string, password: string) {
-    let user = await userModel.findOne({ username: username });
+    let user = await userModel.findOne({ username: username.toLowerCase() });
     if (user) {
       if (await compare(password, user.saltedpassword)) {
         user.lastLoginDate = new Date();

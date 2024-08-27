@@ -31,6 +31,7 @@ export interface IEvent {
   venueId: Types.ObjectId;
   priceTiers: IPriceTier[];
   saleInfos: ISaleInfo[];
+  shoppingCartCooldown: number;
 }
 export interface IEventMethod { }
 interface HydratedEvent extends HydratedDocument<IEvent, IEventMethod, EventQueryHelpers> { }
@@ -85,6 +86,12 @@ export const eventSchema = new Schema<
       type: Number,
       required: true,
       min: [Number.MIN_VALUE, "Duration must be greater than 0."],
+    },
+    shoppingCartCooldown:{
+      type: Number,
+      required: true,
+      min: [0, "Shopping cart cooldown must be >= 0."],
+
     },
     shoppingCartSize: {
       type: Number,

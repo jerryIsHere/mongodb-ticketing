@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, FormControl, FormArray } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SeatingPlanComponent } from '../../seatUI/seating-plan/seating-plan.component';
-import { SeatAPIObject } from '../../api-util';
+import { SeatAPIObject, VenueAPIObject } from '../../api-util';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-venue-seat',
@@ -24,7 +24,7 @@ export class VenueSeatComponent {
   slots: (SeatAPIObject | undefined)[] = []
   seats: SeatAPIObject[] | undefined
   _id: string | undefined
-  venue: any | undefined
+  venue: VenueAPIObject | undefined
 
   _seatingPlan?: SeatingPlanComponent
   get seatingPlan(): SeatingPlanComponent | undefined { return this._seatingPlan }
@@ -124,7 +124,7 @@ export class VenueSeatComponent {
     }
   }
   onSelectedSectionChange(value: { x: number, y: number }) {
-    let section = (this.venue.sections as Array<any>).find(s => s.x == value.x && s.y == value.y)
+    let section = (this.venue?.sections as Array<any>).find(s => s.x == value.x && s.y == value.y)
     if (section && section.options) {
       this.optionForm.controls["horizontalOrder"].setValue(section.options.horizontalOrder)
       this.optionForm.controls["verticleOrder"].setValue(section.options.verticleOrder)
@@ -139,7 +139,7 @@ export class VenueSeatComponent {
   submitSectionOption() {
     if (this.optionForm.valid && this._id && this.seatingPlan && this.seatingPlan.selectedSection) {
       let selectedSection = this.seatingPlan.selectedSection
-      selectedSection = (this.venue.sections as Array<any>).find(s => s.x == selectedSection.x && s.y == selectedSection.y)
+      selectedSection = (this.venue?.sections as Array<any>).find(s => s.x == selectedSection.x && s.y == selectedSection.y)
       if (selectedSection) {
         selectedSection.options = this.optionForm.getRawValue()
         let venueId = this._id

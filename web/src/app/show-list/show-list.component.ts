@@ -24,7 +24,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class ShowListComponent {
   loaded = false
   eventDataSource: MatTableDataSource<ShowAPIObject[]> = new MatTableDataSource<ShowAPIObject[]>()
-  eventDataColumn = ['eventname', 'datetime', 'duration', 'venue.venuename', '_id'];
+  eventDataColumn = ['eventname', 'datetime', 'duration'];
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
   constructor(private api: ApiService) {

@@ -13,7 +13,7 @@ const schema_names_1 = require("../schema-names");
 const error_1 = require("../error");
 const saltRounds = 10;
 exports.userSchema = new mongoose_1.Schema({
-    username: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     fullname: { type: String, required: true },
     email: {
         type: String,
@@ -92,7 +92,7 @@ exports.userSchema.static("verify", async function verify(verificationToken) {
     throw new error_1.OperationError("User with this verification token not found.");
 });
 exports.userSchema.static("login", async function login(username, password) {
-    let user = await exports.userModel.findOne({ username: username });
+    let user = await exports.userModel.findOne({ username: username.toLowerCase() });
     if (user) {
         if (await (0, bcrypt_1.compare)(password, user.saltedpassword)) {
             user.lastLoginDate = new Date();

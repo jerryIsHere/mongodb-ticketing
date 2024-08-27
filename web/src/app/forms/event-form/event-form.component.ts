@@ -46,6 +46,7 @@ export class EventFormComponent {
           })) : []
     ),
     duration: new FormControl(this.data.event.duration, [Validators.required, Validators.min(0), Validators.pattern("^[-0-9]*$"),]),
+    shoppingCartCooldown: new FormControl(this.data.event.shoppingCartCooldown, [Validators.required, Validators.min(0), Validators.pattern("^[-0-9]*$"),]),
     shoppingCartSize: new FormControl(this.data.event.shoppingCartSize, [Validators.max(this.shoppingCartSizeLimit), Validators.required, Validators.pattern("^[-0-9]*$"),]),
     venueId: new FormControl(this.data.event.venueId, [Validators.required,]),
   });
