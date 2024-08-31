@@ -33,9 +33,39 @@ var User;
         };
         user.get("/", async (req, res, next) => {
             if (req.query.list != undefined) {
-                user_1.userModel.find().then(docs => docs.map(doc => doc.disclose())).
-                    then(doc => next({ success: true, data: doc })).
-                    catch(err => next(err));
+                if (req.query.lastPurchaseTicket != undefined) {
+                    user_1.userModel.aggregate([{
+                            $lookup: {
+                                from: "tickets",
+                                localField: "_id",
+                                foreignField: "purchaseInfo.purchaserId",
+                                as: "lastPurchaseTicket"
+                            }
+                        }, {
+                            $set: {
+                                lastPurchaseTicket: {
+                                    $first: {
+                                        $sortArray: {
+                                            input: "$lastPurchaseTicket",
+                                            sortBy: {
+                                                "purchaseInfo.purchaseDate": -1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }]).
+                        then(async (doc) => next({
+                        success: true,
+                        data: doc
+                    })).
+                        catch(err => next(err));
+                }
+                else {
+                    user_1.userModel.find().then(docs => docs.map(doc => doc.disclose())).
+                        then(doc => next({ success: true, data: doc })).
+                        catch(err => next(err));
+                }
             }
         });
         user.post("/forget-password", async (req, res, next) => {

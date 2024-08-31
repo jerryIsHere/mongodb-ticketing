@@ -1,5 +1,5 @@
 import { Component, ViewChild, viewChild, } from '@angular/core';
-import { ShowAPIObject, VenueAPIObject, IPriceTier, TicketAPIObject } from '../api-util'
+import { ShowAPIObject, VenueAPIObject, IPriceTier, TicketAPIObject, UserAPIObject, AdminTicketAPIObject } from '../api-util'
 import { EventListComponent } from './event-list/event-list.component';
 import { MatDialog } from '@angular/material/dialog';
 import { VenueListComponent } from './venue-list/venue-list.component';
@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../service/api.service';
 import { ChangePasswordComponent } from './change-password/change-password.component';
+import dateFormat from 'dateformat';
 
 interface IDataListControl {
   loadData: () => Promise<any>,
@@ -73,5 +74,38 @@ export class ManagementPanelComponent {
   }
   ChangePassword() {
     const dialogRef = this.dialog.open(ChangePasswordComponent);
+  }
+
+  downloadUserDataCSV() {
+    this.api.request.get("/user?list&lastPurchaseTicket").toPromise().then((result: any) => {
+      var data = "data:text/csv;charset=utf-8," +
+        [
+          ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate", "latestTicketPurchaseDate", "latestTicketConfirmDate", "latestTicketConfirmationType",
+            "latestTicketRemark",].join(","),
+          ...result.data.map((user: UserAPIObject & {lastPurchaseTicket : AdminTicketAPIObject}) => {
+            return [
+              user._id,
+              user.username,
+              user.fullname,
+              user.email,
+              user.singingPart,
+              user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss') : '',
+              user.lastPurchaseTicket ? user.lastPurchaseTicket.purchaseInfo ? dateFormat(new Date(user.lastPurchaseTicket.purchaseInfo.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
+              user.lastPurchaseTicket ? user.lastPurchaseTicket.paymentInfo ? dateFormat(new Date(user.lastPurchaseTicket.paymentInfo.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
+              user.lastPurchaseTicket ? user.lastPurchaseTicket.paymentInfo?.confirmedBy : '',
+              user.lastPurchaseTicket ? user.lastPurchaseTicket.paymentInfo?.remark : '',
+
+            ].map(value => value ? value : '').join(",")
+          }
+          )
+        ].join("\n")
+
+      var link = document.createElement("a");
+      link.setAttribute("href", encodeURI(data));
+      link.setAttribute("download", `user-${new Date().toLocaleDateString()}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+    })
   }
 }

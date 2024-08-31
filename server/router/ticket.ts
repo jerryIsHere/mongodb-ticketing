@@ -15,9 +15,16 @@ let ticketNotFound = (id: string) => { throw new RequestError(`Ticket with id ${
 export namespace Ticket {
     export function RouterFactory(): Express.Router {
         var ticket = Router()
-        var shouldShowOccupant = (session: SessionData): "full" | "none" => {
-            if (session && session.user && (session.user.hasAdminRight || session.user.isCustomerSupport))
-                return "full"
+        var InferPopulateType = (req: Request): "full" | "none" => {
+            let session: SessionData = req.session
+            if (session && session.user && (session.user.hasAdminRight || session.user.isCustomerSupport)) {
+                if (req.query.populate == "full") {
+                    return "full"
+                }
+                else {
+                    return "none"
+                }
+            }
             return "none"
         }
 
@@ -36,12 +43,13 @@ export namespace Ticket {
         })
 
         ticket.get("/", async (req: Request, res: Response, next): Promise<any> => {
+            let populateType = InferPopulateType(req)
             if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
                 ticketModel.aggregate<IDisclosableTicket>(lookupQuery({
                     $match: {
                         eventId: new ObjectId(req.query.eventId)
                     }
-                }, { populateType: "none" })).
+                }, { populateType: populateType })).
                     then(async docs =>
                         next({
                             success: true, data: docs
@@ -63,7 +71,7 @@ export namespace Ticket {
                     catch(err => next(err))
             }
             else if (req.query.sold != undefined) {
-                let showOccupant = shouldShowOccupant(req.session)
+                let populateType = InferPopulateType(req)
                 let eventId
                 if (req.query.eventId != undefined && typeof req.query.eventId === "string")
                     eventId = req.query.eventId
@@ -74,7 +82,7 @@ export namespace Ticket {
                             ...eventId ? [{ eventId: new ObjectId(eventId) }] : []
                         ]
                     }
-                }, { populateType: showOccupant })).
+                }, { populateType: populateType })).
                     then(async doc =>
                         next({
                             success: true,
@@ -110,13 +118,12 @@ export namespace Ticket {
         })
 
         ticket.get("/:ticketId", async (req: Request, res: Response, next) => {
-            let showOccupant = shouldShowOccupant(req.session)
-
+            let populateType = InferPopulateType(req)
             ticketModel.aggregate<IFullyPopulatedTicket<IEvent, ISeat, IPopulatedPurchaseInfo<IUser>, IPopulatedPaymentInfo<IUser>>>(lookupQuery({
                 $match: {
                     _id: new ObjectId(req.params.ticketId)
                 }
-            }, { populateType: showOccupant, })).
+            }, { populateType: populateType, })).
                 then(async docs =>
                     docs.length > 0 ?
                         next({

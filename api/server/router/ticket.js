@@ -10,9 +10,16 @@ var Ticket;
 (function (Ticket) {
     function RouterFactory() {
         var ticket = (0, express_1.Router)();
-        var shouldShowOccupant = (session) => {
-            if (session && session.user && (session.user.hasAdminRight || session.user.isCustomerSupport))
-                return "full";
+        var InferPopulateType = (req) => {
+            let session = req.session;
+            if (session && session.user && (session.user.hasAdminRight || session.user.isCustomerSupport)) {
+                if (req.query.populate == "full") {
+                    return "full";
+                }
+                else {
+                    return "none";
+                }
+            }
             return "none";
         };
         ticket.use((req, res, next) => {
@@ -30,12 +37,13 @@ var Ticket;
             }
         });
         ticket.get("/", async (req, res, next) => {
+            let populateType = InferPopulateType(req);
             if (req.query.eventId && typeof req.query.eventId == "string" && req.query.sold == undefined) {
                 ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
                     $match: {
                         eventId: new mongodb_1.ObjectId(req.query.eventId)
                     }
-                }, { populateType: "none" })).
+                }, { populateType: populateType })).
                     then(async (docs) => next({
                     success: true, data: docs
                 })).
@@ -55,7 +63,7 @@ var Ticket;
                     catch(err => next(err));
             }
             else if (req.query.sold != undefined) {
-                let showOccupant = shouldShowOccupant(req.session);
+                let populateType = InferPopulateType(req);
                 let eventId;
                 if (req.query.eventId != undefined && typeof req.query.eventId === "string")
                     eventId = req.query.eventId;
@@ -66,7 +74,7 @@ var Ticket;
                             ...eventId ? [{ eventId: new mongodb_1.ObjectId(eventId) }] : []
                         ]
                     }
-                }, { populateType: showOccupant })).
+                }, { populateType: populateType })).
                     then(async (doc) => next({
                     success: true,
                     data: doc
@@ -100,12 +108,12 @@ var Ticket;
             }
         });
         ticket.get("/:ticketId", async (req, res, next) => {
-            let showOccupant = shouldShowOccupant(req.session);
+            let populateType = InferPopulateType(req);
             ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
                 $match: {
                     _id: new mongodb_1.ObjectId(req.params.ticketId)
                 }
-            }, { populateType: showOccupant, })).
+            }, { populateType: populateType, })).
                 then(async (docs) => docs.length > 0 ?
                 next({
                     success: true,

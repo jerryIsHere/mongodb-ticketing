@@ -12,10 +12,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { AdminTicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString, ticketCompareByDate, ShowAPIObject, ticketCompare, summarizeTicket } from '../../api-util'
+import { AdminTicketAPIObject, UserAPIObject, ticketConfirmDateString, ticketPurchaseDateString, ticketCompareByDate, ShowAPIObject, ticketCompare, summarizeTicket, TicketAPIObject } from '../../api-util'
 import { ApiService } from '../../service/api.service';
 import { TicketFormComponent } from '../../forms/ticket-form/ticket-form.component';
 import { Observable } from 'rxjs';
@@ -30,7 +31,7 @@ const colorshex = "66c2a5fc8d628da0cbe78ac3a6d854ffd92fe5c494b3b3b3" // 8 colors
   standalone: true,
   imports: [MatIconModule, MatTableModule, MatInputModule, MatSortModule, MatPaginatorModule, MatButtonModule,
     MatTooltipModule, MatProgressSpinnerModule, MatListModule,
-    FormsModule, MatDividerModule,
+    FormsModule, MatDividerModule, MatCheckboxModule,
     MatFormFieldModule, MatChipsModule,
     MatAutocompleteModule,
     ReactiveFormsModule,
@@ -54,6 +55,8 @@ export class CustomerTicketComponent {
   selectedUser?: UserAPIObject;
   selectedShow?: ShowAPIObject
   priceTiersColors?: Map<string, string>
+  eventExportOption: { includeUnsold: boolean, specificToSelectedUser: boolean }
+    = { includeUnsold: false, specificToSelectedUser: false }
 
   constructor(public dialog: MatDialog, private api: ApiService) {
     this.loadData()
@@ -174,7 +177,7 @@ export class CustomerTicketComponent {
         );
       }
     }))
-    promises.push(this.api.request.get("/ticket?list&sold").toPromise().then((result: any) => {
+    promises.push(this.api.request.get("/ticket?list&sold&populate=full").toPromise().then((result: any) => {
       if (result && result.data) {
         this.ticketLoaded = true
         this.tickets = result.data
@@ -261,173 +264,144 @@ export class CustomerTicketComponent {
   ticketPurchaseDateString(ticket: AdminTicketAPIObject): string {
     return ticketPurchaseDateString(ticket)
   }
-  downloadUserDataCSV() {
-    this.loadData().then(() => {
-      var data = "data:text/csv;charset=utf-8," +
-        [
-          ["_id", "username", "fullname", "email", "singingPart", "lastLoginDate", "latestTicketPurchaseDate", "latestTicketConfirmDate", "latestTicketConfirmationType",
-            "latestTicketRemark",].join(","),
-          ...this.users.map(user => {
-            let sortedTicket = this.tickets.filter(ticket =>
-              "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaser?._id.toString() == user._id).sort(ticketCompareByDate)
-            let lastTicket = sortedTicket.length > 0 && "purchaseInfo" in sortedTicket[0] ? sortedTicket[0] : null
-            return [
-              user._id,
-              user.username,
-              user.fullname,
-              user.email,
-              user.singingPart,
-              user.lastLoginDate ? dateFormat(new Date(user.lastLoginDate), 'yyyymmdd hhmmss') : '',
-              lastTicket ? lastTicket.purchaseInfo ? dateFormat(new Date(lastTicket.purchaseInfo.purchaseDate), 'yyyymmdd hhmmss') : '' : '',
-              lastTicket ? lastTicket.paymentInfo ? dateFormat(new Date(lastTicket.paymentInfo.confirmationDate), 'yyyymmdd hhmmss') : '' : '',
-              lastTicket ? lastTicket.paymentInfo?.confirmedBy : '',
-              lastTicket ? lastTicket.paymentInfo?.remark : '',
+  downloadAllTicketDataCSV(show: ShowAPIObject, ticketData: AdminTicketAPIObject[]) {
+    var data = "data:text/csv;charset=utf-8," +
+      [
+        ["_id",
+          "event.eventname",
+          "seat.row+seat.no",
+          "priceTier.tierName",
+          "priceTier.price",
+          "purchaser.username",
+          "purchaser.fullname",
+          "purchaseDate",
+          "confirmationDate",
+          "confirmationType",
+          "remark"].join(","),
+        ...ticketData.map(ticket =>
+          [ticket._id,
+          ticket?.event?.eventname,
+          ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
+          ticket.priceTier.tierName,
+          ticket.priceTier.price,
+          "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser?.username : '',
+          "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser?.fullname : '',
+          "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaseDate ?
+            dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
+          "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
+            dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
+          "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
+          "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
+          ].map(value => value ? value : '').join(",")
+        )
+      ].join("\n")
 
-            ].map(value => value ? value : '').join(",")
-          }
-          )
-        ].join("\n")
-
-      var link = document.createElement("a");
-      link.setAttribute("href", encodeURI(data));
-      link.setAttribute("download", `user-${new Date().toLocaleDateString()}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-    })
+    var link = document.createElement("a");
+    link.setAttribute("href", encodeURI(data));
+    link.setAttribute("download", `ticketing-${show.eventname}-all_ticket-${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
   }
-  downloadEventSoldTicketDataCSV() {
-    if (this.selectedShow) {
-      let show = this.selectedShow
-      this.api.request.get(`/ticket?eventId=${show._id}`).toPromise().then((result: any) => {
-        let eventSoldTicket: AdminTicketAPIObject[] = result.data
-        var data = "data:text/csv;charset=utf-8," +
-        [
-          ["_id",
-            "event.eventname",
-            "seat.row+seat.no",
-            "priceTier.tierName",
-            "priceTier.price",
-            "purchaser.username",
-            "purchaser.fullname",
-            "purchaseDate",
-            "confirmationDate",
-            "confirmationType",
-            "remark"].join(","),
-          ...eventSoldTicket.map(ticket =>
-            [ticket._id,
-            ticket?.event?.eventname,
-            ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
-            ticket.priceTier.tierName,
-            ticket.priceTier.price,
-            "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser?.username : '',
-            "purchaseInfo" in ticket ? ticket.purchaseInfo?.purchaser?.fullname : '',
-            "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaseDate ?
-              dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
-            "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
-              dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
-            "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
-            "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
-            ].map(value => value ? value : '').join(",")
-          )
-        ].join("\n")
 
-      var link = document.createElement("a");
-      link.setAttribute("href", encodeURI(data));
-      link.setAttribute("download", `ticketing-${show.eventname}-${new Date().toLocaleDateString()}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      })
-    }
-  }
-  downloadEventDataCSV() {
-    if (this.selectedShow) {
-      let show = this.selectedShow
-      this.api.request.get(`/ticket?eventId=${show._id}&sold`).toPromise().then((result: any) => {
-        let eventSoldTicket: AdminTicketAPIObject[] = result.data
-        let userSoldTicket = eventSoldTicket.reduce((bin, ticket) => {
-          if (ticket.purchaseInfo && ticket.purchaseInfo.purchaser) {
-            let userId = ticket.purchaseInfo.purchaser._id
-            let userTickets = bin.get(userId)
-            if (userTickets) {
-              userTickets.push(ticket)
-              bin.set(userId, userTickets)
-            }
-            else {
-              bin.set(userId, [ticket])
-            }
-          }
+
+  downloadDiscountDataCsv(show: ShowAPIObject, ticketData: AdminTicketAPIObject[]) {
+    let userSoldTicket = ticketData.reduce((bin, ticket) => {
+      if (ticket.purchaseInfo && ticket.purchaseInfo.purchaser) {
+        if (this.eventExportOption.specificToSelectedUser && this.selectedUser &&
+          ticket.purchaseInfo.purchaser._id != this.selectedUser._id
+        ) {
           return bin
-        }, new Map<string, AdminTicketAPIObject[]>())
-        function* userRow() {
-          for (let userTickets of userSoldTicket.values()) {
-            let user = userTickets[0].purchaseInfo?.purchaser
-            if (user) {
-              let userSummary = summarizeTicket(userTickets, show);
-              yield ""
-              yield `ticket info of ${user.fullname} (${user.username}) total: $${userSummary.totalCost}`
-              for (let roundNinfo of userSummary.round.entries()) {
-                yield `round ${roundNinfo[0] + 1} [sum: $${roundNinfo[1].total}] [free/total: ${roundNinfo[1].freed}/${roundNinfo[1].count}]`
-                for (let tierNinfo of roundNinfo[1].tierInfo.entries()) {
-                  yield `tier ${tierNinfo[0]} sum: $${(tierNinfo[1].count - tierNinfo[1].freed) * tierNinfo[1].price
-                    } free/total: ${tierNinfo[1].freed}/${tierNinfo[1].count}`
-                  for (let ticket of tierNinfo[1].tickets) {
-                    yield [ticket._id,
-                    ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
-                    ticket.priceTier.tierName,
-                    ticket.freed ? "free" : ticket.priceTier.price,
-                    "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaseDate ?
-                      dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
-                    "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
-                      dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
-                    "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
-                    "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
-                    ].map(value => value ? value : '').join(",")
-                  }
-                }
+        }
+        let userId = ticket.purchaseInfo.purchaser._id
+        let userTickets = bin.get(userId)
+        if (userTickets) {
+          userTickets.push(ticket)
+          bin.set(userId, userTickets)
+        }
+        else {
+          bin.set(userId, [ticket])
+        }
+      }
+      return bin
+    }, new Map<string, AdminTicketAPIObject[]>())
+    function* userRow() {
+      for (let userTickets of userSoldTicket.values()) {
+        let user = userTickets[0].purchaseInfo?.purchaser
+        if (user) {
+          let userSummary = summarizeTicket(userTickets, show);
+          yield ""
+          yield `ticket info of ${user.fullname} (${user.username}) total: $${userSummary.totalCost}`
+          for (let roundNinfo of userSummary.round.entries()) {
+            yield `round ${roundNinfo[0] + 1} [sum: $${roundNinfo[1].total}] [free/total: ${roundNinfo[1].freed}/${roundNinfo[1].count}]`
+            for (let tierNinfo of roundNinfo[1].tierInfo.entries()) {
+              yield `tier ${tierNinfo[0]} sum: $${(tierNinfo[1].count - tierNinfo[1].freed) * tierNinfo[1].price
+                } free/total: ${tierNinfo[1].freed}/${tierNinfo[1].count}`
+              for (let ticket of tierNinfo[1].tickets) {
+                yield [ticket._id,
+                ticket.seat?.row && ticket.seat?.no ? ticket.seat?.row + ticket.seat?.no : '',
+                ticket.priceTier.tierName,
+                ticket.freed ? "free" : ticket.priceTier.price,
+                "purchaseInfo" in ticket && ticket.purchaseInfo?.purchaseDate ?
+                  dateFormat(new Date(ticket.purchaseInfo?.purchaseDate)) : '',
+                "paymentInfo" in ticket && ticket.paymentInfo?.confirmationDate ?
+                  dateFormat(new Date(ticket.paymentInfo?.confirmationDate)) : '',
+                "paymentInfo" in ticket ? ticket.paymentInfo?.confirmedBy : '',
+                "paymentInfo" in ticket ? ticket.paymentInfo?.remark : '',
+                ].map(value => value ? value : '').join(",")
               }
             }
           }
         }
-        var data = "data:text/csv;charset=utf-8," +
-          [
-            "event info",
-            [
-              "_id",
-              "eventname",
-              "datetime",
-              "duration",
-              "price tiers",
-              // "saleInfos",
-            ].join(","),
-            [
-              show._id.toString(),
-              show.eventname,
-              dateFormat(new Date(show.datetime)),
-              show.duration + " m",
-              show.priceTiers.map(pt => `${pt.tierName}:$${pt.price}`).join(' & '),
-              // show.saleInfos,
-            ].join(","),
-            "",
-            [
-              "_id",
-              "seat.row+seat.no",
-              "priceTier.tierName",
-              "priceTier.price",
-              "purchaseDate",
-              "confirmationDate",
-              "confirmationType",
-              "remark"].join(","),
-            ...userRow(),
-          ].join("\n")
-        console.log(data)
-        var link = document.createElement("a");
-        link.setAttribute("href", encodeURI(data));
-        link.setAttribute("download", `ticketing-${show.eventname}-groupbyuser-${new Date().toLocaleDateString()}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
+      }
+    }
+    var data = "data:text/csv;charset=utf-8," +
+      [
+        "event info",
+        [
+          "_id",
+          "eventname",
+          "datetime",
+          "duration",
+          "price tiers",
+          // "saleInfos",
+        ].join(","),
+        [
+          show._id.toString(),
+          show.eventname,
+          dateFormat(new Date(show.datetime)),
+          show.duration + " m",
+          show.priceTiers.map(pt => `${pt.tierName}:$${pt.price}`).join(' & '),
+          // show.saleInfos,
+        ].join(","),
+        "",
+        [
+          "_id",
+          "seat.row+seat.no",
+          "priceTier.tierName",
+          "priceTier.price",
+          "purchaseDate",
+          "confirmationDate",
+          "confirmationType",
+          "remark"].join(","),
+        ...userRow(),
+      ].join("\n")
+    console.log(data)
+    var link = document.createElement("a");
+    let reportDesc = this.eventExportOption.specificToSelectedUser && this.selectedUser ? `${this.selectedUser.username}` : 'all_user'
+    link.setAttribute("href", encodeURI(data));
+    link.setAttribute("download", `ticketing-${show.eventname}-sold_ticket-${reportDesc}-${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+  }
+
+  downloadEventDataCSV() {
+    if (this.selectedShow) {
+      let includeUnsold = this.eventExportOption.includeUnsold && !(this.eventExportOption.specificToSelectedUser && this.selectedUser)
+      let show = this.selectedShow
+      this.api.request.get(`/ticket?eventId=${show._id}${includeUnsold ? '&populate=full' : '&sold&populate=full'}`).toPromise().then((result: any) => {
+        includeUnsold ? this.downloadAllTicketDataCSV(show, result.data) : this.downloadDiscountDataCsv(show, result.data)
       })
     }
   }

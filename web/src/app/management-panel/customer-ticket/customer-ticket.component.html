@@ -3,22 +3,22 @@
 }
 @else {
 <mat-form-field>
-  <mat-label>Select user</mat-label>
-  <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="userAuto">
-  <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #userAuto="matAutocomplete"
-    [displayWith]="userDisplayFn">
-    @for (option of filteredUsers | async; track option) {
-    <mat-option [value]="option">{{option.fullname}}&#40;{{option.username}}&#41;</mat-option>
-    }
-  </mat-autocomplete>
-</mat-form-field>
-<mat-form-field>
   <mat-label>Select event</mat-label>
   <input type="text" matInput [formControl]="showSearch" [matAutocomplete]="showAuto">
   <mat-autocomplete (optionSelected)="showSelected($event.option.value._id)" autoActiveFirstOption
     #showAuto="matAutocomplete" [displayWith]="showDisplayFn">
     @for (option of filteredShows | async; track option) {
     <mat-option [value]="option">{{option.eventname}}</mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>
+<mat-form-field>
+  <mat-label>Select user</mat-label>
+  <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="userAuto">
+  <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #userAuto="matAutocomplete"
+    [displayWith]="userDisplayFn">
+    @for (option of filteredUsers | async; track option) {
+    <mat-option [value]="option">{{option.fullname}}&#40;{{option.username}}&#41;</mat-option>
     }
   </mat-autocomplete>
 </mat-form-field>
@@ -32,14 +32,22 @@
 </mat-chip-listbox>
 }
 <br>
-<button mat-stroked-button color="primary" (click)="downloadUserDataCSV()">Export user data</button>
 @if(selectedShow){
-<button mat-stroked-button color="primary" (click)="downloadEventSoldTicketDataCSV()">Export all ticket data</button>
-<button mat-stroked-button color="primary" (click)="downloadEventDataCSV()">Export sold ticket data (with user discount summary)</button>
+Report options:
+@if(!eventExportOption.specificToSelectedUser || !selectedUser ){
+<mat-checkbox [(ngModel)]="eventExportOption.includeUnsold">Include unsold ticket</mat-checkbox>
 }
-<br>
+@if(selectedUser && !eventExportOption.includeUnsold){
+<mat-checkbox [(ngModel)]="eventExportOption.specificToSelectedUser">Make report specific to selected
+  user</mat-checkbox>}
+<button mat-stroked-button color="primary" (click)="downloadEventDataCSV()">Export event report</button>
+}
 @if(summary)
 {
+<br>
+{{selectedUser?.fullname}}({{selectedUser?.username}}) {{selectedUser?.email}}
+<br>
+Total: ${{summary.totalCost}}
 @for(roundAndInfo of summary.round.entries(); track roundAndInfo; let isLast = $last){
 <h2 mat-subheader>Round {{roundAndInfo[0]+1}}: ${{roundAndInfo[1].total}}</h2>
 <h3 mat-subheader> get {{roundAndInfo[1].freed}} free
