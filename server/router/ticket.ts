@@ -58,11 +58,19 @@ export namespace Ticket {
             }
             else if (req.query.my != undefined && req.session['user'] && (req.session['user'] as any)._id) {
                 let userId = (req.session['user'] as any)._id
-                ticketModel.aggregate<IClientTicket>(lookupQuery({
+                ticketModel.aggregate<IClientTicket>([...lookupQuery({
                     $match: {
                         "purchaseInfo.purchaserId": new ObjectId(userId)
                     }
-                }, { populateType: "purchaser", checkIfBelongsToUser: userId })).
+                }, { populateType: "purchaser", checkIfBelongsToUser: userId }),
+                {
+                    $sort: {
+                        "event.datetime": -1,
+                        "priceTier.price": -1,
+                        "seat.row": -1,
+                        "seat.no": -1,
+                    }
+                }]).
                     then(async tickets =>
                         next({
                             success: true,

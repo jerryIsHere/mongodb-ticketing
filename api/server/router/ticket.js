@@ -51,11 +51,19 @@ var Ticket;
             }
             else if (req.query.my != undefined && req.session['user'] && req.session['user']._id) {
                 let userId = req.session['user']._id;
-                ticket_1.ticketModel.aggregate((0, ticket_1.lookupQuery)({
-                    $match: {
-                        "purchaseInfo.purchaserId": new mongodb_1.ObjectId(userId)
-                    }
-                }, { populateType: "purchaser", checkIfBelongsToUser: userId })).
+                ticket_1.ticketModel.aggregate([...(0, ticket_1.lookupQuery)({
+                        $match: {
+                            "purchaseInfo.purchaserId": new mongodb_1.ObjectId(userId)
+                        }
+                    }, { populateType: "purchaser", checkIfBelongsToUser: userId }),
+                    {
+                        $sort: {
+                            "event.datetime": -1,
+                            "priceTier.price": -1,
+                            "seat.row": -1,
+                            "seat.no": -1,
+                        }
+                    }]).
                     then(async (tickets) => next({
                     success: true,
                     data: tickets
