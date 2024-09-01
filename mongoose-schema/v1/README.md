@@ -1,3 +1,5 @@
+#Performance issue
+## Intro
 update or delete validatoin that requires mixed documents' fields cannot be implemented as query middleware,
 as there is no way to get fields of the documents in those callback.
 
@@ -62,7 +64,7 @@ pre("findOneAndDelete", () => {
       "foreign key in document fields thus has to be executed in document middleware")
 });
 ```
-
+## Conslusion
 An ultimate approach of enabling query middleware with robust referential integrity validation would be:
 1. for delete query, append condition to the filter such that the query only matches deletable document.
 2. for update query, replace the query with aggregate, as $lookup is not avaliable for filter parameter for querys `updateone`. Analyze the update modifications and appends $match to the piple for filtering prohibited modification out. For examples, if use update the priceTier of ticket x with `updateOne({ _id: objectIdx }, {$set: { priceTier: val } })` we change the query to aggregate as follows :
