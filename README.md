@@ -23,7 +23,7 @@ Make sure up-to-date `vercel.json` is also pushed to the vercel deployment branc
 
 ## Development
 ### Local development
-1. Prepare a mongodb server.
+1. Prepare a MongoDB server.
 2. Populate `./credential/.env`, an example is given at `./example.env`.
    
 # Tools
@@ -40,11 +40,25 @@ Make sure up-to-date `vercel.json` is also pushed to the vercel deployment branc
 A custom DAO is developed at earily phase of development before any formal schema-enabled ODM is ever adopted.
 
 For mingrating data generated from this version 0 to the V1 mongoose schema:
-1. Update environment varialbe in `./credential/.env` and point the mongodb url to the target backend (e.g. Local / Mongodb Atlas).
+1. Update environment varialbe in `./credential/.env` and point the MongoDB url to the target backend (e.g. Local / MongoDB Atlas).
 2. Run `node --env-file ./credential/.env ./api/mongoose-schema/v1/migration.js`.
 ### Venue cloning 
-1. Update environment varialbe in `./credential/.env` and point the mongodb url to the target backend (e.g. Local / Mongodb Atlas).
+1. Update environment varialbe in `./credential/.env` and point the MongoDB url to the target backend (e.g. Local / MongoDB Atlas).
 2. Update varialbe in `./mongoose-schema/v1/tools/clone_venue.ts` such that the script clone the correct venue and venue's section.
 3. Transpile typescript.
 4. Run `node --env-file ./credential/.env ./api/mongoose-schema/v1/tools/clone_venue.js`.
+
+
+# Other Info
+## Cautions
+### Performance Issue
+The demo for this platform could be deployed with free tier service of MongoDB Atlas and vercel, however the process time limit of the free tier serverless deployment service of vercel might cause a timeout error, especially the multiple rount-trip between the database and the web server happen during an API request handling process. Aggregation is highly recommended to reduce such overhead.
+
+Considerations and counter-measure must be taken. Example are given in:
+1. the ticket dao for version 0
+2. the ticket express router and mongoose schema implementation for version 1
+
+A brief elaboration of this issue and how to encapsulate the solution in mongoose schema is avaliable [here](https://github.com/jerryIsHere/mongodb-ticketing/tree/uat/main/mongoose-schema/v1#readme).
+## Todo
+1. Pagination mechanism that works for front-back end.
   
