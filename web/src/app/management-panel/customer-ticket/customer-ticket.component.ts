@@ -332,9 +332,9 @@ export class CustomerTicketComponent {
           let userSummary = summarizeTicket(userTickets, show);
           yield ""
           yield `ticket info of ${user.fullname} (${user.username}) total: $${userSummary.totalCost}`
-          for (let roundNinfo of userSummary.round.entries()) {
+          for (let roundNinfo of [...userSummary.round.entries()].sort()) {
             yield `round ${roundNinfo[0] + 1} [sum: $${roundNinfo[1].total}] [free/total: ${roundNinfo[1].freed}/${roundNinfo[1].count}]`
-            for (let tierNinfo of roundNinfo[1].tierInfo.entries()) {
+            for (let tierNinfo of [...roundNinfo[1].tierInfo.entries()].sort()) {
               yield `tier ${tierNinfo[0]} sum: $${(tierNinfo[1].count - tierNinfo[1].freed) * tierNinfo[1].price
                 } free/total: ${tierNinfo[1].freed}/${tierNinfo[1].count}`
               for (let ticket of tierNinfo[1].tickets) {

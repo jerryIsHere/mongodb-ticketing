@@ -156,7 +156,7 @@ export function summarizeTicket<T extends AdminTicketAPIObject | ClientTicketAPI
             }>()
 
     })
-    summary.totalCost = Array.from(summary.round.entries()).sort().map((round_info) => {
+    summary.totalCost = Array.from(summary.round.entries()).map((round_info) => {
         let round = round_info[0]
         let roundInfo = round_info[1]
         let tierInfo = roundInfo.tierInfo
