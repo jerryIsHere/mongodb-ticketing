@@ -20,7 +20,14 @@ import { OperationError, ReferentialError } from "../error";
 import { ObjectId } from "mongodb";
 
 export const lookupQuery = (condition: PipelineStage, param: { populateType: "full" | "purchaser" | "confirmer" | "none", checkIfBelongsToUser?: string }): PipelineStage[] => {
-
+  let sortingPipeline: PipelineStage = {
+    $sort: {
+      "event.datetime": -1,
+      "priceTier.price": -1,
+      "seat.row": -1,
+      "seat.no": -1,
+    }
+  }
 
   const populatePurchaserPipeline = [{
     $lookup:
@@ -121,7 +128,8 @@ export const lookupQuery = (condition: PipelineStage, param: { populateType: "fu
     ...[
       { $set: { 'event': { $first: '$event' } } },
       { $set: { 'seat': { $first: '$seat' } } },
-    ]
+    ],
+    sortingPipeline,
   ]
 
 }
@@ -339,7 +347,8 @@ export const tickerSchema = new Schema<
           throw new OperationError(
             `Ticket${idsNotPurchaseable.length > 1 ? 's' : ''} with id ` +
             idsNotPurchaseable.join(', ') +
-            `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.`
+            `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.\n` +
+            `Please refresh the page for new ticketing info and try again.`
           );
         }
         let events = await eventModel
@@ -386,7 +395,7 @@ export const tickerSchema = new Schema<
         if (userTicketForEvent.filter(ticket =>
           ticket.purchaseInfo && (now.getTime() - ticket.purchaseInfo.purchaseDate.getTime()) / 60000 < event.shoppingCartCooldown).length > 0)
           throw new OperationError(
-            `You must wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown>1?"s":''} ` +
+            `You must wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown > 1 ? "s" : ''} ` +
             `between two ticket purchase.`
           );
 

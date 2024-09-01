@@ -11,6 +11,14 @@ const schema_names_1 = require("../schema-names");
 const error_1 = require("../error");
 const mongodb_1 = require("mongodb");
 const lookupQuery = (condition, param) => {
+    let sortingPipeline = {
+        $sort: {
+            "event.datetime": -1,
+            "priceTier.price": -1,
+            "seat.row": -1,
+            "seat.no": -1,
+        }
+    };
     const populatePurchaserPipeline = [{
             $lookup: {
                 from: schema_names_1.names.User.collection_name,
@@ -105,7 +113,8 @@ const lookupQuery = (condition, param) => {
         ...[
             { $set: { 'event': { $first: '$event' } } },
             { $set: { 'seat': { $first: '$seat' } } },
-        ]
+        ],
+        sortingPipeline,
     ];
 };
 exports.lookupQuery = lookupQuery;
@@ -210,7 +219,8 @@ exports.tickerSchema = new mongoose_1.Schema({
                 let idsNotPurchaseable = ticketIds.filter(id => !idsPurchaseable.includes(id));
                 throw new error_1.OperationError(`Ticket${idsNotPurchaseable.length > 1 ? 's' : ''} with id ` +
                     idsNotPurchaseable.join(', ') +
-                    `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.`);
+                    `ha${idsNotPurchaseable.length > 1 ? 's' : 've'} been sold.\n` +
+                    `Please refresh the page for new ticketing info and try again.`);
             }
             let events = await event_1.eventModel
                 .find({ _id: { $in: tickets.map((t) => t.eventId) } }, null, { session: session })
