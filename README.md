@@ -17,7 +17,7 @@ node.js v20.11.1
 1. Run `npm install` in both `./` and `./web`
 2. Run `npm run build` in `./`
 ### Vercel support
-Vercel is the primarily supported deployment platfrom. A script ,`vercel.js`, would output a correct vercel project configuration `vercel.json` for correct verson config and routes that serve the angular frontend SPA as static files. This script is executed with command `npm run build` and `npm start`.
+Vercel is the primarily supported deployment platform. A script ,`vercel.js`, would output a correct vercel project configuration `vercel.json` for correct verson config and routes that serve the angular frontend SPA as static files. This script is executed with command `npm run build` and `npm start`.
 
 Make sure up-to-date `vercel.json` is also pushed to the vercel deployment branch, because although a new `vercel.json` is created when vercel is running `npm run build`, only `vercel.json` that are loaded before build step are accepted by vercel ([see this GitHub discussion](https://github.com/vercel/vercel/discussions/8137)).
 
