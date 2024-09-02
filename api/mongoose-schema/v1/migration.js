@@ -32,6 +32,7 @@ Promise.all([database_1.Database.init()])
                     buyX: 0,
                     yFree: 0,
                 }];
+            doc.shoppingCartCooldown = 0;
             await doc.save({ validateBeforeSave: false });
         }
     });
