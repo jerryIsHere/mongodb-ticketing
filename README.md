@@ -25,6 +25,12 @@ Make sure up-to-date `vercel.json` is also pushed to the vercel deployment branc
 ### Local development
 1. Prepare a MongoDB server.
 2. Populate `./credential/.env`, an example is given at `./example.env`.
+
+### Express middleware
+A custom error and database transaction control is implemented as an express middleware
+An empty array for storing thrown error are initialized at a [pre-request middleware](https://github.com/jerryIsHere/mongodb-ticketing/blob/uat/main/index.ts#L49).
+
+A process that handle errors and uncommitted transaction is implememnted at a [post-request middle](https://github.com/jerryIsHere/mongodb-ticketing/blob/38572ba3bad62c0b78dad0468809600a715c10dc/index.ts#L77)
    
 # Tools
 ## General admin tools
