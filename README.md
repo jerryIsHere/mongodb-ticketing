@@ -53,6 +53,11 @@ For mingrating data generated from this version 0 to the V1 mongoose schema:
 2. Update varialbe in `./mongoose-schema/v1/tools/clone_venue.ts` such that the script clone the correct venue and venue's section.
 3. Transpile typescript.
 4. Run `node --env-file ./credential/.env ./api/mongoose-schema/v1/tools/clone_venue.js`.
+### Event cloning 
+1. Update environment varialbe in `./credential/.env` and point the MongoDB url to the target backend (e.g. Local / MongoDB Atlas).
+2. Update varialbe in `./mongoose-schema/v1/tools/clone_event.ts` such that the script clone the correct venue and venue's section.
+3. Transpile typescript.
+4. Run `node --env-file ./credential/.env ./api/mongoose-schema/v1/tools/clone_event.js`.
 
 
 # Other Info
