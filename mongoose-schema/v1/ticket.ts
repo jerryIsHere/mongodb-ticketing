@@ -393,10 +393,12 @@ export const tickerSchema = new Schema<
             `for event with id ${event._id}.`
           );
         if (userTicketForEvent.filter(ticket =>
-          ticket.purchaseInfo && (now.getTime() - ticket.purchaseInfo.purchaseDate.getTime()) / 60000 < event.shoppingCartCooldown).length > 0)
+          ticket.purchaseInfo && (now.getTime() - ticket.purchaseInfo.purchaseDate.getTime()) / 60000 < event.shoppingCartCooldown).length +
+          ticketIds.length
+          > event.shoppingCartSize)
           throw new OperationError(
-            `You must wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown > 1 ? "s" : ''} ` +
-            `between two ticket purchase.`
+            `You must at least wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown > 1 ? "s" : ''} ` +
+            `between purchase for buying more than ${event.shoppingCartSize} ticket${event.shoppingCartSize > 1 ? "s" : ''}.`
           );
 
         let purchaseInfo = new purchaseInfoModel({

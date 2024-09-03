@@ -42,7 +42,7 @@ import { count } from 'console';
 export class EventPaymentComponent {
   loaded = false
   ticketDataSource: MatTableDataSource<ClientTicketAPIObject> = new MatTableDataSource<ClientTicketAPIObject>()
-  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseDate', 'confirmedBy'];
+  ticketDataColumn = ['event.eventname', 'seat', 'priceTier.tierName', 'priceTier.price', 'purchaseInfo.purchaseDate', 'purchaseInfo.confirmedBy'];
   shows: ShowAPIObject[] = [];
   tickets: ClientTicketAPIObject[] = []
   showFromQuery?: string

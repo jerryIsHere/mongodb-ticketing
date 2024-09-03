@@ -1,8 +1,13 @@
 @if(seats && venue && priceTiers){
-<span>
-  <mat-icon fontIcon="event_seat"></mat-icon> : seat for sale &#9;&#9;
-  <mat-icon fontIcon="block"></mat-icon> : Seat not for sale &#9;&#9;
-  <mat-icon fontIcon="airline_seat_recline_normal"></mat-icon> : Seat already sold
+  <span>
+  You may pick any seats except those with sold ticket.
+  <br>
+  &#40;
+  Ticket already sold: <mat-icon fontIcon="block"></mat-icon>
+  &#41;
+  You can then set ticket selling price (or cancel selling) for all selected seat at once.
+
+  &#9;&#9;
 </span>
 <app-seating-plan #seatingPlan [priceTiers]="priceTiers" [venue]="venue" [seats]="seats" [tickets]="tickets"
   isTicketPlanning (selectedSeatIdsChange)="checkAction($event)" soldTicketDisabled

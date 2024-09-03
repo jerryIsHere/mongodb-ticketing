@@ -62,7 +62,7 @@ export class EventFormComponent {
       start: saleInfo ? tolocaltimezone(new Date(saleInfo.start)).toISOString().split('Z')[0] : '',
       end: saleInfo ? tolocaltimezone(new Date(saleInfo.end)).toISOString().split('Z')[0] : '',
       buyX: saleInfo?.buyX,
-      yFree: saleInfo?.yFree,
+      yFree: saleInfo?.yFree == Number.MAX_VALUE ? "*" : saleInfo?.yFree,
       ticketQuota: saleInfo?.ticketQuota
     }
     return this._formBuilder.group(
@@ -71,14 +71,14 @@ export class EventFormComponent {
         end: new FormControl(formValue.end, [Validators.required,]),
         ticketQuota: new FormControl(formValue.ticketQuota, [Validators.required, Validators.min(-1), Validators.pattern("^[-]?[0-9]*$"),]),
         buyX: new FormControl(formValue.buyX, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
-        yFree: new FormControl(formValue.yFree, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$"),]),
+        yFree: new FormControl(formValue.yFree, [Validators.required, Validators.min(0), Validators.pattern("^[0-9]*$|^[*]{1,1}$"),]),
       })
   }
   submit() {
-    console.log(this.eventForm.controls["eventname"].value)
     if (this.eventForm.valid) {
       let timezone = (new Date()).getTimezoneOffset() * 60000
       let formData = this.eventForm.getRawValue()
+      console.log(formData)
       let body = {
         ...formData,
         ...{
@@ -89,12 +89,14 @@ export class EventFormComponent {
               ...{
                 start: info.start ? new Date(info.start) : '',
                 end: info.end ? new Date(info.end) : '',
+                yFree: info.yFree as any == "*" ? Number.MAX_VALUE : info.yFree
               }
             }
           }),
           priceTiers: this.data.event.priceTiers
         },
       }
+      console.log(body)
       if (this.data && this.data.event && this.data.event._id) {
         this.api.request.patch(`/event/${this.data.event._id}`, body).toPromise().then((result: any) => {
           if (result && result.success) {

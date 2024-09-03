@@ -9,6 +9,7 @@ Promise.all([database_1.Database.init()])
     console.error(e);
 })
     .finally(async () => {
+    // update search condition here!
     await schema_1.v1.Event.eventModel.findOne({ eventname: "test" }).then(async (oriEvent) => {
         if (oriEvent) {
             console.log(`cloning ${oriEvent.eventname} `);

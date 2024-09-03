@@ -151,7 +151,9 @@
         }
       </mat-form-field>
       <br>
-      Discount
+      Discount 
+      (type: * in Y Free for infinity)
+      (Buy 0 get Y free means exactly Y tickets are given no matter what)
       <br>
       <mat-form-field>
         <mat-label>Buy X</mat-label>
@@ -164,7 +166,7 @@
         }
       </mat-form-field>
       <mat-form-field>
-        <mat-label>get Y free.</mat-label>
+        <mat-label>get Y free</mat-label>
         <input matInput formControlName="yFree" required>
         @if (saleInfoForm.controls['yFree'].hasError('required')) {
         <mat-error>This field is required</mat-error>

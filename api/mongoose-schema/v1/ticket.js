@@ -251,9 +251,11 @@ exports.tickerSchema = new mongoose_1.Schema({
             if (saleInfo.ticketQuota > -1 && userTicketForEvent.length + ticketIds.length > saleInfo.ticketQuota)
                 throw new error_1.OperationError(`You have no more ticket quota (${saleInfo.ticketQuota} for ${saleInfoInd + 1} round selling) ` +
                     `for event with id ${event._id}.`);
-            if (userTicketForEvent.filter(ticket => ticket.purchaseInfo && (now.getTime() - ticket.purchaseInfo.purchaseDate.getTime()) / 60000 < event.shoppingCartCooldown).length > 0)
-                throw new error_1.OperationError(`You must wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown > 1 ? "s" : ''} ` +
-                    `between two ticket purchase.`);
+            if (userTicketForEvent.filter(ticket => ticket.purchaseInfo && (now.getTime() - ticket.purchaseInfo.purchaseDate.getTime()) / 60000 < event.shoppingCartCooldown).length +
+                ticketIds.length
+                > event.shoppingCartSize)
+                throw new error_1.OperationError(`You must at least wait for ${event.shoppingCartCooldown} minute${event.shoppingCartCooldown > 1 ? "s" : ''} ` +
+                    `between purchase for buying more than ${event.shoppingCartSize} ticket${event.shoppingCartSize > 1 ? "s" : ''}.`);
             let purchaseInfo = new exports.purchaseInfoModel({
                 purchaserId: purchaserId,
                 purchaseDate: now,

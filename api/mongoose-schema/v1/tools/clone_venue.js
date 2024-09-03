@@ -19,6 +19,7 @@ Promise.all([database_1.Database.init()])
         { x: 2, y: 3, options: {} }
     ];
     console.log(`cloning ${venueName} with`);
+    // update search condition here
     await schema_1.v1.Venue.venueModel.findOne({ venuename: venueName }).then(async (oriVenue) => {
         if (oriVenue) {
             let filteredSections = oriVenue.sections.filter(s => sections.find(ss => ss.x == s.x && ss.y == s.y));
