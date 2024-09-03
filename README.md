@@ -44,6 +44,7 @@ A process that handle errors and uncommitted transaction is implememnted at a [p
 ## DB manipulation
 ### V0 to V1 schema migration
 A custom DAO is developed at earily phase of development before any formal schema-enabled ODM is ever adopted.
+PriceTier collection is not in use. V1 schema embeded price information in to events and ticket.
 
 For mingrating data generated from this version 0 to the V1 mongoose schema:
 1. Update environment varialbe in `./credential/.env` and point the MongoDB url to the target backend (e.g. Local / MongoDB Atlas).
