@@ -24,20 +24,20 @@ mat-list-item {
 ::-webkit-scrollbar {
   width: 5em;
 }
+// these don't work on mobile
+// /* Track */
+// ::-webkit-scrollbar-track {
+//   box-shadow: inset 0 0 5em grey; 
+//   border-radius: 10em;
+// }
 
-/* Track */
-::-webkit-scrollbar-track {
-  box-shadow: inset 0 0 5em grey; 
-  border-radius: 10em;
-}
+// /* Handle */
+// ::-webkit-scrollbar-thumb {
+//   background: lightslategrey; 
+//   border-radius: 10em;
+// }
 
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: lightslategrey; 
-  border-radius: 10em;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: darkslategrey; 
-}
+// /* Handle on hover */
+// ::-webkit-scrollbar-thumb:hover {
+//   background: darkslategrey; 
+// }

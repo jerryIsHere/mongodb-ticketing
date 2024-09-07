@@ -1,4 +1,9 @@
 <div [style.flex-direction]="isMobile?'column':'row'" style="display: flex;">
+  @if(isMobile){
+  <div style="flex: 1;">
+    hold and swipe horizontally<mat-icon>swipe</mat-icon>  in below regionfor navigating the whole seat plan
+  </div>
+  }
   <div style="flex: 1;">
     <div style="flex-direction: row; display: flex;">
       @if(venue && tickets){
