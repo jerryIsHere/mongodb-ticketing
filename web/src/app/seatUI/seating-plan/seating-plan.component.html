@@ -19,7 +19,8 @@
         }
       </mat-chip-listbox>
     </div>
-    <div class="seating-plan" [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
+    <div class="seating-plan"
+      [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
       <div>
         @if(this.selectedSection?.options?.seatAlign){
         }
@@ -44,7 +45,7 @@
             [style.background-color]="ticket && !buyer?getColorByTicket(ticket):'grey'"
             [style.border-color]="ticket && buyer?getColorByTicket(ticket):undefined"
             [style.color]="ticket && buyer?getColorByTicket(ticket):undefined" cdkDrag
-            [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="row+col">
+            [cdkDragDisabled]="!seatingPlanEditing" [matTooltip]="isMobile?undefined:row+col">
             @if (ticket){
             @if(buyer){
             <mat-icon [fontIcon]="isSelected?'check_circle':'block'">
