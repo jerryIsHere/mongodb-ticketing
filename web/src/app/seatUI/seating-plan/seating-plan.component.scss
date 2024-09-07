@@ -1,4 +1,4 @@
-mat-list-item {
+mat-list-itpx {
   button {
     max-width: 36px !important;
     max-height: 36px !important;
@@ -22,22 +22,22 @@ mat-list-item {
 
 
 ::-webkit-scrollbar {
-  width: 5em;
+  width: 5px;
 }
-// these don't work on mobile
-// /* Track */
-// ::-webkit-scrollbar-track {
-//   box-shadow: inset 0 0 5em grey; 
-//   border-radius: 10em;
-// }
+//these don't work on mobile
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey; 
+  border-radius: 10px;
+}
 
-// /* Handle */
-// ::-webkit-scrollbar-thumb {
-//   background: lightslategrey; 
-//   border-radius: 10em;
-// }
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: lightslategrey; 
+  border-radius: 10px;
+}
 
-// /* Handle on hover */
-// ::-webkit-scrollbar-thumb:hover {
-//   background: darkslategrey; 
-// }
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: darkslategrey; 
+}

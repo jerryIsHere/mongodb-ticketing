@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/seatUI/seating-plan/seating-plan.component.scss"],
-  "sourcesContent": ["mat-list-item {\n  button {\n    max-width: 36px !important;\n    max-height: 36px !important;\n    min-width: 36px !important;\n    min-height: 36px !important;\n    font-size: 12px !important;\n  }\n}\n\n.seating-plan {\n  max-width: 100vw;\n  height: max-content;\n  overflow-x: auto;\n  overflow-y: clip;\n  font-size: 12px;\n  div {\n    width: max-content;\n    height: max-content;\n  }\n}\n\n\n::-webkit-scrollbar {\n  width: 5em;\n}\n// these don't work on mobile\n// /* Track */\n// ::-webkit-scrollbar-track {\n//   box-shadow: inset 0 0 5em grey; \n//   border-radius: 10em;\n// }\n\n// /* Handle */\n// ::-webkit-scrollbar-thumb {\n//   background: lightslategrey; \n//   border-radius: 10em;\n// }\n\n// /* Handle on hover */\n// ::-webkit-scrollbar-thumb:hover {\n//   background: darkslategrey; \n// }"],
-  "mappings": "AACE,cAAA,OACE,UAAA,eACA,WAAA,eACA,UAAA,eACA,WAAA,eACA,UAAA,eAIJ,CAAA,aACE,UAAA,MACA,OAAA,YACA,WAAA,KACA,WAAA,KACA,UAAA,KACA,CANF,aAME,IACE,MAAA,YACA,OAAA,YAKJ,oBACE,MAAA",
-  "names": []
-}
