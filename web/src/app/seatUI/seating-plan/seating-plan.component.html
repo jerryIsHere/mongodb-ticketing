@@ -1,9 +1,4 @@
 <div [style.flex-direction]="isMobile?'column':'row'" style="display: flex;">
-  @if(isMobile){
-  <div style="flex: 1;">
-    hold and swipe horizontally<mat-icon>swipe</mat-icon>  in below regionfor navigating the whole seat plan
-  </div>
-  }
   <div style="flex: 1;">
     <div style="flex-direction: row; display: flex;">
       @if(venue && tickets){
@@ -24,7 +19,13 @@
         }
       </mat-chip-listbox>
     </div>
+    @if(isMobile){
+    <div style="flex: 1; font-size: x-small; color: darkgray;">
+      you may hold and swipe horizontally<mat-icon>swipe</mat-icon> in below region for navigating the whole seat plan
+    </div>
+    }
     <div class="seating-plan"
+      style="border: 1px black;"
       [style.text-align]="this.selectedSection?.options && this.selectedSection?.options?.seatAlign ? this.selectedSection?.options.seatAlign: 'none'">
       <div>
         @if(this.selectedSection?.options?.seatAlign){
