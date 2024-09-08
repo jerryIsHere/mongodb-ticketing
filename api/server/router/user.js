@@ -31,6 +31,25 @@ var User;
         var clearSession = (req, res) => {
             req.session.user = null;
         };
+        user.get("/:username", async (req, res, next) => {
+            if (req.params.username && typeof req.params.username == "string"
+                && req.session.user?.hasAdminRight == true) {
+                user_1.userModel.findOne({ username: req.params.username }).
+                    then(doc => {
+                    if (doc) {
+                        return doc.disclose();
+                    }
+                    else {
+                        throw new database_1.RequestError(`User with username ${req.params.username} not found.`);
+                    }
+                }).
+                    then(doc => next({ success: true, data: doc })).
+                    catch(err => next(err));
+            }
+            else {
+                res.status(401).json({ success: false, reason: "Unauthorized access" });
+            }
+        });
         user.get("/", async (req, res, next) => {
             if (req.query.list != undefined) {
                 if (req.query.lastPurchaseTicket != undefined) {
@@ -120,14 +139,14 @@ var User;
                 next();
             }
         });
-        let changeableField = ["username", "fullname", "email", "singingPart"];
+        let changeableField = ["fullname", "email", "singingPart"];
         user.patch("/:username", async (req, res, next) => {
             if (req.params.username && typeof req.params.username == "string") {
-                if (req.query.profile != undefined) {
-                    user_1.userModel.findOne({ username: req.body.username.toLowerCase() }).
+                if (req.body.profile != undefined) {
+                    user_1.userModel.findOne({ username: req.params.username.toLowerCase() }).
                         then(user => {
                         if (user) {
-                            let profile = Object.fromEntries(changeableField.map(key => [key, req.body[key]]));
+                            let profile = Object.fromEntries(changeableField.map(key => [key, req.body.profile[key]]));
                             Object.keys(profile).forEach(key => {
                                 if (key in user)
                                     user[key] = profile[key];
@@ -137,7 +156,9 @@ var User;
                         throw new database_1.RequestError(`User with user name ${req.params.username} not found`);
                     }).then((doc) => {
                         if (doc) {
-                            updateSession(req, res, doc?.disclose());
+                            if (req.session.user?._id == doc._id.toString()) {
+                                updateSession(req, res, doc?.disclose());
+                            }
                             next({ success: true, data: req.session.user });
                         }
                     }).

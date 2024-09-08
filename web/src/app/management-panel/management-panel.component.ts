@@ -12,6 +12,7 @@ import { RouterModule } from '@angular/router';
 import { ApiService } from '../service/api.service';
 import { ChangePasswordComponent } from './change-password/change-password.component';
 import dateFormat from 'dateformat';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 
 interface IDataListControl {
   loadData: () => Promise<any>,
@@ -74,6 +75,9 @@ export class ManagementPanelComponent {
   }
   ChangePassword() {
     const dialogRef = this.dialog.open(ChangePasswordComponent);
+  }
+  ChangeProfile() {
+    const dialogRef = this.dialog.open(UserProfileComponent);
   }
 
   downloadUserDataCSV() {

@@ -1,0 +1,40 @@
+<form [formGroup]="profileForm">
+    <mat-form-field>
+        <mat-label>Select user</mat-label>
+        <input type="text" matInput [formControl]="userSearch" [matAutocomplete]="userAuto">
+        <mat-autocomplete (optionSelected)="userSelected($event)" autoActiveFirstOption #userAuto="matAutocomplete"
+            [displayWith]="userDisplayFn">
+            @for (option of filteredUsers | async; track option) {
+            <mat-option [value]="option">{{option.fullname}}&#40;{{option.username}}&#41;</mat-option>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+    <br>  
+    <mat-form-field>
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" required>
+      @if (profileForm.controls['email'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+  
+    </mat-form-field>
+    <br>
+  
+    <mat-form-field>
+      <mat-label>Full name</mat-label>
+      <input matInput formControlName="fullname" required>
+      @if (profileForm.controls['fullname'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+    <br>
+  
+    <mat-form-field>
+      <mat-label>SingingPart</mat-label>
+      <input matInput formControlName="singingPart">
+      @if (profileForm.controls['singingPart'].hasError('required')) {
+      <mat-error>This field is required</mat-error>
+      }
+    </mat-form-field>
+</form>
+<button mat-stroked-button color="primary"(click)="updateProfile()">Update Profile</button>

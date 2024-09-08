@@ -6,7 +6,7 @@ selected &#40;up to {{limit}}&#41;
 <!-- print ticket no? -->
 <br>
 <span>
-  <button matSnackBarAction mat-stroked-button color="primary" (click)="buy()" [disabled]="doing">
+  <button matSnackBarAction mat-stroked-button color="primary" (click)="buy()" [disabled]="doing || data.tickets.length == 0">
     @if(doing){
     <mat-spinner></mat-spinner>
     }
