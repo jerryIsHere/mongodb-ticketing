@@ -97,7 +97,7 @@ export class BuyTicketComponent {
       success: false,
       reload: false,
     }
-    if (this.actionBtmSheetRef == undefined && this.seatingPlan) {
+    if (this.actionBtmSheetRef == undefined && tickets.length >0 && this.seatingPlan) {
       this.actionBtmSheetRef = this._bottomSheet.open(TicketSelectedComponent, {
         data: action,
         hasBackdrop: false,

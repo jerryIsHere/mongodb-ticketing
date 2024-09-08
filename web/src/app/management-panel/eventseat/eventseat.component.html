@@ -1,4 +1,8 @@
-@if(seats && venue && priceTiers){
+@if(seats && venue && priceTiers && event){
+  {{event.eventname}}
+  <br>
+  {{venue.venuename}}
+  <br>
   <span>
   You may pick any seats except those with sold ticket.
   <br>
